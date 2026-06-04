@@ -1,0 +1,39 @@
+{
+  "name": "edutrack",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EduTrack — Flint Technologies · national school platform for Cameroon",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "db:seed": "node --env-file=.env --env-file=.env.local prisma/seed.js",
+    "db:seed:history": "node prisma/seed-history.js",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.45.0",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "ws": "^8.21.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "postcss": "^8",
+    "prisma": "^6.19.3",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5"
+  }
+}

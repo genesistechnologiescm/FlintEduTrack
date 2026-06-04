@@ -1,0 +1,21 @@
+# dependencies
+/node_modules
+
+# env — NEVER commit secrets
+.env
+.env.local
+.env*.local
+
+# next / build
+/.next
+/out
+/dist
+*.tsbuildinfo
+
+# prisma generated client
+/prisma/generated
+
+# os / editor
+.DS_Store
+Thumbs.db
+.vercel

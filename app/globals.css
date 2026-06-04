@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* ── Flint · Design Tokens (EduTrack) ────────────────────────── */
+@theme {
+  --color-flint-black: #0a0a0f;
+  --color-flint-blue: #1a6bff;
+  --color-flint-cyan: #00e5ff;
+  --color-flint-grey: #8a94a6;
+  --color-flint-white: #f4f6fa;
+  --color-muted: #4a5160;
+  --color-success: #00c48c;
+  --color-error: #ff4444;
+
+  --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  --font-body: var(--font-inter), "Inter", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
+}
+
+/* Mobile-first base — high contrast for sunlight readability on cheap Android */
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --text: #0a0a0f;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Respect reduced motion (Non-Negotiable Rule 15) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

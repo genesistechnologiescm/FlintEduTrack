@@ -1,0 +1,468 @@
+// EduTrack — Phase 1 schema (see Architecture/06_Database_Schema.md + 07_Auth_Flow.md)
+// Privacy is enforced by Supabase RLS policies applied AFTER this push (see prisma/rls.sql).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ───────────────────────── Enums ─────────────────────────
+enum Lang {
+  EN
+  FR
+}
+
+enum SchoolRole {
+  ADMIN
+  TEACHER
+}
+
+enum StreamType {
+  SCIENCES
+  ARTS
+  COMMERCIAL
+  TECHNICAL
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  TRANSFERRED
+  ARCHIVED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+  PRE_AUTHORISED
+}
+
+enum SetBy {
+  TEACHER
+  ADMIN
+  SYSTEM
+}
+
+enum ParentRelation {
+  MOTHER
+  FATHER
+  GUARDIAN
+  OTHER
+}
+
+enum ChannelType {
+  PUSH
+  WHATSAPP
+  SMS
+}
+
+enum ChannelStatus {
+  ACTIVE
+  FAILING
+  DISABLED
+}
+
+enum Criticality {
+  CRITICAL
+  ROUTINE
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+}
+
+enum WelfareStatus {
+  OPEN
+  MONITORING
+  AT_RISK
+  ESCALATED_NATIONAL
+  RESOLVED
+}
+
+enum WelfareEventType {
+  ABSENCE_TRIGGER
+  SMS_SENT
+  MEETING_SUGGESTED
+  MEETING_SCHEDULED
+  STAFF_ASSIGNED
+  HOME_VISIT
+  OUTCOME_LOGGED
+  SUSPENSION
+  NOTE
+}
+
+// ───────────────────────── Identity ─────────────────────────
+model User {
+  id            String             @id // = auth.users.id
+  phone         String             @unique
+  displayName   String
+  preferredLang Lang               @default(EN)
+  isFlintAdmin  Boolean            @default(false)
+  status        String             @default("active")
+  createdAt     DateTime           @default(now())
+  deletedAt     DateTime?
+  memberships   SchoolMembership[]
+  parentLinks   ParentLink[]
+  channels      ParentChannel[]
+  teaching      TimetableSlot[]    @relation("SlotTeacher")
+  devices       AuthDevice[]
+}
+
+// ───────────────────────── Tenant + calendar ─────────────────────────
+model School {
+  id           String             @id @default(uuid())
+  name         String
+  region       String
+  division     String?
+  town         String?
+  contactPhone String?
+  logoUrl      String?
+  isCrisisZone Boolean            @default(false)
+  status       String             @default("active")
+  createdAt    DateTime           @default(now())
+  deletedAt    DateTime?
+  memberships  SchoolMembership[]
+  years        AcademicYear[]
+  classes      ClassGroup[]
+  subjects     Subject[]
+  slots        TimetableSlot[]
+  enrollments  Enrollment[]
+  @@index([region])
+}
+
+model SchoolMembership {
+  id        String     @id @default(uuid())
+  userId    String
+  schoolId  String
+  role      SchoolRole
+  status    String     @default("active")
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id])
+  school    School     @relation(fields: [schoolId], references: [id])
+  @@unique([userId, schoolId, role])
+  @@index([schoolId])
+  @@index([userId])
+}
+
+model AcademicYear {
+  id        String       @id @default(uuid())
+  schoolId  String
+  label     String
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean      @default(false)
+  school    School       @relation(fields: [schoolId], references: [id])
+  terms     Term[]
+  classes   ClassGroup[]
+  @@index([schoolId])
+}
+
+model Term {
+  id             String          @id @default(uuid())
+  academicYearId String
+  label          String
+  order          Int // 1..3 (Cameroon: 3 terms/year)
+  sequenceCount  Int             @default(2) // CONFIRMED: 2 sequences/term -> 6/year
+  startDate      DateTime
+  endDate        DateTime
+  academicYear   AcademicYear    @relation(fields: [academicYearId], references: [id])
+  slots          TimetableSlot[]
+  @@index([academicYearId])
+}
+
+// ───────────────────────── Academic structure ─────────────────────────
+model ClassGroup {
+  id             String          @id @default(uuid())
+  schoolId       String
+  academicYearId String
+  name           String
+  formLevel      Int
+  streamType     StreamType?
+  isGceClass     Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  deletedAt      DateTime?
+  school         School          @relation(fields: [schoolId], references: [id])
+  academicYear   AcademicYear    @relation(fields: [academicYearId], references: [id])
+  slots          TimetableSlot[]
+  enrollments    Enrollment[]
+  @@index([schoolId])
+  @@index([academicYearId])
+}
+
+model Subject {
+  id         String          @id @default(uuid())
+  schoolId   String
+  name       String
+  code       String?
+  streamType StreamType?
+  school     School          @relation(fields: [schoolId], references: [id])
+  slots      TimetableSlot[]
+  @@unique([schoolId, name])
+  @@index([schoolId])
+}
+
+model TimetableSlot {
+  id            String              @id @default(uuid())
+  schoolId      String
+  termId        String
+  classGroupId  String
+  subjectId     String
+  teacherUserId String
+  dayOfWeek     Int
+  startTime     String
+  endTime       String
+  room          String?
+  school        School              @relation(fields: [schoolId], references: [id])
+  term          Term                @relation(fields: [termId], references: [id])
+  classGroup    ClassGroup          @relation(fields: [classGroupId], references: [id])
+  subject       Subject             @relation(fields: [subjectId], references: [id])
+  teacher       User                @relation("SlotTeacher", fields: [teacherUserId], references: [id])
+  sessions      AttendanceSession[]
+  @@unique([termId, teacherUserId, dayOfWeek, startTime])
+  @@index([schoolId])
+  @@index([classGroupId])
+  @@index([teacherUserId])
+}
+
+// ───────────────────────── Students + enrollment + guardianship ─────────────────────────
+model Student {
+  id          String                 @id @default(uuid())
+  firstName   String
+  lastName    String
+  dob         DateTime?
+  gender      String?
+  photoUrl    String?
+  createdAt   DateTime               @default(now())
+  deletedAt   DateTime?
+  enrollments Enrollment[]
+  parentLinks ParentLink[]
+  records     AttendanceRecord[]
+  auths       AbsenceAuthorisation[]
+  cases       WelfareCase[]
+}
+
+model Enrollment {
+  id           String           @id @default(uuid())
+  studentId    String
+  schoolId     String
+  classGroupId String
+  streamType   StreamType?
+  status       EnrollmentStatus @default(ACTIVE)
+  enrolledAt   DateTime         @default(now())
+  departedAt   DateTime?
+  student      Student          @relation(fields: [studentId], references: [id])
+  school       School           @relation(fields: [schoolId], references: [id])
+  classGroup   ClassGroup       @relation(fields: [classGroupId], references: [id])
+  @@unique([studentId, schoolId, classGroupId])
+  @@index([schoolId])
+  @@index([classGroupId])
+  @@index([studentId])
+}
+
+model ParentLink {
+  id             String         @id @default(uuid())
+  parentUserId   String
+  studentId      String
+  schoolId       String
+  relationship   ParentRelation @default(GUARDIAN)
+  isPrimary      Boolean        @default(false)
+  receivesAlerts Boolean        @default(true)
+  pickupAuth     Boolean        @default(false)
+  status         String         @default("active")
+  createdAt      DateTime       @default(now())
+  revokedAt      DateTime?
+  parent         User           @relation(fields: [parentUserId], references: [id])
+  student        Student        @relation(fields: [studentId], references: [id])
+  @@unique([parentUserId, studentId, schoolId])
+  @@index([parentUserId])
+  @@index([studentId])
+}
+
+model AbsenceAuthorisation {
+  id              String   @id @default(uuid())
+  studentId       String
+  schoolId        String
+  fromDate        DateTime
+  toDate          DateTime
+  reason          String
+  isExcusePostHoc Boolean  @default(false)
+  authorisedBy    String
+  createdAt       DateTime @default(now())
+  student         Student  @relation(fields: [studentId], references: [id])
+  @@index([studentId])
+  @@index([schoolId, fromDate, toDate])
+}
+
+// ───────────────────────── Attendance ─────────────────────────
+model AttendanceSession {
+  id              String             @id @default(uuid())
+  schoolId        String
+  timetableSlotId String
+  classGroupId    String
+  subjectId       String
+  teacherUserId   String
+  date            DateTime           @db.Date
+  periodStartAt   DateTime
+  submittedAt     DateTime?
+  isLate          Boolean            @default(false)
+  idempotencyKey  String             @unique
+  createdAt       DateTime           @default(now())
+  slot            TimetableSlot      @relation(fields: [timetableSlotId], references: [id])
+  records         AttendanceRecord[]
+  @@unique([timetableSlotId, date])
+  @@index([schoolId, date])
+  @@index([teacherUserId, date])
+}
+
+model AttendanceRecord {
+  id          String            @id @default(uuid())
+  sessionId   String
+  studentId   String
+  status      AttendanceStatus  @default(PRESENT)
+  setBy       SetBy             @default(TEACHER)
+  setByUserId String
+  note        String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  session     AttendanceSession @relation(fields: [sessionId], references: [id])
+  student     Student           @relation(fields: [studentId], references: [id])
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+}
+
+// ───────────────────────── Welfare (admin-only via RLS) ─────────────────────────
+model WelfareCase {
+  id              String         @id @default(uuid())
+  studentId       String
+  schoolId        String
+  status          WelfareStatus  @default(OPEN)
+  currentStage    Int            @default(1)
+  assignedStaffId String?
+  openedAt        DateTime       @default(now())
+  lastActionAt    DateTime       @default(now())
+  resolvedAt      DateTime?
+  student         Student        @relation(fields: [studentId], references: [id])
+  events          WelfareEvent[]
+  @@index([schoolId, status])
+  @@index([studentId])
+}
+
+model WelfareEvent {
+  id            String           @id @default(uuid())
+  welfareCaseId String
+  type          WelfareEventType
+  description   String
+  actorUserId   String?
+  occurredAt    DateTime         @default(now())
+  metadata      Json?
+  case          WelfareCase      @relation(fields: [welfareCaseId], references: [id])
+  @@index([welfareCaseId])
+}
+
+model SuspensionLog {
+  id           String   @id @default(uuid())
+  studentId    String
+  schoolId     String
+  reason       String
+  durationDays Int
+  priorSteps   String
+  decidedBy    String
+  decidedAt    DateTime @default(now())
+  @@index([schoolId])
+  @@index([studentId])
+}
+
+// ───────────────────────── Notifications (see 05_Notification_Router.md) ─────────────────────────
+model ParentChannel {
+  id            String        @id @default(uuid())
+  parentUserId  String
+  type          ChannelType
+  address       String
+  optedIn       Boolean       @default(false)
+  verified      Boolean       @default(false)
+  lastSuccessAt DateTime?
+  status        ChannelStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  parent        User          @relation(fields: [parentUserId], references: [id])
+  @@index([parentUserId])
+}
+
+model NotificationLog {
+  id               String         @id @default(uuid())
+  parentUserId     String
+  studentId        String?
+  eventType        String
+  criticality      Criticality
+  channelAttempted ChannelType
+  channelSucceeded ChannelType?
+  costFcfa         Decimal        @default(0) @db.Decimal(8, 2)
+  idempotencyKey   String         @unique
+  deliveryStatus   DeliveryStatus @default(QUEUED)
+  providerMsgId    String?
+  serverSentAt     DateTime       @default(now())
+  deliveredAt      DateTime?
+  @@index([parentUserId])
+  @@index([eventType, serverSentAt])
+}
+
+// ───────────────────────── Audit + conflict ─────────────────────────
+model AuditLog {
+  id          String   @id @default(uuid())
+  schoolId    String?
+  actorUserId String
+  action      String
+  entityType  String
+  entityId    String
+  before      Json?
+  after       Json?
+  reason      String?
+  serverAt    DateTime @default(now())
+  @@index([schoolId, serverAt])
+  @@index([entityType, entityId])
+}
+
+model ConflictLog {
+  id             String    @id @default(uuid())
+  entityType     String
+  entityId       String
+  resolution     String
+  detail         String
+  affectedUserId String
+  resolvedAt     DateTime  @default(now())
+  acknowledgedAt DateTime?
+  @@index([affectedUserId])
+}
+
+// ───────────────────────── Auth (see 07_Auth_Flow.md) ─────────────────────────
+model AuthDevice {
+  id          String   @id @default(uuid())
+  userId      String
+  fingerprint String
+  label       String?
+  trusted     Boolean  @default(false)
+  shared      Boolean  @default(false)
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  @@unique([userId, fingerprint])
+  @@index([userId])
+}
+
+model AuthAttempt {
+  id      String   @id @default(uuid())
+  phone   String
+  ip      String?
+  kind    String
+  success Boolean
+  at      DateTime @default(now())
+  @@index([phone, at])
+  @@index([ip, at])
+}
