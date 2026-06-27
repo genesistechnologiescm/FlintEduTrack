@@ -77,6 +77,20 @@ export const dict = {
     queuedTitle: "Saved offline",
     queuedBody:
       "This attendance is saved on your device. It will sync automatically when you're back online — parents have not been notified yet.",
+    landingHook: "The first live education data from Cameroon's classrooms.",
+    landingSub:
+      "A 60-second attendance tool for teachers. Real-time visibility for parents. The first verifiable national education dataset — including the schools hardest to reach.",
+    landingDemo: "View the live demo",
+    landingW1Title: "Teachers",
+    landingW1Body: "Mark a class in 60 seconds — even with no internet. Hours reclaimed every week.",
+    landingW2Title: "Parents",
+    landingW2Body: "See your child's school day in real time. An instant alert the moment they're marked absent.",
+    landingW3Title: "The Nation",
+    landingW3Body: "The first live, verifiable education dataset — a true picture of attendance across every region.",
+    landingCrisisTitle: "Built for where it matters most",
+    landingCrisisBody:
+      "Including the crisis-hit North-West & South-West — classrooms no foreign platform can reach, measured for the first time.",
+    landingFooter: "Flint Technologies · EduTrack",
   },
   fr: {
     brand: "Flint Technologies",
@@ -149,6 +163,20 @@ export const dict = {
     queuedTitle: "Enregistré hors ligne",
     queuedBody:
       "Cet appel est enregistré sur votre appareil. Il se synchronisera automatiquement dès le retour de la connexion — les parents n'ont pas encore été notifiés.",
+    landingHook: "Les premières données scolaires en temps réel des classes camerounaises.",
+    landingSub:
+      "Un outil de présence en 60 secondes pour les enseignants. Une visibilité en temps réel pour les parents. Le premier jeu de données éducatives national vérifiable — y compris les écoles les plus difficiles d'accès.",
+    landingDemo: "Voir la démo en direct",
+    landingW1Title: "Enseignants",
+    landingW1Body: "Faites l'appel en 60 secondes — même sans internet. Des heures gagnées chaque semaine.",
+    landingW2Title: "Parents",
+    landingW2Body: "Suivez la journée scolaire de votre enfant en temps réel. Une alerte immédiate dès qu'il est marqué absent.",
+    landingW3Title: "La Nation",
+    landingW3Body: "Le premier jeu de données éducatives vérifiable en temps réel — une image fidèle de la présence dans chaque région.",
+    landingCrisisTitle: "Conçu pour là où ça compte le plus",
+    landingCrisisBody:
+      "Y compris le Nord-Ouest et le Sud-Ouest en crise — des classes qu'aucune plateforme étrangère ne peut atteindre, mesurées pour la première fois.",
+    landingFooter: "Flint Technologies · EduTrack",
   },
 } as const;
 
