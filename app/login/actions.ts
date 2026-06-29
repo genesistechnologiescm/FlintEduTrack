@@ -20,7 +20,14 @@ export async function signIn(input: { phone: string; pin: string }): Promise<{ e
     email: phoneToAuthEmail(parsed.data.phone),
     password: parsed.data.pin,
   });
-  if (error) return { error: `DEBUG ${error.status ?? "?"}: ${error.message}` };
+  if (error) {
+    const unreachable = error.status === 0 || /fetch failed|network/i.test(error.message);
+    return {
+      error: unreachable
+        ? "Couldn't reach the server. Check your connection and try again."
+        : "Wrong phone number or PIN.",
+    };
+  }
 
   const {
     data: { user },
