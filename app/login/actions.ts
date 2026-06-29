@@ -38,7 +38,14 @@ export async function signIn(input: { phone: string; pin: string }): Promise<{ e
     const membership = await prisma.schoolMembership.findFirst({
       where: { userId: user.id, status: "active" },
     });
-    if (membership?.role === "TEACHER") dest = "/attendance";
+    if (membership?.role === "TEACHER") {
+      dest = "/attendance";
+    } else if (!membership) {
+      const link = await prisma.parentLink.findFirst({
+        where: { parentUserId: user.id, status: "active" },
+      });
+      if (link) dest = "/parent";
+    }
   }
   redirect(dest);
 }
