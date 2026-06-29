@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { ParentDashboard, type ParentData } from "@/components/ParentDashboard";
+import { avgOf, groupBySubject } from "@/lib/grades";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,18 @@ export default async function ParentPage() {
     });
     const present = records.filter((r) => r.status !== "ABSENT").length;
     const total = records.length;
+
+    const gradeRows = await prisma.grade.findMany({
+      where: { studentId: link.studentId },
+      include: { subject: { select: { name: true } } },
+      orderBy: { sequence: "asc" },
+    });
+    const subjects = groupBySubject(
+      gradeRows.map((g) => ({ sequence: g.sequence, score: Number(g.score), subject: { name: g.subject.name } })),
+    );
+
     children.push({
+      studentId: link.studentId,
       name: `${link.student.firstName} ${link.student.lastName}`,
       school: enrollment?.school.name ?? "—",
       className: enrollment?.classGroup.name ?? "—",
@@ -42,6 +54,8 @@ export default async function ParentPage() {
         date: r.session.date.toISOString().slice(5, 10),
         absent: r.status === "ABSENT",
       })),
+      subjects,
+      overall: avgOf(subjects.map((s) => s.avg)),
     });
   }
 
@@ -53,10 +67,7 @@ export default async function ParentPage() {
 
   const data: ParentData = {
     children,
-    alerts: notifs.map((n) => ({
-      type: n.eventType,
-      date: n.serverSentAt.toISOString().slice(0, 10),
-    })),
+    alerts: notifs.map((n) => ({ type: n.eventType, date: n.serverSentAt.toISOString().slice(0, 10) })),
   };
 
   return <ParentDashboard data={data} />;

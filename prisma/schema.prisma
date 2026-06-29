@@ -205,6 +205,7 @@ model Subject {
   streamType StreamType?
   school     School          @relation(fields: [schoolId], references: [id])
   slots      TimetableSlot[]
+  grades     Grade[]
   @@unique([schoolId, name])
   @@index([schoolId])
 }
@@ -247,6 +248,7 @@ model Student {
   records     AttendanceRecord[]
   auths       AbsenceAuthorisation[]
   cases       WelfareCase[]
+  grades      Grade[]
 }
 
 model Enrollment {
@@ -465,4 +467,23 @@ model AuthAttempt {
   at      DateTime @default(now())
   @@index([phone, at])
   @@index([ip, at])
+}
+
+// Grades — Cameroon sequence model (2 sequences/term, score out of 20).
+model Grade {
+  id        String   @id @default(uuid())
+  studentId String
+  subjectId String
+  schoolId  String
+  termId    String
+  sequence  Int // 1 or 2 within the term
+  score     Decimal  @db.Decimal(4, 2) // out of 20
+  enteredBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  student   Student  @relation(fields: [studentId], references: [id])
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  @@unique([studentId, subjectId, termId, sequence])
+  @@index([schoolId, termId])
+  @@index([studentId])
 }

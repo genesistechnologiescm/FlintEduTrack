@@ -3,13 +3,17 @@
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { LogoutButton } from "./LogoutButton";
+import type { SubjectGrade } from "@/lib/grades";
 
 type Child = {
+  studentId: string;
   name: string;
   school: string;
   className: string;
   rate: number | null;
   recent: { date: string; absent: boolean }[];
+  subjects: SubjectGrade[];
+  overall: number | null;
 };
 
 export type ParentData = {
@@ -31,8 +35,8 @@ export function ParentDashboard({ data }: { data: ParentData }) {
       </header>
 
       <div className="space-y-4">
-        {data.children.map((c, i) => (
-          <section key={i} className="rounded-2xl border border-black/10 bg-white p-5">
+        {data.children.map((c) => (
+          <section key={c.studentId} className="rounded-2xl border border-black/10 bg-white p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="font-display text-lg font-bold text-flint-black">{c.name}</h2>
@@ -50,6 +54,7 @@ export function ParentDashboard({ data }: { data: ParentData }) {
               </div>
             </div>
 
+            {/* Recent attendance */}
             <div className="mt-4">
               <div className="mb-1.5 font-mono text-[11px] uppercase tracking-widest text-muted">
                 {t("parentRecent")}
@@ -68,6 +73,39 @@ export function ParentDashboard({ data }: { data: ParentData }) {
                 ))}
               </div>
             </div>
+
+            {/* Grades */}
+            {c.subjects.length > 0 && (
+              <div className="mt-4 border-t border-black/5 pt-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-mono text-[11px] uppercase tracking-widest text-muted">
+                    {t("gradesTitle")}
+                  </span>
+                  <span className="font-mono text-xs text-muted">
+                    {t("overallAvg")}:{" "}
+                    <span className="font-bold text-flint-black">
+                      {c.overall === null ? "—" : `${c.overall}/20`}
+                    </span>
+                  </span>
+                </div>
+                <ul className="space-y-1">
+                  {c.subjects.map((s) => (
+                    <li key={s.subject} className="flex items-center justify-between text-sm">
+                      <span className="text-flint-black">{s.subject}</span>
+                      <span className="font-mono tabular-nums text-muted">
+                        {s.avg === null ? "—" : `${s.avg}/20`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={`/report/${c.studentId}`}
+                  className="mt-3 inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+                >
+                  {t("viewReport")} →
+                </a>
+              </div>
+            )}
           </section>
         ))}
       </div>
