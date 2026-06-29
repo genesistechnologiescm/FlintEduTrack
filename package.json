@@ -13,6 +13,7 @@
     "db:studio": "prisma studio",
     "db:seed": "node --env-file=.env --env-file=.env.local prisma/seed.js",
     "db:seed:history": "node prisma/seed-history.js",
+    "db:seed:announcements": "node --env-file=.env --env-file=.env.local prisma/seed-announcements.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
