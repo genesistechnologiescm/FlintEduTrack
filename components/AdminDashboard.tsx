@@ -66,12 +66,18 @@ export function AdminDashboard({ data }: { data: AdminData }) {
         </div>
       </header>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap gap-x-5 gap-y-2">
         <a
           href="/admin/students"
           className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
         >
           {t("manageStudents")} →
+        </a>
+        <a
+          href="/admin/teachers"
+          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+        >
+          {t("manageTeachers")} →
         </a>
       </div>
 
