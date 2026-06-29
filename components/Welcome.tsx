@@ -40,12 +40,18 @@ export function Welcome() {
         <p className="mt-5 max-w-[600px] text-lg leading-relaxed text-muted">
           {t("landingSub")}
         </p>
-        <div className="mt-8">
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
           <a
             href="/login"
             className="inline-flex min-h-12 items-center rounded-full bg-flint-blue px-8 font-mono text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flint-blue"
           >
             {t("landingDemo")} →
+          </a>
+          <a
+            href="/national"
+            className="inline-flex min-h-11 items-center font-mono text-sm text-flint-blue hover:underline"
+          >
+            {t("natCta")} →
           </a>
         </div>
       </section>

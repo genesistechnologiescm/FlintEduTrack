@@ -91,6 +91,18 @@ export const dict = {
     landingCrisisBody:
       "Including the crisis-hit North-West & South-West — classrooms no foreign platform can reach, measured for the first time.",
     landingFooter: "Flint Technologies · EduTrack",
+    natTitle: "National Picture",
+    natSubtitle: "Live education data across Cameroon",
+    natSchools: "Schools",
+    natStudents: "Students",
+    natAttendance: "National attendance",
+    natCrisisTitle: "The crisis-zone gap",
+    natCrisisZones: "Crisis zones · NW + SW",
+    natRest: "Rest of Cameroon",
+    natGap: "points lower",
+    natByRegion: "Attendance by region",
+    natFoot: "The first live, verifiable attendance data from Cameroon — including the conflict-affected North-West & South-West.",
+    natCta: "See the national picture",
   },
   fr: {
     brand: "Flint Technologies",
@@ -177,6 +189,18 @@ export const dict = {
     landingCrisisBody:
       "Y compris le Nord-Ouest et le Sud-Ouest en crise — des classes qu'aucune plateforme étrangère ne peut atteindre, mesurées pour la première fois.",
     landingFooter: "Flint Technologies · EduTrack",
+    natTitle: "Vue nationale",
+    natSubtitle: "Données scolaires en temps réel à travers le Cameroun",
+    natSchools: "Écoles",
+    natStudents: "Élèves",
+    natAttendance: "Présence nationale",
+    natCrisisTitle: "L'écart des zones de crise",
+    natCrisisZones: "Zones de crise · NO + SO",
+    natRest: "Reste du Cameroun",
+    natGap: "points de moins",
+    natByRegion: "Présence par région",
+    natFoot: "Les premières données de présence vérifiables en temps réel du Cameroun — y compris le Nord-Ouest et le Sud-Ouest en conflit.",
+    natCta: "Voir la vue nationale",
   },
 } as const;
 
