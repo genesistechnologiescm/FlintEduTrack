@@ -66,6 +66,15 @@ export function AdminDashboard({ data }: { data: AdminData }) {
         </div>
       </header>
 
+      <div className="mb-4">
+        <a
+          href="/admin/students"
+          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+        >
+          {t("manageStudents")} →
+        </a>
+      </div>
+
       {/* Three numbers */}
       <div className="grid grid-cols-3 gap-3">
         <StatCard
