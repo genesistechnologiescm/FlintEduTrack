@@ -117,6 +117,10 @@ export const dict = {
     seq2: "Seq 2",
     avgCol: "Avg",
     print: "Print",
+    pushEnable: "Enable alerts",
+    pushEnabling: "Enabling…",
+    pushOn: "Alerts on",
+    pushDenied: "Alerts blocked",
   },
   fr: {
     brand: "Flint Technologies",
@@ -229,6 +233,10 @@ export const dict = {
     seq2: "Séq 2",
     avgCol: "Moy",
     print: "Imprimer",
+    pushEnable: "Activer les alertes",
+    pushEnabling: "Activation…",
+    pushOn: "Alertes activées",
+    pushDenied: "Alertes bloquées",
   },
 } as const;
 

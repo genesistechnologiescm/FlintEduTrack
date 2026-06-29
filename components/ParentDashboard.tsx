@@ -3,6 +3,7 @@
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { LogoutButton } from "./LogoutButton";
+import { EnablePush } from "./EnablePush";
 import type { SubjectGrade } from "@/lib/grades";
 
 type Child = {
@@ -33,6 +34,10 @@ export function ParentDashboard({ data }: { data: ParentData }) {
           <LogoutButton />
         </div>
       </header>
+
+      <div className="mb-5">
+        <EnablePush />
+      </div>
 
       <div className="space-y-4">
         {data.children.map((c) => (

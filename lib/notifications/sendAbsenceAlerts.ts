@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { sendWebPush } from "./sendWebPush";
 
 // ── Mock sender ──────────────────────────────────────────────
 // Logs instead of sending. Swap for Africa's Talking at pilot (Notification
@@ -97,6 +98,18 @@ export async function sendAbsenceAlerts(params: {
           },
         });
         queued++;
+      }
+
+      // Free active push to the parent's installed PWA, if they've subscribed.
+      const push = await prisma.parentChannel.findFirst({
+        where: { parentUserId: link.parentUserId, type: "PUSH", optedIn: true },
+      });
+      if (push) {
+        try {
+          await sendWebPush(JSON.parse(push.address), { title: "EduTrack", body, url: "/parent" });
+        } catch {
+          // best-effort — never block the attendance commit
+        }
       }
     }
   }

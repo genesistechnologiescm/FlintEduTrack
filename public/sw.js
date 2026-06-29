@@ -21,6 +21,30 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Push notifications — show the alert even when the app is closed.
+self.addEventListener("push", (event) => {
+  let payload = { title: "EduTrack", body: "", url: "/parent" };
+  try {
+    if (event.data) payload = { ...payload, ...event.data.json() };
+  } catch {
+    if (event.data) payload.body = event.data.text();
+  }
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { url: payload.url },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/parent";
+  event.waitUntil(self.clients.openWindow(url));
+});
+
 // Network-first, fall back to cache. Keeps the app usable on flaky 3G.
 self.addEventListener("fetch", (event) => {
   const { request } = event;
