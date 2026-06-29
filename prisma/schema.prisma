@@ -119,6 +119,7 @@ model User {
   parentThreads MessageThread[]               @relation("ParentThreads")
   staffThreads  MessageThread[]               @relation("StaffThreads")
   sentMessages  Message[]                     @relation("SentMessages")
+  authoredResources LessonResource[]          @relation("AuthoredResources")
 }
 
 // ───────────────────────── Tenant + calendar ─────────────────────────
@@ -142,6 +143,7 @@ model School {
   enrollments  Enrollment[]
   announcements Announcement[]
   threads      MessageThread[]
+  resources    LessonResource[]
   @@index([region])
 }
 
@@ -201,6 +203,7 @@ model ClassGroup {
   slots          TimetableSlot[]
   enrollments    Enrollment[]
   announcements  Announcement[]
+  resources      LessonResource[]
   @@index([schoolId])
   @@index([academicYearId])
 }
@@ -214,6 +217,7 @@ model Subject {
   school     School          @relation(fields: [schoolId], references: [id])
   slots      TimetableSlot[]
   grades     Grade[]
+  resources  LessonResource[]
   @@unique([schoolId, name])
   @@index([schoolId])
 }
@@ -567,4 +571,33 @@ model Message {
   thread       MessageThread @relation(fields: [threadId], references: [id])
   sender       User          @relation("SentMessages", fields: [senderUserId], references: [id])
   @@index([threadId, createdAt])
+}
+
+// ───────────────────────── E-learning — lesson resources (continuity) ─────────────────────────
+// A lesson a teacher attaches to a subject so students/parents can learn even
+// when they can't attend (crisis continuity). LINK = external URL, NOTE = inline
+// text — both storage-free. Optionally scoped to one class; null = whole subject.
+enum ResourceType {
+  LINK
+  NOTE
+}
+
+model LessonResource {
+  id           String       @id @default(uuid())
+  schoolId     String
+  subjectId    String
+  classGroupId String?
+  type         ResourceType @default(LINK)
+  title        String
+  url          String?
+  body         String?
+  createdBy    String
+  createdAt    DateTime     @default(now())
+  deletedAt    DateTime?
+  school       School       @relation(fields: [schoolId], references: [id])
+  subject      Subject      @relation(fields: [subjectId], references: [id])
+  classGroup   ClassGroup?  @relation(fields: [classGroupId], references: [id])
+  author       User         @relation("AuthoredResources", fields: [createdBy], references: [id])
+  @@index([schoolId, subjectId])
+  @@index([classGroupId])
 }

@@ -45,6 +45,13 @@ export function ParentDashboard({ data }: { data: ParentData }) {
           <span className="font-medium text-flint-black">{t("messagesNav")}</span>
           <span className="font-mono text-xs text-flint-blue">→</span>
         </a>
+        <a
+          href="/parent/resources"
+          className="flex min-h-11 items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 transition-colors hover:bg-black/[0.02]"
+        >
+          <span className="font-medium text-flint-black">{t("resourcesNav")}</span>
+          <span className="font-mono text-xs text-flint-blue">→</span>
+        </a>
       </div>
 
       <div className="space-y-4">
