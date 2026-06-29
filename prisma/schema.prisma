@@ -268,6 +268,7 @@ model Student {
   grades      Grade[]
   threads     MessageThread[]
   payments    Payment[]
+  account     StudentAccount?
 }
 
 model Enrollment {
@@ -647,4 +648,18 @@ model Payment {
   payer        User?         @relation("PaymentsMade", fields: [paidByUserId], references: [id])
   @@index([schoolId, createdAt])
   @@index([studentId])
+}
+
+// ───────────────────────── Student self-accounts ─────────────────────────
+// Lets a student log in (loginCode + PIN, distinct `s…@edutrack.local` namespace)
+// to see their own attendance, grades and lessons. id = auth.users.id.
+model StudentAccount {
+  id        String   @id
+  studentId String   @unique
+  schoolId  String
+  loginCode String   @unique
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  student   Student  @relation(fields: [studentId], references: [id])
+  @@index([schoolId])
 }

@@ -19,7 +19,7 @@ export default async function StudentsPage() {
   if (!membership) redirect("/login");
   const schoolId = membership.schoolId;
 
-  const [classes, enrollments] = await Promise.all([
+  const [classes, enrollments, accounts] = await Promise.all([
     prisma.classGroup.findMany({ where: { schoolId }, orderBy: { name: "asc" } }),
     prisma.enrollment.findMany({
       where: { schoolId, status: "ACTIVE" },
@@ -27,14 +27,19 @@ export default async function StudentsPage() {
       orderBy: { enrolledAt: "desc" },
       take: 200,
     }),
+    prisma.studentAccount.findMany({ where: { schoolId }, select: { studentId: true, loginCode: true } }),
   ]);
+
+  const codeByStudent = new Map(accounts.map((a) => [a.studentId, a.loginCode]));
 
   const data: StudentsData = {
     schoolName: membership.school.name,
     classes: classes.map((c) => ({ id: c.id, name: c.name })),
     students: enrollments.map((e) => ({
+      id: e.studentId,
       name: `${e.student.lastName} ${e.student.firstName}`,
       className: e.classGroup.name,
+      loginCode: codeByStudent.get(e.studentId) ?? null,
     })),
   };
 

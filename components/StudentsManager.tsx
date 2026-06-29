@@ -4,13 +4,50 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
-import { addStudent, bulkAddStudents } from "@/app/admin/students/actions";
+import { addStudent, bulkAddStudents, enableStudentLogin } from "@/app/admin/students/actions";
 
 export type StudentsData = {
   schoolName: string;
   classes: { id: string; name: string }[];
-  students: { name: string; className: string }[];
+  students: { id: string; name: string; className: string; loginCode: string | null }[];
 };
+
+function LoginCell({ id, loginCode }: { id: string; loginCode: string | null }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [issued, setIssued] = useState<{ code: string; pin?: string } | null>(null);
+
+  if (loginCode) {
+    return <span className="font-mono text-[11px] text-success">{t("studentCodeWord")} {loginCode}</span>;
+  }
+  if (issued) {
+    return (
+      <span className="font-mono text-[11px] text-success">
+        {t("studentCodeWord")} {issued.code}
+        {issued.pin ? ` · ${t("studentPinWord")} ${issued.pin}` : ""}
+      </span>
+    );
+  }
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        const res = await enableStudentLogin(id);
+        setBusy(false);
+        if (res.ok && res.code) {
+          setIssued({ code: res.code, pin: res.pin });
+          router.refresh();
+        }
+      }}
+      className="font-mono text-[11px] uppercase tracking-widest text-flint-blue hover:underline disabled:opacity-60"
+    >
+      {busy ? t("adding") : t("enableLogin")}
+    </button>
+  );
+}
 
 export function StudentsManager({ data }: { data: StudentsData }) {
   const { t } = useI18n();
@@ -133,10 +170,13 @@ export function StudentsManager({ data }: { data: StudentsData }) {
         {t("enrolled")} · {data.students.length}
       </h2>
       <ul className="space-y-1">
-        {data.students.map((s, i) => (
-          <li key={i} className="flex items-center justify-between rounded-lg border border-black/10 bg-white px-4 py-2 text-sm">
-            <span className="text-flint-black">{s.name}</span>
-            <span className="font-mono text-xs text-muted">{s.className}</span>
+        {data.students.map((s) => (
+          <li key={s.id} className="flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white px-4 py-2 text-sm">
+            <span className="min-w-0 truncate text-flint-black">{s.name}</span>
+            <span className="flex shrink-0 items-center gap-3">
+              <LoginCell id={s.id} loginCode={s.loginCode} />
+              <span className="font-mono text-xs text-muted">{s.className}</span>
+            </span>
           </li>
         ))}
       </ul>

@@ -2,10 +2,12 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { randomUUID } from "crypto";
+import { randomUUID, randomInt } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
+import { studentCodeToAuthEmail } from "@/lib/auth";
+import { provisionAuthUser, authProvisioningAvailable } from "@/lib/provisionAuth";
 
 async function adminContext() {
   const supabase = await createClient();
@@ -110,4 +112,52 @@ export async function bulkAddStudents(csv: string): Promise<{ added: number; fai
   });
   revalidatePath("/admin/students");
   return { added, failed };
+}
+
+// Issue a student a login (code + PIN) so they can see their own attendance,
+// grades and lessons. Provisions a GoTrue account in the `s…` email namespace.
+export async function enableStudentLogin(studentId: string): Promise<{ ok: boolean; code?: string; pin?: string; existing?: boolean; error?: string }> {
+  const { userId, schoolId } = await adminContext();
+
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { studentId, schoolId, status: "ACTIVE" },
+    include: { student: true },
+  });
+  if (!enrollment) return { ok: false, error: "Student not in your school" };
+
+  const existing = await prisma.studentAccount.findUnique({ where: { studentId } });
+  if (existing) return { ok: true, code: existing.loginCode, existing: true };
+
+  if (!authProvisioningAvailable()) return { ok: false, error: "Student logins aren't configured on the server" };
+
+  // Unique, typeable code: 3 letters of surname + 4 digits.
+  const stem = (enrollment.student.lastName.replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "STU").padEnd(3, "X");
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    const candidate = `${stem}${randomInt(1000, 9999)}`;
+    if (!(await prisma.studentAccount.findUnique({ where: { loginCode: candidate } }))) {
+      code = candidate;
+      break;
+    }
+  }
+  if (!code) return { ok: false, error: "Could not allocate a code, try again" };
+
+  const pin = String(randomInt(10000, 99999));
+  const authId = await provisionAuthUser(studentCodeToAuthEmail(code), pin, {
+    displayName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
+    role: "student",
+  });
+  if (!authId) return { ok: false, error: "Could not create the login, try again" };
+
+  await prisma.studentAccount.create({ data: { id: authId, studentId, schoolId, loginCode: code } });
+  await writeAudit({
+    schoolId,
+    actorUserId: userId,
+    action: "student.login_enabled",
+    entityType: "StudentAccount",
+    entityId: authId,
+    after: { studentId, code },
+  });
+  revalidatePath("/admin/students");
+  return { ok: true, code, pin };
 }
