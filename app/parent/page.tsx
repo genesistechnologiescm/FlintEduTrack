@@ -65,9 +65,21 @@ export default async function ParentPage() {
     take: 10,
   });
 
+  const receipts = await prisma.announcementReceipt.findMany({
+    where: { parentUserId: user.id },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    include: { announcement: { select: { title: true, body: true, createdAt: true } } },
+  });
+
   const data: ParentData = {
     children,
     alerts: notifs.map((n) => ({ type: n.eventType, date: n.serverSentAt.toISOString().slice(0, 10) })),
+    announcements: receipts.map((r) => ({
+      title: r.announcement.title,
+      body: r.announcement.body,
+      date: r.announcement.createdAt.toISOString().slice(0, 10),
+    })),
   };
 
   return <ParentDashboard data={data} />;

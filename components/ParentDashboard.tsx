@@ -20,6 +20,7 @@ type Child = {
 export type ParentData = {
   children: Child[];
   alerts: { type: string; date: string }[];
+  announcements: { title: string; body: string; date: string }[];
 };
 
 export function ParentDashboard({ data }: { data: ParentData }) {
@@ -114,6 +115,26 @@ export function ParentDashboard({ data }: { data: ParentData }) {
           </section>
         ))}
       </div>
+
+      {/* Announcements from the school */}
+      {data.announcements.length > 0 && (
+        <>
+          <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">
+            {t("parentAnnouncements")}
+          </h2>
+          <ul className="space-y-2">
+            {data.announcements.map((a, i) => (
+              <li key={i} className="rounded-xl border border-flint-blue/20 bg-flint-blue/5 px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-display font-bold text-flint-black">{a.title}</span>
+                  <span className="shrink-0 font-mono text-xs text-muted">{a.date}</span>
+                </div>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-flint-black">{a.body}</p>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       {/* Alerts feed */}
       <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">

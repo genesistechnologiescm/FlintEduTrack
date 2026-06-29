@@ -114,6 +114,8 @@ model User {
   channels      ParentChannel[]
   teaching      TimetableSlot[]    @relation("SlotTeacher")
   devices       AuthDevice[]
+  authoredAnnouncements Announcement[]        @relation("AuthoredAnnouncements")
+  announcementReceipts  AnnouncementReceipt[] @relation("AnnouncementReceipts")
 }
 
 // ───────────────────────── Tenant + calendar ─────────────────────────
@@ -135,6 +137,7 @@ model School {
   subjects     Subject[]
   slots        TimetableSlot[]
   enrollments  Enrollment[]
+  announcements Announcement[]
   @@index([region])
 }
 
@@ -193,6 +196,7 @@ model ClassGroup {
   academicYear   AcademicYear    @relation(fields: [academicYearId], references: [id])
   slots          TimetableSlot[]
   enrollments    Enrollment[]
+  announcements  Announcement[]
   @@index([schoolId])
   @@index([academicYearId])
 }
@@ -486,4 +490,42 @@ model Grade {
   @@unique([studentId, subjectId, termId, sequence])
   @@index([schoolId, termId])
   @@index([studentId])
+}
+
+// ───────────────────────── Messaging — school announcements ─────────────────────────
+enum AnnouncementAudience {
+  SCHOOL
+  CLASS
+}
+
+// A broadcast from school staff to parents (whole school or one class).
+// Delivery + read state is per-parent in AnnouncementReceipt; push reuses the
+// Notification Router's free web-push channel.
+model Announcement {
+  id           String                @id @default(uuid())
+  schoolId     String
+  authorUserId String
+  audience     AnnouncementAudience  @default(SCHOOL)
+  classGroupId String?
+  title        String
+  body         String
+  createdAt    DateTime              @default(now())
+  deletedAt    DateTime?
+  school       School                @relation(fields: [schoolId], references: [id])
+  author       User                  @relation("AuthoredAnnouncements", fields: [authorUserId], references: [id])
+  classGroup   ClassGroup?           @relation(fields: [classGroupId], references: [id])
+  receipts     AnnouncementReceipt[]
+  @@index([schoolId, createdAt])
+}
+
+model AnnouncementReceipt {
+  id             String       @id @default(uuid())
+  announcementId String
+  parentUserId   String
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+  announcement   Announcement @relation(fields: [announcementId], references: [id])
+  parent         User         @relation("AnnouncementReceipts", fields: [parentUserId], references: [id])
+  @@unique([announcementId, parentUserId])
+  @@index([parentUserId, createdAt])
 }
