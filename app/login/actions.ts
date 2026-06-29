@@ -20,7 +20,7 @@ export async function signIn(input: { phone: string; pin: string }): Promise<{ e
     email: phoneToAuthEmail(parsed.data.phone),
     password: parsed.data.pin,
   });
-  if (error) return { error: "Wrong phone number or PIN." };
+  if (error) return { error: `DEBUG ${error.status ?? "?"}: ${error.message}` };
 
   const {
     data: { user },
