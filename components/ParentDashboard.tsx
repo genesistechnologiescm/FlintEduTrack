@@ -36,8 +36,15 @@ export function ParentDashboard({ data }: { data: ParentData }) {
         </div>
       </header>
 
-      <div className="mb-5">
+      <div className="mb-5 space-y-3">
         <EnablePush />
+        <a
+          href="/parent/messages"
+          className="flex min-h-11 items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 transition-colors hover:bg-black/[0.02]"
+        >
+          <span className="font-medium text-flint-black">{t("messagesNav")}</span>
+          <span className="font-mono text-xs text-flint-blue">→</span>
+        </a>
       </div>
 
       <div className="space-y-4">

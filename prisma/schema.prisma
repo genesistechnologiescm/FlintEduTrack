@@ -116,6 +116,9 @@ model User {
   devices       AuthDevice[]
   authoredAnnouncements Announcement[]        @relation("AuthoredAnnouncements")
   announcementReceipts  AnnouncementReceipt[] @relation("AnnouncementReceipts")
+  parentThreads MessageThread[]               @relation("ParentThreads")
+  staffThreads  MessageThread[]               @relation("StaffThreads")
+  sentMessages  Message[]                     @relation("SentMessages")
 }
 
 // ───────────────────────── Tenant + calendar ─────────────────────────
@@ -138,6 +141,7 @@ model School {
   slots        TimetableSlot[]
   enrollments  Enrollment[]
   announcements Announcement[]
+  threads      MessageThread[]
   @@index([region])
 }
 
@@ -253,6 +257,7 @@ model Student {
   auths       AbsenceAuthorisation[]
   cases       WelfareCase[]
   grades      Grade[]
+  threads     MessageThread[]
 }
 
 model Enrollment {
@@ -528,4 +533,38 @@ model AnnouncementReceipt {
   parent         User         @relation("AnnouncementReceipts", fields: [parentUserId], references: [id])
   @@unique([announcementId, parentUserId])
   @@index([parentUserId, createdAt])
+}
+
+// ───────────────────────── Messaging — parent ↔ staff threads ─────────────────────────
+// A conversation between one parent and the school (any staff can pick it up;
+// staffUserId records the latest staff responder). Optionally about one child.
+model MessageThread {
+  id            String    @id @default(uuid())
+  schoolId      String
+  parentUserId  String
+  staffUserId   String?
+  studentId     String?
+  subject       String
+  lastMessageAt DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  school        School    @relation(fields: [schoolId], references: [id])
+  parent        User      @relation("ParentThreads", fields: [parentUserId], references: [id])
+  staff         User?     @relation("StaffThreads", fields: [staffUserId], references: [id])
+  student       Student?  @relation(fields: [studentId], references: [id])
+  messages      Message[]
+  @@index([schoolId, lastMessageAt])
+  @@index([parentUserId, lastMessageAt])
+}
+
+model Message {
+  id           String        @id @default(uuid())
+  threadId     String
+  senderUserId String
+  fromParent   Boolean // true = parent wrote it, false = staff
+  body         String
+  createdAt    DateTime      @default(now())
+  readAt       DateTime?
+  thread       MessageThread @relation(fields: [threadId], references: [id])
+  sender       User          @relation("SentMessages", fields: [senderUserId], references: [id])
+  @@index([threadId, createdAt])
 }

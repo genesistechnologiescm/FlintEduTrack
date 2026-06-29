@@ -97,6 +97,12 @@ export function AdminDashboard({ data }: { data: AdminData }) {
         >
           {t("announcementsNav")} →
         </a>
+        <a
+          href="/admin/messages"
+          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+        >
+          {t("messagesNav")} →
+        </a>
       </div>
 
       {/* Three numbers */}

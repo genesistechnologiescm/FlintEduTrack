@@ -192,6 +192,12 @@ export const dict = {
     sentTitle: "Sent announcements",
     noSentYet: "No announcements yet",
     parentAnnouncements: "Announcements",
+    messagesNav: "Messages",
+    newMessage: "New message",
+    fldChild: "About which child",
+    sendBtn: "Send",
+    replyPlaceholder: "Write a reply…",
+    noThreads: "No messages yet",
   },
   fr: {
     brand: "Flint Technologies",
@@ -379,6 +385,12 @@ export const dict = {
     sentTitle: "Annonces envoyées",
     noSentYet: "Aucune annonce",
     parentAnnouncements: "Annonces",
+    messagesNav: "Messages",
+    newMessage: "Nouveau message",
+    fldChild: "Concernant quel enfant",
+    sendBtn: "Envoyer",
+    replyPlaceholder: "Écrire une réponse…",
+    noThreads: "Aucun message",
   },
 } as const;
 
