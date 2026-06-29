@@ -16,6 +16,7 @@
     "db:seed:announcements": "node --env-file=.env --env-file=.env.local prisma/seed-announcements.js",
     "db:seed:messages": "node --env-file=.env --env-file=.env.local prisma/seed-messages.js",
     "db:seed:resources": "node --env-file=.env --env-file=.env.local prisma/seed-resources.js",
+    "db:seed:fees": "node --env-file=.env --env-file=.env.local prisma/seed-fees.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

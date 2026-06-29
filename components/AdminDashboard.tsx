@@ -109,6 +109,12 @@ export function AdminDashboard({ data }: { data: AdminData }) {
         >
           {t("resourcesNav")} →
         </a>
+        <a
+          href="/admin/fees"
+          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+        >
+          {t("feesNav")} →
+        </a>
       </div>
 
       {/* Three numbers */}

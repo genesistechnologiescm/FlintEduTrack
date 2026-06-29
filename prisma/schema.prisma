@@ -120,6 +120,7 @@ model User {
   staffThreads  MessageThread[]               @relation("StaffThreads")
   sentMessages  Message[]                     @relation("SentMessages")
   authoredResources LessonResource[]          @relation("AuthoredResources")
+  paymentsMade  Payment[]                     @relation("PaymentsMade")
 }
 
 // ───────────────────────── Tenant + calendar ─────────────────────────
@@ -144,6 +145,8 @@ model School {
   announcements Announcement[]
   threads      MessageThread[]
   resources    LessonResource[]
+  feeItems     FeeItem[]
+  payments     Payment[]
   @@index([region])
 }
 
@@ -184,6 +187,7 @@ model Term {
   endDate        DateTime
   academicYear   AcademicYear    @relation(fields: [academicYearId], references: [id])
   slots          TimetableSlot[]
+  feeItems       FeeItem[]
   @@index([academicYearId])
 }
 
@@ -204,6 +208,7 @@ model ClassGroup {
   enrollments    Enrollment[]
   announcements  Announcement[]
   resources      LessonResource[]
+  feeItems       FeeItem[]
   @@index([schoolId])
   @@index([academicYearId])
 }
@@ -262,6 +267,7 @@ model Student {
   cases       WelfareCase[]
   grades      Grade[]
   threads     MessageThread[]
+  payments    Payment[]
 }
 
 model Enrollment {
@@ -600,4 +606,45 @@ model LessonResource {
   author       User         @relation("AuthoredResources", fields: [createdBy], references: [id])
   @@index([schoolId, subjectId])
   @@index([classGroupId])
+}
+
+// ───────────────────────── Fees & payments (mocked MoMo for the demo) ─────────────────────────
+// Amounts in whole FCFA (no subunits). Payments record a mocked Mobile Money
+// transaction — no real funds move; real PSP integration is a post-win swap.
+enum PaymentMethod {
+  MOMO
+  CASH
+}
+
+model FeeItem {
+  id           String      @id @default(uuid())
+  schoolId     String
+  termId       String
+  classGroupId String?
+  label        String
+  amount       Int // FCFA
+  createdBy    String
+  createdAt    DateTime    @default(now())
+  deletedAt    DateTime?
+  school       School      @relation(fields: [schoolId], references: [id])
+  term         Term        @relation(fields: [termId], references: [id])
+  classGroup   ClassGroup? @relation(fields: [classGroupId], references: [id])
+  @@index([schoolId, termId])
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  schoolId     String
+  studentId    String
+  amount       Int // FCFA
+  method       PaymentMethod @default(MOMO)
+  reference    String // mock MoMo transaction id
+  paidByUserId String?
+  note         String?
+  createdAt    DateTime      @default(now())
+  school       School        @relation(fields: [schoolId], references: [id])
+  student      Student       @relation(fields: [studentId], references: [id])
+  payer        User?         @relation("PaymentsMade", fields: [paidByUserId], references: [id])
+  @@index([schoolId, createdAt])
+  @@index([studentId])
 }
