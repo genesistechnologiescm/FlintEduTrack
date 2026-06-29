@@ -117,6 +117,12 @@ export function AttendanceMarker({
         <p className="text-muted">
           {subjectName} · {periodLabel} · {t("todayLabel")}
         </p>
+        <a
+          href="/grades"
+          className="mt-2 inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+        >
+          {t("gradesNav")} →
+        </a>
         <p className="mt-3 rounded-lg bg-black/5 px-3 py-2 text-sm text-muted">
           {t("tapHint")}
         </p>

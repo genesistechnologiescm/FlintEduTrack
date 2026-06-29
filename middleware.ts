@@ -21,5 +21,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/attendance/:path*", "/parent/:path*", "/report/:path*"],
+  matcher: ["/admin/:path*", "/attendance/:path*", "/grades/:path*", "/parent/:path*", "/report/:path*"],
 };
