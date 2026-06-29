@@ -18,6 +18,7 @@
     "db:seed:resources": "node --env-file=.env --env-file=.env.local prisma/seed-resources.js",
     "db:seed:fees": "node --env-file=.env --env-file=.env.local prisma/seed-fees.js",
     "db:seed:student": "node --env-file=.env --env-file=.env.local prisma/seed-student-login.js",
+    "db:seed:staff": "node --env-file=.env --env-file=.env.local prisma/seed-staff.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

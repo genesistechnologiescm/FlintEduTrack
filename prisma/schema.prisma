@@ -155,6 +155,7 @@ model SchoolMembership {
   userId    String
   schoolId  String
   role      SchoolRole
+  title     String? // job title for display (Principal, Bursar, …); role is the permission level
   status    String     @default("active")
   createdAt DateTime   @default(now())
   user      User       @relation(fields: [userId], references: [id])

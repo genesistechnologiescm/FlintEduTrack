@@ -115,6 +115,12 @@ export function AdminDashboard({ data }: { data: AdminData }) {
         >
           {t("feesNav")} →
         </a>
+        <a
+          href="/admin/staff"
+          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+        >
+          {t("staffNav")} →
+        </a>
       </div>
 
       {/* Three numbers */}
