@@ -37,6 +37,23 @@ export function StudentDashboard({ data }: { data: StudentData }) {
         </div>
       </header>
 
+      {/* Chariot — AI study tutor */}
+      <a
+        href="/student/tutor"
+        className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-flint-blue/20 bg-flint-blue/5 px-4 py-4 transition-colors hover:bg-flint-blue/10"
+      >
+        <span className="flex items-center gap-3">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-flint-blue/10">
+            <span className="inline-block size-2.5 rounded-full bg-flint-cyan" aria-hidden />
+          </span>
+          <span>
+            <span className="block font-display font-bold text-flint-black">{t("chariotNav")}</span>
+            <span className="block font-mono text-xs text-muted">{t("chariotTagline")}</span>
+          </span>
+        </span>
+        <span className="font-mono text-xs text-flint-blue">→</span>
+      </a>
+
       {/* Attendance */}
       <section className="rounded-2xl border border-black/10 bg-white p-5">
         <div className="flex items-center justify-between">

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { askChariot } from "@/lib/ai/tutor";
 
 // Resolve the logged-in student → their Student row + school.
 async function studentContext() {
@@ -49,4 +50,21 @@ export async function submitQuiz(raw: z.infer<typeof SubmitSchema>): Promise<{ o
   });
   revalidatePath("/student");
   return { ok: true, score, correct, total };
+}
+
+// Chariot — student AI study tutor. Gated to logged-in students; per-request bounds
+// (≤16 turns, ≤1500 chars each) cap the cost of any one call. Chat is ephemeral —
+// nothing is stored. The key lives server-side in lib/ai/tutor.
+const ChariotSchema = z.object({
+  history: z
+    .array(z.object({ role: z.enum(["user", "assistant"]), text: z.string().trim().min(1).max(1500) }))
+    .min(1)
+    .max(16),
+});
+
+export async function sendToChariot(raw: z.infer<typeof ChariotSchema>): Promise<{ ok: boolean; text?: string; reason?: string }> {
+  const input = ChariotSchema.parse(raw);
+  await studentContext(); // only an authenticated student may use the tutor
+  const res = await askChariot(input.history);
+  return res.ok ? { ok: true, text: res.text } : { ok: false, reason: res.reason };
 }
