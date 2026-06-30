@@ -106,6 +106,7 @@ model User {
   displayName   String
   preferredLang Lang               @default(EN)
   isFlintAdmin  Boolean            @default(false)
+  isGovernment  Boolean            @default(false) // ministry account — read-only aggregate layer
   status        String             @default("active")
   createdAt     DateTime           @default(now())
   deletedAt     DateTime?

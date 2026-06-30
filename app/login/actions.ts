@@ -40,16 +40,26 @@ export async function signIn(input: { phone: string; pin: string }): Promise<{ e
 
   let dest = "/admin";
   if (user) {
-    const membership = await prisma.schoolMembership.findFirst({
-      where: { userId: user.id, status: "active" },
+    const me = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { isGovernment: true, isFlintAdmin: true },
     });
-    if (membership?.role === "TEACHER") {
-      dest = "/attendance";
-    } else if (!membership) {
-      const link = await prisma.parentLink.findFirst({
-        where: { parentUserId: user.id, status: "active" },
+    if (me?.isGovernment) {
+      dest = "/government";
+    } else if (me?.isFlintAdmin) {
+      dest = "/national";
+    } else {
+      const membership = await prisma.schoolMembership.findFirst({
+        where: { userId: user.id, status: "active" },
       });
-      if (link) dest = "/parent";
+      if (membership?.role === "TEACHER") {
+        dest = "/attendance";
+      } else if (!membership) {
+        const link = await prisma.parentLink.findFirst({
+          where: { parentUserId: user.id, status: "active" },
+        });
+        if (link) dest = "/parent";
+      }
     }
   }
   redirect(dest);
