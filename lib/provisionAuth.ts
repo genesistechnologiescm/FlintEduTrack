@@ -2,6 +2,7 @@
 // using the service-role key. Never import this into client code — the key must
 // stay server-side. Mirrors the seed scripts' provisioning, but reads the id
 // straight from the create response (no list scan).
+import "server-only";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
-import { ensureCurrentYear } from "@/app/admin/setup/actions";
+import { ensureCurrentYear } from "@/lib/academicYear";
 
 async function adminContext() {
   const supabase = await createClient();
