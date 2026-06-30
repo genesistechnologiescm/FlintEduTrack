@@ -60,6 +60,28 @@ export default async function StudentPage() {
     bySubject.set(r.subject.name, g);
   }
 
+  // Quizzes for the student's class (or whole-subject) + their own scores.
+  const [quizzesRaw, attempts, subjectsRaw] = await Promise.all([
+    enrollment
+      ? prisma.quiz.findMany({
+          where: { schoolId: enrollment.schoolId, deletedAt: null, OR: [{ classGroupId: enrollment.classGroupId }, { classGroupId: null }] },
+          orderBy: { createdAt: "desc" },
+          include: { _count: { select: { questions: true } } },
+        })
+      : Promise.resolve([]),
+    prisma.quizAttempt.findMany({ where: { studentId }, select: { quizId: true, score: true } }),
+    enrollment ? prisma.subject.findMany({ where: { schoolId: enrollment.schoolId }, select: { id: true, name: true } }) : Promise.resolve([]),
+  ]);
+  const scoreByQuiz = new Map(attempts.map((a) => [a.quizId, a.score]));
+  const subjName = new Map(subjectsRaw.map((s) => [s.id, s.name]));
+  const quizzes = quizzesRaw.map((q) => ({
+    id: q.id,
+    title: q.title,
+    subject: subjName.get(q.subjectId) ?? "—",
+    questions: q._count.questions,
+    score: scoreByQuiz.get(q.id) ?? null,
+  }));
+
   const data: StudentData = {
     name: `${account.student.firstName} ${account.student.lastName}`,
     school: enrollment?.school.name ?? "—",
@@ -70,6 +92,7 @@ export default async function StudentPage() {
     subjects,
     overall: avgOf(subjects.map((s) => s.avg)),
     lessons: [...bySubject.values()],
+    quizzes,
   };
 
   return <StudentDashboard data={data} />;

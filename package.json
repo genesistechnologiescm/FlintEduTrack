@@ -20,6 +20,7 @@
     "db:seed:student": "node --env-file=.env --env-file=.env.local prisma/seed-student-login.js",
     "db:seed:staff": "node --env-file=.env --env-file=.env.local prisma/seed-staff.js",
     "db:seed:government": "node --env-file=.env --env-file=.env.local prisma/seed-government.js",
+    "db:seed:quiz": "node --env-file=.env --env-file=.env.local prisma/seed-quiz.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

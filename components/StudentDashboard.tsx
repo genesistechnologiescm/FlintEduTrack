@@ -16,6 +16,7 @@ export type StudentData = {
   subjects: SubjectGrade[];
   overall: number | null;
   lessons: { subject: string; items: Lesson[] }[];
+  quizzes: { id: string; title: string; subject: string; questions: number; score: number | null }[];
 };
 
 export function StudentDashboard({ data }: { data: StudentData }) {
@@ -84,6 +85,30 @@ export function StudentDashboard({ data }: { data: StudentData }) {
             {t("viewReport")} →
           </a>
         </section>
+      )}
+
+      {/* Quizzes */}
+      {data.quizzes.length > 0 && (
+        <>
+          <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">{t("quizzesNav")}</h2>
+          <ul className="space-y-2">
+            {data.quizzes.map((q) => (
+              <li key={q.id} className="flex items-center justify-between gap-3 rounded-xl border border-black/10 bg-white px-4 py-3">
+                <div className="min-w-0">
+                  <div className="truncate font-medium text-flint-black">{q.title}</div>
+                  <div className="font-mono text-xs text-muted">{q.subject} · {q.questions} {t("quizQs")}</div>
+                </div>
+                {q.score === null ? (
+                  <a href={`/student/quiz/${q.id}`} className="shrink-0 rounded-full bg-flint-blue px-4 py-2 font-mono text-xs font-medium text-white">
+                    {t("quizTake")}
+                  </a>
+                ) : (
+                  <span className="shrink-0 rounded-full bg-success/15 px-3 py-1 font-mono text-xs font-bold text-success">{q.score}%</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       {/* Lessons */}

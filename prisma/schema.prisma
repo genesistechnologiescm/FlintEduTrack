@@ -665,3 +665,46 @@ model StudentAccount {
   student   Student  @relation(fields: [studentId], references: [id])
   @@index([schoolId])
 }
+
+// ───────────────────────── E-learning — quizzes ─────────────────────────
+// Multiple-choice quizzes (auto-graded). FK fields are plain strings (no Prisma
+// relations to existing models) to keep the established models untouched; the
+// only relations are internal to these three tables.
+model Quiz {
+  id           String         @id @default(uuid())
+  schoolId     String
+  subjectId    String
+  classGroupId String?
+  title        String
+  createdBy    String
+  createdAt    DateTime       @default(now())
+  deletedAt    DateTime?
+  questions    QuizQuestion[]
+  attempts     QuizAttempt[]
+  @@index([schoolId])
+  @@index([classGroupId])
+}
+
+model QuizQuestion {
+  id           String @id @default(uuid())
+  quizId       String
+  order        Int
+  prompt       String
+  options      Json // string[]
+  correctIndex Int
+  quiz         Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  @@index([quizId])
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid())
+  quizId      String
+  studentId   String
+  schoolId    String
+  score       Int // percentage 0–100
+  answers     Json // number[] (chosen option index per question)
+  submittedAt DateTime @default(now())
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  @@unique([quizId, studentId])
+  @@index([studentId])
+}
