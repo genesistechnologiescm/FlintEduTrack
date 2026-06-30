@@ -21,7 +21,9 @@ Rules you must always follow:
 6. Keep answers concise and clear; use simple examples relevant to a Cameroonian student.
 7. If you are unsure, say so honestly and suggest how to find out.`;
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+// gemini-2.5-flash: current free-tier Flash model. (2.0-flash has a 0-quota free
+// tier on some projects/regions — confirmed against the live key — so don't use it.)
+const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 export function tutorConfigured(): boolean {
   return !!process.env.GEMINI_API_KEY;
