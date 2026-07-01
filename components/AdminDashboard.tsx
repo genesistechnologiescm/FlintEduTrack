@@ -146,10 +146,24 @@ export function AdminDashboard({ data }: { data: AdminData }) {
         />
       </div>
 
+      {/* Dropout-risk radar — the intelligence layer that feeds welfare */}
+      <a
+        href="/admin/risk"
+        className="mt-4 flex items-center justify-between rounded-2xl border border-flint-blue/20 bg-flint-blue/5 px-4 py-3 transition-colors hover:bg-flint-blue/10"
+      >
+        <span className="flex items-center gap-2">
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-flint-blue/10">
+            <span className="inline-block size-2 rounded-full bg-flint-cyan" aria-hidden />
+          </span>
+          <span className="font-medium text-flint-black">{t("riskNav")}</span>
+        </span>
+        <span className="font-mono text-xs text-flint-blue">→</span>
+      </a>
+
       {/* Welfare entry point */}
       <a
         href="/admin/welfare"
-        className="mt-4 flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 transition-colors hover:bg-black/[0.02]"
+        className="mt-3 flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 transition-colors hover:bg-black/[0.02]"
       >
         <span className="font-medium text-flint-black">{t("welfareCta")}</span>
         <span className="font-mono text-xs text-flint-blue">→</span>
