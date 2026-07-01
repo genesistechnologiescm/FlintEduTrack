@@ -3,7 +3,7 @@
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 
-type Region = { region: string; crisis: boolean; students: number; rate: number | null };
+type Region = { region: string; crisis: boolean; students: number; rate: number | null; atRisk: number };
 
 export type NationalData = {
   totalSchools: number;
@@ -11,6 +11,9 @@ export type NationalData = {
   nationalRate: number | null;
   crisisRate: number | null;
   restRate: number | null;
+  atRiskTotal: number;
+  crisisAtRisk: number;
+  restAtRisk: number;
   regions: Region[];
 };
 
@@ -71,6 +74,25 @@ export function NationalDashboard({ data }: { data: NationalData }) {
         )}
       </section>
 
+      {/* Dropout-risk intelligence — early warning, aggregated */}
+      <section className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-lg font-bold text-flint-black">{t("natRiskTitle")}</h2>
+            <p className="mt-1 max-w-md text-sm text-muted">{t("natRiskSub")}</p>
+          </div>
+          <div className="shrink-0 text-right">
+            <div className="font-display text-4xl font-bold tabular-nums text-amber-700">{data.atRiskTotal}</div>
+            <div className="font-mono text-[10px] uppercase tracking-widest text-muted">{t("natRiskWord")}</div>
+          </div>
+        </div>
+        {data.atRiskTotal > 0 && (
+          <p className="mt-3 font-mono text-sm text-error">
+            {data.crisisAtRisk} {t("natRiskInCrisis")}
+          </p>
+        )}
+      </section>
+
       {/* By region */}
       <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">{t("natByRegion")}</h2>
       <ul className="space-y-3">
@@ -83,6 +105,7 @@ export function NationalDashboard({ data }: { data: NationalData }) {
               </span>
               <span className="font-mono tabular-nums text-muted">
                 {pct(r.rate)} · {r.students}
+                {r.atRisk > 0 && <span className="text-error"> · {r.atRisk} {t("natAtRiskShort")}</span>}
               </span>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-black/5">

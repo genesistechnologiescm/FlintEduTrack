@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { dropoutRisk } from "@/lib/dropoutRisk";
 import { NationalDashboard, type NationalData } from "@/components/NationalDashboard";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,34 @@ export default async function NationalPage() {
   `;
   const studentsByRegion = new Map(studentsRaw.map((r) => [r.region, r.students]));
 
+  // Dropout-risk aggregate. We compute each student's risk from their attendance,
+  // then expose ONLY the counts per region — no individual ever leaves this layer.
+  const schools = await prisma.school.findMany({ where: { deletedAt: null }, select: { id: true, region: true, isCrisisZone: true } });
+  const schoolMeta = new Map(schools.map((s) => [s.id, { region: s.region, crisis: s.isCrisisZone }]));
+  const marks = await prisma.attendanceRecord.findMany({
+    select: { studentId: true, status: true, session: { select: { date: true, schoolId: true } } },
+    orderBy: { session: { date: "desc" } },
+    take: 20000,
+  });
+  const byStudent = new Map<string, { region: string; crisis: boolean; marks: { date: string; absent: boolean }[] }>();
+  for (const m of marks) {
+    const meta = schoolMeta.get(m.session.schoolId);
+    if (!meta) continue;
+    const g = byStudent.get(m.studentId) ?? { region: meta.region, crisis: meta.crisis, marks: [] };
+    g.marks.push({ date: m.session.date.toISOString().slice(0, 10), absent: m.status === "ABSENT" });
+    byStudent.set(m.studentId, g);
+  }
+  const atRiskByRegion = new Map<string, number>();
+  let atRiskTotal = 0, crisisAtRisk = 0, restAtRisk = 0;
+  for (const g of byStudent.values()) {
+    if (dropoutRisk(g.marks).band === "high") {
+      atRiskTotal++;
+      atRiskByRegion.set(g.region, (atRiskByRegion.get(g.region) ?? 0) + 1);
+      if (g.crisis) crisisAtRisk++;
+      else restAtRisk++;
+    }
+  }
+
   const sum = (f: (r: RegionAgg) => number) => regionsRaw.reduce((n, r) => n + f(r), 0);
   const rate = (records: number, absent: number) =>
     records > 0 ? Math.round(((records - absent) / records) * 100) : null;
@@ -41,6 +70,7 @@ export default async function NationalPage() {
       crisis: r.crisis,
       students: studentsByRegion.get(r.region) ?? 0,
       rate: rate(r.records, r.absent),
+      atRisk: atRiskByRegion.get(r.region) ?? 0,
     }))
     .sort((a, b) => b.students - a.students);
 
@@ -55,6 +85,9 @@ export default async function NationalPage() {
     nationalRate: rate(sum((r) => r.records), sum((r) => r.absent)),
     crisisRate: rate(crisisRecords, crisisAbsent),
     restRate: rate(restRecords, restAbsent),
+    atRiskTotal,
+    crisisAtRisk,
+    restAtRisk,
     regions,
   };
 
