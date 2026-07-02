@@ -14,8 +14,8 @@ export type ReportData = {
   attendanceRate: number | null;
 };
 
-export function ReportCard({ data }: { data: ReportData }) {
-  const { t } = useI18n();
+export function ReportCard({ data, studentId }: { data: ReportData; studentId: string }) {
+  const { t, locale } = useI18n();
   const fmt = (n: number | null) => (n === null ? "—" : n.toFixed(1));
 
   return (
@@ -26,6 +26,12 @@ export function ReportCard({ data }: { data: ReportData }) {
         </a>
         <div className="flex items-center gap-3">
           <LanguageToggle />
+          <a
+            href={`/report/${studentId}/pdf?lang=${locale}`}
+            className="inline-flex min-h-11 items-center rounded-full border border-flint-blue/30 px-5 font-mono text-xs font-medium uppercase tracking-widest text-flint-blue"
+          >
+            {t("downloadPdf")}
+          </a>
           <button
             type="button"
             onClick={() => window.print()}
