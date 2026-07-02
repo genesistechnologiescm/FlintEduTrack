@@ -141,6 +141,9 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
                 <span className="flex shrink-0 items-center gap-3">
                   <span className="font-mono text-[10px] text-muted">{p.reference}</span>
                   <span className="font-mono tabular-nums text-success">{formatFcfa(p.amount)}</span>
+                  <a href={`/receipt/${p.id}`} className="font-mono text-[10px] uppercase tracking-widest text-flint-blue hover:underline">
+                    {t("receiptWord")}
+                  </a>
                 </span>
               </li>
             ))}

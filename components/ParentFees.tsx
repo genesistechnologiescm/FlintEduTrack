@@ -15,7 +15,7 @@ type ChildFees = {
   billed: number;
   paid: number;
   balance: number;
-  payments: { amount: number; reference: string; date: string }[];
+  payments: { id: string; amount: number; reference: string; date: string }[];
 };
 export type ParentFeesData = { parentPhone: string; children: ChildFees[] };
 
@@ -28,7 +28,7 @@ function PayBox({ child, parentPhone }: { child: ChildFees; parentPhone: string 
   const [amount, setAmount] = useState(String(Math.max(0, child.balance)));
   const [momo, setMomo] = useState(parentPhone);
   const [busy, setBusy] = useState(false);
-  const [receipt, setReceipt] = useState<{ reference: string; amount: number } | null>(null);
+  const [receipt, setReceipt] = useState<{ reference: string; amount: number; paymentId?: string } | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   async function onPay(e: React.FormEvent) {
@@ -38,7 +38,7 @@ function PayBox({ child, parentPhone }: { child: ChildFees; parentPhone: string 
     const res = await payFees({ studentId: child.studentId, amount: Number(amount), momoNumber: momo });
     setBusy(false);
     if (res.ok && res.reference) {
-      setReceipt({ reference: res.reference, amount: res.amount ?? Number(amount) });
+      setReceipt({ reference: res.reference, amount: res.amount ?? Number(amount), paymentId: res.paymentId });
       router.refresh();
     } else setErr(res.error ?? "error");
   }
@@ -49,6 +49,14 @@ function PayBox({ child, parentPhone }: { child: ChildFees; parentPhone: string 
         <div className="font-display font-bold text-success">{t("paymentDone")}</div>
         <div className="mt-1 font-mono text-sm tabular-nums text-flint-black">{formatFcfa(receipt.amount)}</div>
         <div className="mt-1 font-mono text-xs text-muted">{t("feeRef")}: {receipt.reference}</div>
+        {receipt.paymentId && (
+          <a
+            href={`/receipt/${receipt.paymentId}`}
+            className="mt-2 inline-flex min-h-10 items-center rounded-full border border-success/40 px-4 font-mono text-xs uppercase tracking-widest text-success hover:underline"
+          >
+            {t("receiptWord")} ↓
+          </a>
+        )}
       </div>
     );
   }
@@ -118,10 +126,15 @@ export function ParentFees({ data }: { data: ParentFeesData }) {
 
             {c.payments.length > 0 && (
               <ul className="mt-3 space-y-1 border-t border-black/5 pt-3">
-                {c.payments.map((p, i) => (
-                  <li key={i} className="flex items-center justify-between font-mono text-xs">
-                    <span className="text-muted">{p.date} · {p.reference}</span>
-                    <span className="tabular-nums text-success">{formatFcfa(p.amount)}</span>
+                {c.payments.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-2 font-mono text-xs">
+                    <span className="min-w-0 truncate text-muted">{p.date} · {p.reference}</span>
+                    <span className="flex shrink-0 items-center gap-3">
+                      <span className="tabular-nums text-success">{formatFcfa(p.amount)}</span>
+                      <a href={`/receipt/${p.id}`} className="uppercase tracking-widest text-flint-blue hover:underline">
+                        {t("receiptWord")}
+                      </a>
+                    </span>
                   </li>
                 ))}
               </ul>

@@ -16,7 +16,7 @@ const PaySchema = z.object({
 
 // MOCKED Mobile Money payment — records the transaction with a fake reference.
 // No real funds move and no PSP is contacted. Real MTN/Orange MoMo is a post-win swap.
-export async function payFees(raw: z.infer<typeof PaySchema>): Promise<{ ok: boolean; reference?: string; amount?: number; newBalance?: number; error?: string }> {
+export async function payFees(raw: z.infer<typeof PaySchema>): Promise<{ ok: boolean; reference?: string; paymentId?: string; amount?: number; newBalance?: number; error?: string }> {
   const input = PaySchema.parse(raw);
   const supabase = await createClient();
   const {
@@ -30,7 +30,7 @@ export async function payFees(raw: z.infer<typeof PaySchema>): Promise<{ ok: boo
   if (!link) return { ok: false, error: "Not your child" };
 
   const reference = `MOMO-${randomBytes(4).toString("hex").toUpperCase()}`;
-  await prisma.payment.create({
+  const payment = await prisma.payment.create({
     data: {
       schoolId: link.schoolId,
       studentId: input.studentId,
@@ -53,5 +53,5 @@ export async function payFees(raw: z.infer<typeof PaySchema>): Promise<{ ok: boo
   const { balance } = await getStudentBalance(input.studentId);
   revalidatePath("/parent/fees");
   revalidatePath("/admin/fees");
-  return { ok: true, reference, amount: input.amount, newBalance: balance };
+  return { ok: true, reference, paymentId: payment.id, amount: input.amount, newBalance: balance };
 }

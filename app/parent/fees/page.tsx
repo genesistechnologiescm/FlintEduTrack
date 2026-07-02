@@ -38,7 +38,7 @@ export default async function ParentFeesPage() {
       billed: balance.billed,
       paid: balance.paid,
       balance: balance.balance,
-      payments: payments.map((p) => ({ amount: p.amount, reference: p.reference, date: p.createdAt.toISOString().slice(0, 10) })),
+      payments: payments.map((p) => ({ id: p.id, amount: p.amount, reference: p.reference, date: p.createdAt.toISOString().slice(0, 10) })),
     });
   }
 
