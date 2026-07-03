@@ -106,6 +106,12 @@ export function AdminDashboard({ data }: { data: AdminData }) {
           {t("calendarNav")} →
         </a>
         <a
+          href="/admin/absences"
+          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+        >
+          {t("absencesNav")} →
+        </a>
+        <a
           href="/admin/announcements"
           className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
         >
