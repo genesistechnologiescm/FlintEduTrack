@@ -132,7 +132,7 @@ function StudentCard({ row }: { row: AtRiskRow }) {
   );
 }
 
-export function WelfarePanel({ rows }: { rows: AtRiskRow[] }) {
+export function WelfarePanel({ rows, wellbeingFlags = [] }: { rows: AtRiskRow[]; wellbeingFlags?: string[] }) {
   const { t } = useI18n();
   return (
     <div className="mx-auto max-w-[560px] px-4 pb-16 pt-6">
@@ -151,6 +151,22 @@ export function WelfarePanel({ rows }: { rows: AtRiskRow[] }) {
       <p className="mb-5 rounded-lg bg-flint-blue/5 px-3 py-2 text-sm text-muted">
         {t("welfareIntro")}
       </p>
+
+      {/* Teachers' wellbeing reads this week — the human signal */}
+      {wellbeingFlags.length > 0 && (
+        <section className="mb-5 rounded-2xl border border-error/20 bg-error/5 p-4">
+          <h2 className="font-mono text-xs uppercase tracking-widest text-error">
+            {t("wbFlagsTitle")} · {wellbeingFlags.length}
+          </h2>
+          <p className="mt-1 text-sm text-flint-black">{wellbeingFlags.join(" · ")}</p>
+          <a
+            href="/wellbeing"
+            className="mt-2 inline-flex min-h-9 items-center font-mono text-[11px] uppercase tracking-widest text-flint-blue hover:underline"
+          >
+            {t("wellbeingNav")} →
+          </a>
+        </section>
+      )}
 
       {rows.length === 0 ? (
         <p className="rounded-xl border border-black/10 bg-white px-4 py-6 text-center text-muted">

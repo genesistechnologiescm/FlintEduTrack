@@ -283,6 +283,31 @@ model Student {
   threads     MessageThread[]
   payments    Payment[]
   account     StudentAccount?
+  wellbeing   WellbeingSnapshot[]
+}
+
+// Weekly wellbeing snapshot — a teacher's pastoral read per student (Phase 3).
+// Human judgment beside the attendance-derived risk score: it catches the child
+// who attends but is withdrawing. One row per student per ISO week (upserted).
+enum WellbeingLevel {
+  ENGAGED
+  NEUTRAL
+  NEEDS_ATTENTION
+}
+
+model WellbeingSnapshot {
+  id          String         @id @default(uuid())
+  schoolId    String
+  studentId   String
+  weekStart   DateTime       @db.Date
+  level       WellbeingLevel
+  note        String?
+  setByUserId String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  student     Student        @relation(fields: [studentId], references: [id])
+  @@unique([studentId, weekStart])
+  @@index([schoolId, weekStart])
 }
 
 model Enrollment {

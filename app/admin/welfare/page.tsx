@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { WelfarePanel, type AtRiskRow } from "@/components/WelfarePanel";
+import { wellbeingWeekStartISO } from "@/lib/wellbeing";
 
 export const dynamic = "force-dynamic";
 
@@ -59,5 +60,13 @@ export default async function WelfarePage() {
     };
   });
 
-  return <WelfarePanel rows={rows} />;
+  // This week's teacher wellbeing reads flagged "needs attention" — the human
+  // signal beside the absence-count signal.
+  const wbFlags = await prisma.wellbeingSnapshot.findMany({
+    where: { schoolId: school.id, weekStart: new Date(wellbeingWeekStartISO()), level: "NEEDS_ATTENTION" },
+    include: { student: { select: { firstName: true, lastName: true } } },
+  });
+  const wellbeingFlags = wbFlags.map((w) => `${w.student.lastName} ${w.student.firstName}`.trim());
+
+  return <WelfarePanel rows={rows} wellbeingFlags={wellbeingFlags} />;
 }

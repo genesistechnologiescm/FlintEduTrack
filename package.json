@@ -29,6 +29,7 @@
     "db:seed:library": "node --env-file=.env --env-file=.env.local prisma/seed-library.js",
     "db:seed:curation": "node --env-file=.env --env-file=.env.local prisma/seed-curation.js",
     "db:seed:gate": "node --env-file=.env --env-file=.env.local prisma/seed-gate.js",
+    "db:seed:wellbeing": "node --env-file=.env --env-file=.env.local prisma/seed-wellbeing.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
