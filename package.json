@@ -23,6 +23,7 @@
     "db:seed:government": "node --env-file=.env --env-file=.env.local prisma/seed-government.js",
     "db:seed:quiz": "node --env-file=.env --env-file=.env.local prisma/seed-quiz.js",
     "db:seed:corrections": "node --env-file=.env --env-file=.env.local prisma/seed-corrections.js",
+    "db:seed:calendar": "node --env-file=.env --env-file=.env.local prisma/seed-calendar.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

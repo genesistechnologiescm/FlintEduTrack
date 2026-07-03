@@ -149,6 +149,7 @@ model School {
   resources    LessonResource[]
   feeItems     FeeItem[]
   payments     Payment[]
+  calendarEvents CalendarEvent[]
   @@index([region])
 }
 
@@ -510,6 +511,21 @@ model Grade {
   @@unique([studentId, subjectId, termId, sequence])
   @@index([schoolId, termId])
   @@index([studentId])
+}
+
+// School calendar — staff publish term dates/events; parents and students read.
+model CalendarEvent {
+  id        String    @id @default(uuid())
+  schoolId  String
+  title     String
+  startDate DateTime  @db.Date
+  endDate   DateTime? @db.Date
+  note      String?
+  createdBy String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  school    School    @relation(fields: [schoolId], references: [id])
+  @@index([schoolId, startDate])
 }
 
 // Grade-correction workflow — once a grade is recorded, changing it requires an

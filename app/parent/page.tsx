@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { ParentDashboard, type ParentData } from "@/components/ParentDashboard";
 import { avgOf, groupBySubject } from "@/lib/grades";
+import { upcomingEvents } from "@/lib/calendarFeed";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +99,8 @@ export default async function ParentPage() {
     include: { announcement: { select: { title: true, body: true, createdAt: true } } },
   });
 
+  const events = await upcomingEvents([...new Set(links.map((l) => l.schoolId))]);
+
   const data: ParentData = {
     children,
     alerts: notifs.map((n) => ({ type: n.eventType, date: n.serverSentAt.toISOString().slice(0, 10) })),
@@ -106,6 +109,7 @@ export default async function ParentPage() {
       body: r.announcement.body,
       date: r.announcement.createdAt.toISOString().slice(0, 10),
     })),
+    events,
   };
 
   return <ParentDashboard data={data} />;

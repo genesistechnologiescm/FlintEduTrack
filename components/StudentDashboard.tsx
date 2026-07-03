@@ -17,6 +17,7 @@ export type StudentData = {
   overall: number | null;
   lessons: { subject: string; items: Lesson[] }[];
   quizzes: { id: string; title: string; subject: string; questions: number; score: number | null }[];
+  events: { title: string; startDate: string; endDate: string | null; note: string | null }[];
 };
 
 export function StudentDashboard({ data }: { data: StudentData }) {
@@ -76,6 +77,27 @@ export function StudentDashboard({ data }: { data: StudentData }) {
           ))}
         </div>
       </section>
+
+      {/* School calendar — upcoming events */}
+      {data.events.length > 0 && (
+        <section className="mt-4 rounded-2xl border border-black/10 bg-white p-5">
+          <h2 className="mb-2 font-mono text-xs uppercase tracking-widest text-muted">{t("upcomingEvents")}</h2>
+          <ul className="space-y-1.5">
+            {data.events.map((e, i) => (
+              <li key={i} className="flex items-start justify-between gap-3 text-sm">
+                <span className="min-w-0">
+                  <span className="text-flint-black">{e.title}</span>
+                  {e.note && <span className="text-muted"> · {e.note}</span>}
+                </span>
+                <span className="shrink-0 font-mono text-xs tabular-nums text-flint-blue">
+                  {e.startDate.slice(5)}
+                  {e.endDate ? ` → ${e.endDate.slice(5)}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Grades */}
       {data.subjects.length > 0 && (

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { avgOf, groupBySubject } from "@/lib/grades";
+import { upcomingEvents } from "@/lib/calendarFeed";
 import { StudentDashboard, type StudentData } from "@/components/StudentDashboard";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,8 @@ export default async function StudentPage() {
     score: scoreByQuiz.get(q.id) ?? null,
   }));
 
+  const events = enrollment ? await upcomingEvents([enrollment.schoolId]) : [];
+
   const data: StudentData = {
     name: `${account.student.firstName} ${account.student.lastName}`,
     school: enrollment?.school.name ?? "—",
@@ -93,6 +96,7 @@ export default async function StudentPage() {
     overall: avgOf(subjects.map((s) => s.avg)),
     lessons: [...bySubject.values()],
     quizzes,
+    events: events.map((e) => ({ title: e.title, startDate: e.startDate, endDate: e.endDate, note: e.note })),
   };
 
   return <StudentDashboard data={data} />;

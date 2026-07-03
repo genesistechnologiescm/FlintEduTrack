@@ -22,6 +22,7 @@ export type ParentData = {
   children: Child[];
   alerts: { type: string; date: string }[];
   announcements: { title: string; body: string; date: string }[];
+  events: { school: string; title: string; startDate: string; endDate: string | null; note: string | null }[];
 };
 
 export function ParentDashboard({ data }: { data: ParentData }) {
@@ -163,6 +164,32 @@ export function ParentDashboard({ data }: { data: ParentData }) {
           </section>
         ))}
       </div>
+
+      {/* School calendar — upcoming events */}
+      {data.events.length > 0 && (
+        <>
+          <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">
+            {t("upcomingEvents")}
+          </h2>
+          <ul className="space-y-2">
+            {data.events.map((e, i) => (
+              <li key={i} className="flex items-start justify-between gap-3 rounded-xl border border-black/10 bg-white px-4 py-3">
+                <div className="min-w-0">
+                  <div className="font-medium text-flint-black">{e.title}</div>
+                  <div className="font-mono text-[11px] text-muted">
+                    {e.school}
+                    {e.note ? ` · ${e.note}` : ""}
+                  </div>
+                </div>
+                <span className="shrink-0 font-mono text-xs tabular-nums text-flint-blue">
+                  {e.startDate.slice(5)}
+                  {e.endDate ? ` → ${e.endDate.slice(5)}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       {/* Announcements from the school */}
       {data.announcements.length > 0 && (
