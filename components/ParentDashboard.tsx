@@ -13,6 +13,7 @@ type Child = {
   className: string;
   rate: number | null;
   recent: { date: string; absent: boolean }[];
+  bySubject: { subject: string; rate: number; total: number }[];
   subjects: SubjectGrade[];
   overall: number | null;
 };
@@ -100,6 +101,32 @@ export function ParentDashboard({ data }: { data: ParentData }) {
                 ))}
               </div>
             </div>
+
+            {/* Subject-level attendance — which class is the child missing? */}
+            {c.bySubject.length > 0 && (
+              <div className="mt-4">
+                <div className="mb-1.5 font-mono text-[11px] uppercase tracking-widest text-muted">
+                  {t("attnBySubject")}
+                </div>
+                <ul className="space-y-1.5">
+                  {c.bySubject.map((s) => {
+                    const tone = s.rate < 80 ? "bg-error" : s.rate < 90 ? "bg-amber-500" : "bg-success";
+                    const text = s.rate < 80 ? "text-error" : "text-flint-black";
+                    return (
+                      <li key={s.subject} className="flex items-center gap-3 text-sm">
+                        <span className="w-32 shrink-0 truncate text-flint-black">{s.subject}</span>
+                        <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/5">
+                          <span className={`block h-full rounded-full ${tone}`} style={{ width: `${s.rate}%` }} />
+                        </span>
+                        <span className={`w-12 shrink-0 text-right font-mono text-xs font-bold tabular-nums ${text}`}>
+                          {s.rate}%
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
 
             {/* Grades */}
             {c.subjects.length > 0 && (

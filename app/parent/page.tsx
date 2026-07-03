@@ -28,12 +28,37 @@ export default async function ParentPage() {
     });
     const records = await prisma.attendanceRecord.findMany({
       where: { studentId: link.studentId },
-      include: { session: { select: { date: true } } },
+      include: { session: { select: { date: true, subjectId: true } } },
       orderBy: { session: { date: "desc" } },
-      take: 40,
+      take: 200,
     });
     const present = records.filter((r) => r.status !== "ABSENT").length;
     const total = records.length;
+
+    // Subject-level attendance (Phase-1 data, now surfaced): which class is
+    // this child actually missing? Worst subjects first — that's the signal.
+    const perSubject = new Map<string, { total: number; absent: number }>();
+    for (const r of records) {
+      const s = perSubject.get(r.session.subjectId) ?? { total: 0, absent: 0 };
+      s.total++;
+      if (r.status === "ABSENT") s.absent++;
+      perSubject.set(r.session.subjectId, s);
+    }
+    const subjectIds = [...perSubject.keys()];
+    const subjectNames = subjectIds.length
+      ? await prisma.subject.findMany({ where: { id: { in: subjectIds } }, select: { id: true, name: true } })
+      : [];
+    const nameById = new Map(subjectNames.map((s) => [s.id, s.name]));
+    const bySubject = subjectIds
+      .map((id) => {
+        const s = perSubject.get(id)!;
+        return {
+          subject: nameById.get(id) ?? "—",
+          rate: Math.round(((s.total - s.absent) / s.total) * 100),
+          total: s.total,
+        };
+      })
+      .sort((a, b) => a.rate - b.rate);
 
     const gradeRows = await prisma.grade.findMany({
       where: { studentId: link.studentId },
@@ -54,6 +79,7 @@ export default async function ParentPage() {
         date: r.session.date.toISOString().slice(5, 10),
         absent: r.status === "ABSENT",
       })),
+      bySubject,
       subjects,
       overall: avgOf(subjects.map((s) => s.avg)),
     });
