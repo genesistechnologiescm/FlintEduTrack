@@ -118,6 +118,12 @@ export function AdminDashboard({ data }: { data: AdminData }) {
           {t("wellbeingNav")} →
         </a>
         <a
+          href="/ussd-demo"
+          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+        >
+          {t("ussdNav")} →
+        </a>
+        <a
           href="/admin/announcements"
           className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
         >
