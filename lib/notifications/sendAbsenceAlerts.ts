@@ -5,8 +5,12 @@ import { sendWebPush } from "./sendWebPush";
 // Logs instead of sending. Swap for Africa's Talking at pilot (Notification
 // Router, doc 05) — this is the ONLY thing that changes to go live.
 async function mockSend(channel: "SMS", to: string, body: string) {
-  // eslint-disable-next-line no-console
-  console.log(`[MOCK ${channel}] -> ${to}: ${body}`);
+  // Dev-only visibility — never a parent's phone or child's name in production
+  // logs (security review #6). NotificationLog already records the send.
+  if (process.env.NODE_ENV !== "production") {
+    // eslint-disable-next-line no-console
+    console.log(`[MOCK ${channel}] -> ${to}: ${body}`);
+  }
   return {
     providerMsgId: `mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     costFcfa: 5, // Africa's Talking ~5 FCFA/SMS (real cost logged once live)

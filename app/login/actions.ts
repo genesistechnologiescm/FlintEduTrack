@@ -1,10 +1,47 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { phoneToAuthEmail, studentCodeToAuthEmail } from "@/lib/auth";
+
+// ── Brute-force protection (security review #4) ─────────────────────────────
+// A 5-digit PIN is ~100k combinations; GoTrue's per-endpoint limits are the
+// baseline, this adds an app-level lock per identifier and per IP.
+const WINDOW_MIN = 15;
+const MAX_ID_FAILS = 5;
+const MAX_IP_FAILS = 20;
+const LOCK_MSG = "Too many failed attempts. Please wait 15 minutes and try again.";
+
+async function clientIp(): Promise<string | null> {
+  const h = await headers();
+  const fwd = h.get("x-forwarded-for");
+  return fwd ? fwd.split(",")[0].trim() : null;
+}
+
+// Fail-open: the rate limiter must never be the thing that takes login down.
+async function isLocked(identifier: string, ip: string | null): Promise<boolean> {
+  const since = new Date(Date.now() - WINDOW_MIN * 60_000);
+  try {
+    const [idFails, ipFails] = await Promise.all([
+      prisma.authAttempt.count({ where: { phone: identifier, success: false, at: { gte: since } } }),
+      ip ? prisma.authAttempt.count({ where: { ip, success: false, at: { gte: since } } }) : Promise.resolve(0),
+    ]);
+    return idFails >= MAX_ID_FAILS || ipFails >= MAX_IP_FAILS;
+  } catch {
+    return false;
+  }
+}
+
+async function recordAttempt(identifier: string, ip: string | null, kind: string, success: boolean): Promise<void> {
+  try {
+    await prisma.authAttempt.create({ data: { phone: identifier, ip, kind, success } });
+  } catch {
+    // best-effort — never block login on logging
+  }
+}
 
 const Schema = z.object({
   phone: z.string().min(6).max(20),
@@ -20,11 +57,16 @@ export async function signIn(input: { phone: string; pin: string }): Promise<{ e
   const parsed = Schema.safeParse(input);
   if (!parsed.success) return { error: "Enter your phone number and 5-digit PIN." };
 
+  const identifier = parsed.data.phone.replace(/\D/g, "");
+  const ip = await clientIp();
+  if (await isLocked(identifier, ip)) return { error: LOCK_MSG };
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
     email: phoneToAuthEmail(parsed.data.phone),
     password: parsed.data.pin,
   });
+  await recordAttempt(identifier, ip, "staff_parent_pin", !error);
   if (error) {
     const unreachable = error.status === 0 || /fetch failed|network/i.test(error.message);
     return {
@@ -69,11 +111,16 @@ export async function signInStudent(input: { code: string; pin: string }): Promi
   const parsed = StudentSchema.safeParse(input);
   if (!parsed.success) return { error: "Enter your student code and 5-digit PIN." };
 
+  const identifier = `code:${parsed.data.code.toUpperCase().replace(/[^A-Z0-9]/g, "")}`;
+  const ip = await clientIp();
+  if (await isLocked(identifier, ip)) return { error: LOCK_MSG };
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
     email: studentCodeToAuthEmail(parsed.data.code),
     password: parsed.data.pin,
   });
+  await recordAttempt(identifier, ip, "student_pin", !error);
   if (error) {
     const unreachable = error.status === 0 || /fetch failed|network/i.test(error.message);
     return {
