@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { dropoutRisk } from "@/lib/dropoutRisk";
+import { computePerformance } from "@/lib/performanceIndex";
 import { NationalRegion, type RegionData } from "@/components/NationalRegion";
 
 export const dynamic = "force-dynamic";
@@ -61,9 +62,23 @@ export default async function RegionPage({ params }: { params: Promise<{ region:
   const rate = (records: number, absent: number) =>
     records > 0 ? Math.round(((records - absent) / records) * 100) : null;
 
+  // Transparent composite index per school (attendance/coverage/fees/risk-free).
+  const perf = await computePerformance(
+    schoolsRaw.map((s) => {
+      const a = attById.get(s.id);
+      return {
+        schoolId: s.id,
+        attendanceRate: a ? rate(a.records, a.absent) : null,
+        students: s.students,
+        atRisk: atRiskBySchool.get(s.id) ?? 0,
+      };
+    }),
+  );
+
   const schools = schoolsRaw
     .map((s) => {
       const a = attById.get(s.id);
+      const p = perf.get(s.id);
       return {
         name: s.name,
         division: s.division ?? "—",
@@ -72,6 +87,13 @@ export default async function RegionPage({ params }: { params: Promise<{ region:
         students: s.students,
         rate: a ? rate(a.records, a.absent) : null,
         atRisk: atRiskBySchool.get(s.id) ?? 0,
+        index: p?.index ?? 0,
+        breakdown: {
+          attendance: p?.attendance ?? null,
+          coverage: p?.coverage ?? null,
+          fees: p?.fees ?? null,
+          riskFree: p?.riskFree ?? null,
+        },
       };
     })
     .sort((a, b) => (a.rate ?? 101) - (b.rate ?? 101)); // worst first — the signal

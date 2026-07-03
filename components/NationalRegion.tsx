@@ -11,7 +11,14 @@ type SchoolRow = {
   students: number;
   rate: number | null;
   atRisk: number;
+  index: number;
+  breakdown: { attendance: number | null; coverage: number | null; fees: number | null; riskFree: number | null };
 };
+
+function IndexChip({ index }: { index: number }) {
+  const tone = index >= 80 ? "bg-success/15 text-success" : index >= 60 ? "bg-amber-500/15 text-amber-700" : "bg-error/10 text-error";
+  return <span className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-bold tabular-nums ${tone}`}>{index}</span>;
+}
 export type RegionData = {
   region: string;
   crisis: boolean;
@@ -71,6 +78,10 @@ export function NationalRegion({ data }: { data: RegionData }) {
         <Stat label={t("natAtRiskShort")} value={String(data.atRisk)} tone={data.atRisk > 0 ? "error" : undefined} />
       </div>
 
+      <p className="mt-4 rounded-lg bg-black/[0.03] px-3 py-2 font-mono text-[10px] leading-relaxed text-muted">
+        {t("perfNote")}
+      </p>
+
       {[...divisions.entries()].map(([division, rows]) => (
         <section key={division} className="mt-7">
           <h2 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">
@@ -80,14 +91,25 @@ export function NationalRegion({ data }: { data: RegionData }) {
             {rows.map((s) => (
               <li key={s.name} className="rounded-2xl border border-black/10 bg-white p-4">
                 <div className="mb-1 flex items-center justify-between gap-3 text-sm">
-                  <span className="min-w-0">
-                    <span className="font-medium text-flint-black">{s.name}</span>
-                    <span className="ml-2 font-mono text-[11px] text-muted">{s.town}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <IndexChip index={s.index} />
+                    <span className="truncate font-medium text-flint-black">{s.name}</span>
+                    <span className="shrink-0 font-mono text-[11px] text-muted">{s.town}</span>
                   </span>
                   <span className="shrink-0 font-mono tabular-nums text-muted">
                     {pct(s.rate)} · {s.students}
                     {s.atRisk > 0 && <span className="text-error"> · {s.atRisk} {t("natAtRiskShort")}</span>}
                   </span>
+                </div>
+                <div className="mb-1 font-mono text-[10px] text-muted">
+                  {[
+                    s.breakdown.attendance !== null ? `${t("perfAtt")} ${s.breakdown.attendance}` : null,
+                    s.breakdown.coverage !== null ? `${t("perfCov")} ${s.breakdown.coverage}` : null,
+                    s.breakdown.fees !== null ? `${t("perfFees")} ${s.breakdown.fees}` : null,
+                    s.breakdown.riskFree !== null ? `${t("perfRisk")} ${s.breakdown.riskFree}` : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-black/5">
                   <div
