@@ -28,6 +28,7 @@
     "db:seed:digest": "node --env-file=.env --env-file=.env.local prisma/seed-digest.js",
     "db:seed:library": "node --env-file=.env --env-file=.env.local prisma/seed-library.js",
     "db:seed:curation": "node --env-file=.env --env-file=.env.local prisma/seed-curation.js",
+    "db:seed:gate": "node --env-file=.env --env-file=.env.local prisma/seed-gate.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

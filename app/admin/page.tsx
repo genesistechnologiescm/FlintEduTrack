@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { formatWat, isOnTime, watTodayISO } from "@/lib/gate";
 import { AdminDashboard, type AdminData } from "@/components/AdminDashboard";
 
 export const dynamic = "force-dynamic";
@@ -83,6 +84,27 @@ export default async function AdminPage() {
   });
   const phoneById = new Map(recentParents.map((p) => [p.id, p.phone]));
 
+  // Gate check-ins: who is on site today, and when did they arrive?
+  const [staffMembers, todaysCheckIns] = await Promise.all([
+    prisma.schoolMembership.findMany({
+      where: { schoolId: school.id, status: "active", role: { in: ["ADMIN", "TEACHER"] } },
+      include: { user: { select: { id: true, displayName: true } } },
+    }),
+    prisma.gateCheckIn.findMany({ where: { schoolId: school.id, date: new Date(watTodayISO()) } }),
+  ]);
+  const checkInByUser = new Map(todaysCheckIns.map((c) => [c.userId, c]));
+  const gate = staffMembers
+    .map((m) => {
+      const c = checkInByUser.get(m.userId);
+      return {
+        name: m.user.displayName,
+        title: m.title,
+        time: c ? formatWat(c.arrivedAt) : null,
+        onTime: c ? isOnTime(c.arrivedAt) : null,
+      };
+    })
+    .sort((a, b) => (a.time ?? "99").localeCompare(b.time ?? "99"));
+
   // Reach / cost profile: how many of this school's parents need paid SMS?
   const parentLinks = await prisma.parentLink.findMany({
     where: { schoolId: school.id, status: "active" },
@@ -115,6 +137,7 @@ export default async function AdminPage() {
       })),
     },
     reach,
+    gate,
   };
 
   return <AdminDashboard data={data} />;

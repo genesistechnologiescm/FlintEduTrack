@@ -132,6 +132,7 @@ model User {
   authoredResources LessonResource[]          @relation("AuthoredResources")
   paymentsMade  Payment[]                     @relation("PaymentsMade")
   correctionRequests GradeCorrection[]        @relation("CorrectionRequests")
+  gateCheckIns  GateCheckIn[]                 @relation("GateCheckIns")
 }
 
 // ───────────────────────── Tenant + calendar ─────────────────────────
@@ -520,6 +521,19 @@ model Grade {
   @@unique([studentId, subjectId, termId, sequence])
   @@index([schoolId, termId])
   @@index([studentId])
+}
+
+// Gate check-in — a staff member's timestamped arrival tap (one per day).
+// Feeds staff-presence visibility now and the reliability index at scale.
+model GateCheckIn {
+  id        String   @id @default(uuid())
+  schoolId  String
+  userId    String
+  date      DateTime @db.Date
+  arrivedAt DateTime @default(now())
+  user      User     @relation("GateCheckIns", fields: [userId], references: [id])
+  @@unique([userId, date])
+  @@index([schoolId, date])
 }
 
 // Digital library — platform-level study shelf (past GCE papers, syllabi,

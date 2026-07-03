@@ -30,6 +30,7 @@ export type AdminData = {
     recent: { phone: string; status: string }[];
   };
   reach: { smartphone: number; whatsapp: number; smsOnly: number; unknown: number; total: number };
+  gate: { name: string; title: string | null; time: string | null; onTime: boolean | null }[];
 };
 
 function StatCard({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "alert" }) {
@@ -254,6 +255,35 @@ export function AdminDashboard({ data }: { data: AdminData }) {
           </div>
         )}
       </section>
+
+      {/* Staff on site today (gate check-in) */}
+      {data.gate.length > 0 && (
+        <section className="mt-4 rounded-2xl border border-black/10 bg-white p-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-mono text-xs uppercase tracking-widest text-muted">{t("gateAdminTitle")}</h2>
+            <span className="font-mono text-xs tabular-nums text-flint-black">
+              {data.gate.filter((g) => g.time).length}/{data.gate.length}
+            </span>
+          </div>
+          <ul className="mt-3 space-y-1.5">
+            {data.gate.map((g, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 text-sm">
+                <span className="min-w-0 truncate text-flint-black">
+                  {g.name}
+                  {g.title && <span className="ml-1.5 font-mono text-[10px] uppercase text-muted">{g.title}</span>}
+                </span>
+                {g.time ? (
+                  <span className={`shrink-0 font-mono text-xs tabular-nums ${g.onTime ? "text-success" : "text-amber-700"}`}>
+                    {g.time} · {g.onTime ? t("gateOnTime") : t("gateLate")}
+                  </span>
+                ) : (
+                  <span className="shrink-0 font-mono text-xs text-muted">{t("gateNotYet")}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Completion grid */}
       <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">

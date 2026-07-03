@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 import { AttendanceMarker } from "@/components/AttendanceMarker";
+import { GateBanner } from "@/components/GateBanner";
+import { formatWat, isOnTime, watTodayISO } from "@/lib/gate";
 
 export const dynamic = "force-dynamic";
 
@@ -46,14 +49,32 @@ export default async function AttendancePage() {
     }))
     .sort((a, b) => a.lastName.localeCompare(b.lastName));
 
+  // Gate check-in state for the signed-in staff member (banner above the roster).
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  let gate: { time: string; onTime: boolean } | null = null;
+  if (user) {
+    const record = await prisma.gateCheckIn.findUnique({
+      where: { userId_date: { userId: user.id, date: new Date(watTodayISO()) } },
+    });
+    if (record) gate = { time: formatWat(record.arrivedAt), onTime: isOnTime(record.arrivedAt) };
+  }
+
   return (
-    <AttendanceMarker
-      slotId={slot.id}
-      dateISO={todayISO()}
-      className={slot.classGroup.name}
-      subjectName={slot.subject.name}
-      periodLabel={`${slot.startTime}–${slot.endTime}`}
-      students={students}
-    />
+    <>
+      <div className="px-4 pt-4">
+        <GateBanner initial={gate} />
+      </div>
+      <AttendanceMarker
+        slotId={slot.id}
+        dateISO={todayISO()}
+        className={slot.classGroup.name}
+        subjectName={slot.subject.name}
+        periodLabel={`${slot.startTime}–${slot.endTime}`}
+        students={students}
+      />
+    </>
   );
 }
