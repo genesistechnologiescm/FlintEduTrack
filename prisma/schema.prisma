@@ -744,6 +744,7 @@ model FeeItem {
   classGroupId String?
   label        String
   amount       Int // FCFA
+  dueDate      DateTime?   @db.Date // past this + unpaid balance = overdue
   createdBy    String
   createdAt    DateTime    @default(now())
   deletedAt    DateTime?

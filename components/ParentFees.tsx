@@ -15,6 +15,7 @@ type ChildFees = {
   billed: number;
   paid: number;
   balance: number;
+  overdueSince: string | null;
   payments: { id: string; amount: number; reference: string; date: string }[];
 };
 export type ParentFeesData = { parentPhone: string; children: ChildFees[] };
@@ -114,6 +115,11 @@ export function ParentFees({ data }: { data: ParentFeesData }) {
                   {formatFcfa(Math.max(0, c.balance))}
                 </div>
                 <div className="font-mono text-[10px] uppercase tracking-widest text-muted">{t("feeBalance")}</div>
+                {c.overdueSince && (
+                  <div className="mt-1 inline-block rounded-full bg-error/10 px-2 py-0.5 font-mono text-[10px] uppercase text-error">
+                    {t("feeOverdueSince")} {c.overdueSince}
+                  </div>
+                )}
               </div>
             </div>
 

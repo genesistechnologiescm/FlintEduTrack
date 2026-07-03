@@ -30,6 +30,23 @@ export default async function ParentFeesPage() {
       prisma.payment.findMany({ where: { studentId: link.studentId }, orderBy: { createdAt: "desc" }, take: 5 }),
     ]);
 
+    // Overdue: any applicable fee past its due date while a balance remains.
+    let overdueSince: string | null = null;
+    if (balance.balance > 0 && balance.schoolId) {
+      const today = new Date(new Date().toISOString().slice(0, 10));
+      const dueFees = await prisma.feeItem.findMany({
+        where: {
+          schoolId: balance.schoolId,
+          deletedAt: null,
+          dueDate: { not: null, lt: today },
+          OR: [{ classGroupId: balance.classGroupId }, { classGroupId: null }],
+        },
+        orderBy: { dueDate: "asc" },
+        take: 1,
+      });
+      if (dueFees.length > 0) overdueSince = dueFees[0].dueDate!.toISOString().slice(0, 10);
+    }
+
     children.push({
       studentId: link.studentId,
       name: `${link.student.firstName} ${link.student.lastName}`,
@@ -38,6 +55,7 @@ export default async function ParentFeesPage() {
       billed: balance.billed,
       paid: balance.paid,
       balance: balance.balance,
+      overdueSince,
       payments: payments.map((p) => ({ id: p.id, amount: p.amount, reference: p.reference, date: p.createdAt.toISOString().slice(0, 10) })),
     });
   }

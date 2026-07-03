@@ -5,15 +5,17 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { formatFcfa } from "@/lib/fees";
-import { addFeeItem, deleteFeeItem } from "@/app/admin/fees/actions";
+import { addFeeItem, deleteFeeItem, sendOverdueReminders } from "@/app/admin/fees/actions";
 
 type FeeRow = { id: string; label: string; amount: number; target: string | null; applicable: number };
 type PaymentRow = { id: string; student: string; amount: number; reference: string; method: string; date: string };
+type OverdueRow = { studentId: string; name: string; className: string; overdueAmount: number; daysOverdue: number };
 export type AdminFeesData = {
   schoolName: string;
   termLabel: string | null;
   billed: number;
   collected: number;
+  overdue: OverdueRow[];
   classes: { id: string; name: string }[];
   fees: FeeRow[];
   payments: PaymentRow[];
@@ -38,8 +40,11 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState("");
   const [classGroupId, setClassGroupId] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [remindBusy, setRemindBusy] = useState(false);
+  const [remindMsg, setRemindMsg] = useState<string | null>(null);
 
   const outstanding = Math.max(0, data.billed - data.collected);
   const rate = data.billed > 0 ? Math.round((data.collected / data.billed) * 100) : 0;
@@ -48,13 +53,23 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
     e.preventDefault();
     setBusy(true);
     setErr(null);
-    const res = await addFeeItem({ label, amount: Number(amount), classGroupId: classGroupId || undefined });
+    const res = await addFeeItem({ label, amount: Number(amount), classGroupId: classGroupId || undefined, dueDate: dueDate || undefined });
     setBusy(false);
     if (res.ok) {
       setLabel("");
       setAmount("");
+      setDueDate("");
       router.refresh();
     } else setErr(res.error ?? "error");
+  }
+
+  async function onRemind() {
+    setRemindBusy(true);
+    setRemindMsg(null);
+    const res = await sendOverdueReminders();
+    setRemindBusy(false);
+    if (res.ok) setRemindMsg(`${res.reminded} · ${res.costFcfa} FCFA`);
+    router.refresh();
   }
 
   async function onDelete(id: string) {
@@ -85,6 +100,43 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
         <Stat label={t("feeRate")} value={`${rate}%`} />
       </div>
 
+      {/* Overdue desk — students past a fee due date with an unpaid balance */}
+      {data.overdue.length > 0 && (
+        <section className="mt-4 rounded-2xl border border-error/20 bg-error/5 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-mono text-xs uppercase tracking-widest text-error">
+              {t("overdueTitle")} · {data.overdue.length}
+            </h2>
+            <button
+              type="button"
+              onClick={onRemind}
+              disabled={remindBusy}
+              className="min-h-10 shrink-0 rounded-full bg-error px-4 font-mono text-[11px] uppercase tracking-widest text-white disabled:opacity-60"
+            >
+              {remindBusy ? t("adding") : t("sendReminders")}
+            </button>
+          </div>
+          {remindMsg && (
+            <p className="mt-2 text-sm text-flint-black">
+              {t("remindersSent")}: <span className="font-mono">{remindMsg}</span>
+            </p>
+          )}
+          <ul className="mt-3 space-y-1.5">
+            {data.overdue.map((o) => (
+              <li key={o.studentId} className="flex items-center justify-between gap-3 text-sm">
+                <span className="min-w-0 truncate text-flint-black">
+                  {o.name} <span className="font-mono text-[11px] text-muted">· {o.className}</span>
+                </span>
+                <span className="shrink-0 font-mono text-xs tabular-nums">
+                  <span className="font-bold text-error">{formatFcfa(o.overdueAmount)}</span>
+                  <span className="text-muted"> · {o.daysOverdue}{t("daysShort")}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <section className="mt-4 rounded-2xl border border-black/10 bg-white p-5">
         <h2 className="mb-3 font-display text-lg font-bold text-flint-black">{t("addFee")}</h2>
         <form onSubmit={onAdd} className="space-y-3">
@@ -98,6 +150,10 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
               ))}
             </select>
           </div>
+          <label className="block text-sm">
+            <span className="mb-1 block font-mono text-xs uppercase tracking-widest text-muted">{t("feeDueDate")}</span>
+            <input className={field} type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </label>
           <button type="submit" disabled={busy} className="min-h-11 w-full rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60">
             {busy ? t("adding") : t("addFee")}
           </button>

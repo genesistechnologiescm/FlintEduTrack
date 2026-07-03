@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { AdminFees, type AdminFeesData } from "@/components/AdminFees";
+import { computeOverdue } from "@/lib/overdue";
 
 export const dynamic = "force-dynamic";
 
@@ -48,11 +49,14 @@ export default async function FeesPage() {
   });
   const collected = paidAgg._sum.amount ?? 0;
 
+  const overdue = await computeOverdue(schoolId);
+
   const data: AdminFeesData = {
     schoolName: membership.school.name,
     termLabel: term?.label ?? null,
     billed,
     collected,
+    overdue,
     classes: classes.map((c) => ({ id: c.id, name: c.name })),
     fees: feeRows,
     payments: payments.map((p) => ({
