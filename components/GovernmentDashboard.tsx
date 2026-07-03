@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { LogoutButton } from "./LogoutButton";
@@ -23,30 +24,10 @@ export function GovernmentDashboard({ data }: { data: GovernmentData }) {
   const { t } = useI18n();
   const gap = data.crisisRate !== null && data.restRate !== null ? data.restRate - data.crisisRate : null;
 
-  function downloadCsv() {
-    const rows: string[][] = [
-      [t("govReportTitle")],
-      [t("govGenerated"), data.generatedAt],
-      [],
-      [t("natAttendance"), pct(data.nationalRate)],
-      [t("natCrisisZones"), pct(data.crisisRate)],
-      [t("natRest"), pct(data.restRate)],
-      [],
-      [t("govRegion"), t("govCrisis"), t("studentsWord"), t("natAttendance")],
-      ...data.regions.map((r) => [r.region, r.crisis ? "yes" : "no", String(r.students), pct(r.rate)]),
-      [],
-      [t("govSchool"), t("govRegion"), t("govCrisis"), t("studentsWord"), t("natAttendance")],
-      ...data.schools.map((s) => [s.name, s.region, s.crisis ? "yes" : "no", String(s.students), pct(s.rate)]),
-    ];
-    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `edutrack-national-report-${data.generatedAt}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  // Server export: custom date range + k-anonymity applied server-side.
+  const [from, setFrom] = useState(new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10));
+  const [to, setTo] = useState(new Date().toISOString().slice(0, 10));
+  const exportHref = `/government/export?from=${from}&to=${to}`;
 
   return (
     <main className="mx-auto max-w-[760px] px-4 pb-16 pt-6">
@@ -97,14 +78,36 @@ export function GovernmentDashboard({ data }: { data: GovernmentData }) {
         </div>
       </section>
 
-      {/* Export */}
-      <button
-        type="button"
-        onClick={downloadCsv}
-        className="mt-4 min-h-11 w-full rounded-full bg-flint-blue font-mono text-sm font-medium text-white"
-      >
-        {t("govDownload")}
-      </button>
+      {/* Export — custom range, k-anonymised server-side */}
+      <section className="mt-4 rounded-2xl border border-black/10 bg-white p-4">
+        <div className="grid grid-cols-2 gap-3">
+          <label className="text-sm">
+            <span className="mb-1 block font-mono text-xs uppercase tracking-widest text-muted">{t("govFrom")}</span>
+            <input
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base"
+            />
+          </label>
+          <label className="text-sm">
+            <span className="mb-1 block font-mono text-xs uppercase tracking-widest text-muted">{t("govTo")}</span>
+            <input
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base"
+            />
+          </label>
+        </div>
+        <a
+          href={exportHref}
+          className="mt-3 flex min-h-11 w-full items-center justify-center rounded-full bg-flint-blue font-mono text-sm font-medium text-white"
+        >
+          {t("govDownload")}
+        </a>
+        <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted">{t("govKNote")}</p>
+      </section>
 
       {/* Regional breakdown */}
       <h2 className="mb-2 mt-8 font-mono text-xs uppercase tracking-widest text-muted">{t("govByRegion")}</h2>
