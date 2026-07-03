@@ -34,6 +34,7 @@ export async function submitQuiz(raw: z.infer<typeof SubmitSchema>): Promise<{ o
     include: { questions: { orderBy: { order: "asc" } } },
   });
   if (!quiz) return { ok: false, error: "Quiz not found" };
+  if (quiz.dueAt && new Date() > quiz.dueAt) return { ok: false, error: "The deadline for this quiz has passed" };
 
   const existing = await prisma.quizAttempt.findUnique({ where: { quizId_studentId: { quizId: quiz.id, studentId } } });
   if (existing) return { ok: false, error: "Already submitted" };

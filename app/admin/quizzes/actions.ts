@@ -30,6 +30,7 @@ const QuizSchema = z
     subjectId: z.string().uuid(),
     classGroupId: z.string().uuid().optional(),
     title: z.string().trim().min(1).max(140),
+    dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     questions: z.array(QuestionSchema).min(1).max(30),
   })
   .refine((v) => v.questions.every((q) => q.correctIndex < q.options.length), {
@@ -54,6 +55,8 @@ export async function createQuiz(raw: z.infer<typeof QuizSchema>): Promise<{ ok:
       subjectId: input.subjectId,
       classGroupId: input.classGroupId ?? null,
       title: input.title,
+      // Deadline = 23:59 Cameroon time (WAT, UTC+1) on the chosen day.
+      dueAt: input.dueDate ? new Date(`${input.dueDate}T22:59:59.000Z`) : null,
       createdBy: userId,
       questions: {
         create: input.questions.map((q, i) => ({

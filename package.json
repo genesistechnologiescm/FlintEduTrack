@@ -31,6 +31,7 @@
     "db:seed:gate": "node --env-file=.env --env-file=.env.local prisma/seed-gate.js",
     "db:seed:wellbeing": "node --env-file=.env --env-file=.env.local prisma/seed-wellbeing.js",
     "db:seed:overdue": "node --env-file=.env --env-file=.env.local prisma/seed-overdue.js",
+    "db:seed:quizdeadline": "node --env-file=.env --env-file=.env.local prisma/seed-quiz-deadline.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

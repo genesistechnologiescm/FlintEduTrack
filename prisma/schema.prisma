@@ -795,6 +795,7 @@ model Quiz {
   subjectId    String
   classGroupId String?
   title        String
+  dueAt        DateTime? // deadline (23:59 WAT of the chosen day); null = always open
   createdBy    String
   createdAt    DateTime       @default(now())
   deletedAt    DateTime?

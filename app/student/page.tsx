@@ -75,12 +75,15 @@ export default async function StudentPage() {
   ]);
   const scoreByQuiz = new Map(attempts.map((a) => [a.quizId, a.score]));
   const subjName = new Map(subjectsRaw.map((s) => [s.id, s.name]));
+  const now = new Date();
   const quizzes = quizzesRaw.map((q) => ({
     id: q.id,
     title: q.title,
     subject: subjName.get(q.subjectId) ?? "—",
     questions: q._count.questions,
     score: scoreByQuiz.get(q.id) ?? null,
+    due: q.dueAt ? q.dueAt.toISOString().slice(0, 10) : null,
+    closed: !!q.dueAt && now > q.dueAt,
   }));
 
   const events = enrollment ? await upcomingEvents([enrollment.schoolId]) : [];

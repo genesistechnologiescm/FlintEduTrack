@@ -48,6 +48,7 @@ export default async function QuizzesPage() {
         questions: q._count.questions,
         attempts: scores.length,
         avgScore: avg,
+        due: q.dueAt ? q.dueAt.toISOString().slice(0, 10) : null,
       };
     }),
   };

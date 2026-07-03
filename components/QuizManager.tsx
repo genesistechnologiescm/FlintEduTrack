@@ -6,7 +6,7 @@ import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { createQuiz, deleteQuiz } from "@/app/admin/quizzes/actions";
 
-type QuizRow = { id: string; title: string; subject: string; target: string | null; questions: number; attempts: number; avgScore: number | null };
+type QuizRow = { id: string; title: string; subject: string; target: string | null; questions: number; attempts: number; avgScore: number | null; due: string | null };
 export type QuizManagerData = {
   schoolName: string;
   isAdmin: boolean;
@@ -25,6 +25,7 @@ export function QuizManager({ data }: { data: QuizManagerData }) {
   const [subjectId, setSubjectId] = useState(data.subjects[0]?.id ?? "");
   const [classGroupId, setClassGroupId] = useState("");
   const [title, setTitle] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [questions, setQuestions] = useState<Draft[]>([blankQ()]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -46,11 +47,13 @@ export function QuizManager({ data }: { data: QuizManagerData }) {
       subjectId,
       classGroupId: classGroupId || undefined,
       title,
+      dueDate: dueDate || undefined,
       questions: questions.map((q) => ({ prompt: q.prompt, options: q.options.filter((o) => o.trim()), correctIndex: q.correctIndex })),
     });
     setBusy(false);
     if (res.ok) {
       setTitle("");
+      setDueDate("");
       setQuestions([blankQ()]);
       router.refresh();
     } else setErr(res.error ?? "error");
@@ -94,6 +97,10 @@ export function QuizManager({ data }: { data: QuizManagerData }) {
               </select>
             </div>
             <input className={field} placeholder={t("quizTitle")} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} required />
+            <label className="block text-sm">
+              <span className="mb-1 block font-mono text-xs uppercase tracking-widest text-muted">{t("quizDeadline")}</span>
+              <input className={field} type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            </label>
 
             {questions.map((q, i) => (
               <div key={i} className="rounded-xl border border-black/10 bg-black/[0.02] p-3">
@@ -152,7 +159,10 @@ export function QuizManager({ data }: { data: QuizManagerData }) {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h3 className="font-display font-bold text-flint-black">{q.title}</h3>
-                  <p className="font-mono text-xs text-muted">{q.subject} · {q.target ?? t("resAllClasses")} · {q.questions} {t("quizQs")}</p>
+                  <p className="font-mono text-xs text-muted">
+                    {q.subject} · {q.target ?? t("resAllClasses")} · {q.questions} {t("quizQs")}
+                    {q.due && <span className="text-flint-blue"> · {t("quizDue")} {q.due}</span>}
+                  </p>
                 </div>
                 <button type="button" onClick={() => onDelete(q.id)} className="shrink-0 font-mono text-[11px] uppercase text-error hover:underline">
                   {t("resDelete")}

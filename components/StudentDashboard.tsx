@@ -17,7 +17,7 @@ export type StudentData = {
   subjects: SubjectGrade[];
   overall: number | null;
   lessons: { subject: string; items: Lesson[] }[];
-  quizzes: { id: string; title: string; subject: string; questions: number; score: number | null }[];
+  quizzes: { id: string; title: string; subject: string; questions: number; score: number | null; due: string | null; closed: boolean }[];
   events: { title: string; startDate: string; endDate: string | null; note: string | null }[];
 };
 
@@ -148,14 +148,23 @@ export function StudentDashboard({ data }: { data: StudentData }) {
               <li key={q.id} className="flex items-center justify-between gap-3 rounded-xl border border-black/10 bg-white px-4 py-3">
                 <div className="min-w-0">
                   <div className="truncate font-medium text-flint-black">{q.title}</div>
-                  <div className="font-mono text-xs text-muted">{q.subject} · {q.questions} {t("quizQs")}</div>
+                  <div className="font-mono text-xs text-muted">
+                    {q.subject} · {q.questions} {t("quizQs")}
+                    {q.due && (
+                      <span className={q.closed && q.score === null ? "text-error" : "text-flint-blue"}>
+                        {" "}· {t("quizDue")} {q.due}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                {q.score === null ? (
+                {q.score !== null ? (
+                  <span className="shrink-0 rounded-full bg-success/15 px-3 py-1 font-mono text-xs font-bold text-success">{q.score}%</span>
+                ) : q.closed ? (
+                  <span className="shrink-0 rounded-full bg-error/10 px-3 py-1 font-mono text-xs text-error">{t("quizClosed")}</span>
+                ) : (
                   <a href={`/student/quiz/${q.id}`} className="shrink-0 rounded-full bg-flint-blue px-4 py-2 font-mono text-xs font-medium text-white">
                     {t("quizTake")}
                   </a>
-                ) : (
-                  <span className="shrink-0 rounded-full bg-success/15 px-3 py-1 font-mono text-xs font-bold text-success">{q.score}%</span>
                 )}
               </li>
             ))}

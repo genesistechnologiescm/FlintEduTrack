@@ -27,6 +27,8 @@ export default async function TakeQuizPage({ params }: { params: Promise<{ id: s
   });
   // Must belong to the student's class (or be whole-school).
   if (!quiz || (quiz.classGroupId && quiz.classGroupId !== enrollment?.classGroupId)) redirect("/student");
+  // Past the deadline → back to the dashboard (the submit action enforces too).
+  if (quiz.dueAt && new Date() > quiz.dueAt) redirect("/student");
 
   const attempt = await prisma.quizAttempt.findUnique({
     where: { quizId_studentId: { quizId: quiz.id, studentId: account.studentId } },
