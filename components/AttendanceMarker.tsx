@@ -117,12 +117,20 @@ export function AttendanceMarker({
         <p className="text-muted">
           {subjectName} · {periodLabel} · {t("todayLabel")}
         </p>
-        <a
-          href="/grades"
-          className="mt-2 inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("gradesNav")} →
-        </a>
+        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+          <a href="/grades" className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+            {t("gradesNav")} →
+          </a>
+          <a href="/admin/resources" className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+            {t("resourcesNav")} →
+          </a>
+          <a href="/admin/quizzes" className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+            {t("quizzesNav")} →
+          </a>
+          <a href="/library" className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+            {t("libraryNav")} →
+          </a>
+        </div>
         <p className="mt-3 rounded-lg bg-black/5 px-3 py-2 text-sm text-muted">
           {t("tapHint")}
         </p>

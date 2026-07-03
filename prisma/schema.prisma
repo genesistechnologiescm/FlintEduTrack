@@ -542,11 +542,16 @@ model LibraryItem {
   url       String?
   body      String?
   lang      Lang        @default(EN)
+  // Contribution pipeline: teachers SUBMIT (PENDING), a Flint curator approves.
+  // Only APPROVED items appear on the shelf — curation, not a junk drawer.
+  status    String      @default("APPROVED") // PENDING | APPROVED | REJECTED
+  schoolId  String? // submitting school (provenance), null = platform-curated
   createdBy String
   createdAt DateTime    @default(now())
   deletedAt DateTime?
   @@index([subject, year])
   @@index([kind])
+  @@index([status])
 }
 
 // School calendar — staff publish term dates/events; parents and students read.

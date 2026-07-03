@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
+import { submitLibraryItem } from "@/app/library/actions";
 
 type Item = {
   id: string;
@@ -15,10 +17,121 @@ type Item = {
   url: string | null;
   body: string | null;
 };
-export type LibraryData = { items: Item[] };
+export type LibraryData = {
+  items: Item[];
+  canContribute: boolean;
+  isCurator: boolean;
+  pendingCount: number;
+  mySubmissions: { title: string; status: "PENDING" | "REJECTED" }[];
+};
 
 const KINDS = ["PAST_PAPER", "SYLLABUS", "STUDY_GUIDE"] as const;
 const field = "min-h-11 rounded-lg border border-black/15 bg-white px-3 text-base";
+
+// Staff-only: submit a contribution to the national shelf (curated before it appears).
+function ContributeCard({ mySubmissions }: { mySubmissions: LibraryData["mySubmissions"] }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [kind, setKind] = useState<(typeof KINDS)[number]>("STUDY_GUIDE");
+  const [title, setTitle] = useState("");
+  const [subject, setSubject] = useState("");
+  const [url, setUrl] = useState("");
+  const [body, setBody] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      const res = await submitLibraryItem({
+        kind,
+        title,
+        subject,
+        url: url.trim() || undefined,
+        body: body.trim() || undefined,
+      });
+      if (res.ok) {
+        setMsg(t("libSubmitted"));
+        setTitle("");
+        setSubject("");
+        setUrl("");
+        setBody("");
+        router.refresh();
+      } else setErr(res.error ?? "error");
+    } catch {
+      setErr(t("libSubmitFailed"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="mt-5 rounded-2xl border border-flint-blue/20 bg-flint-blue/5 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="font-medium text-flint-black">{t("libContribute")}</div>
+          <div className="font-mono text-[11px] text-muted">{t("libContributeHint")}</div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="min-h-10 shrink-0 rounded-full border border-flint-blue/30 px-4 font-mono text-xs uppercase tracking-widest text-flint-blue"
+        >
+          {open ? t("cancel") : t("libContributeBtn")}
+        </button>
+      </div>
+
+      {open && (
+        <form onSubmit={onSubmit} className="mt-3 space-y-2 border-t border-flint-blue/10 pt-3">
+          <div className="grid grid-cols-2 gap-2">
+            <select className={field} value={kind} onChange={(e) => setKind(e.target.value as (typeof KINDS)[number])}>
+              <option value="STUDY_GUIDE">{t("libGuides")}</option>
+              <option value="PAST_PAPER">{t("libPapers")}</option>
+              <option value="SYLLABUS">{t("libSyllabi")}</option>
+            </select>
+            <input className={field} placeholder={t("fldSubject")} value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={60} required />
+          </div>
+          <input className={`${field} w-full`} placeholder={t("fldTitle")} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} required />
+          <input className={`${field} w-full`} type="url" inputMode="url" placeholder={t("libLinkOptional")} value={url} onChange={(e) => setUrl(e.target.value)} />
+          <textarea
+            className="min-h-24 w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-base"
+            placeholder={t("libBodyOptional")}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            maxLength={8000}
+          />
+          <button type="submit" disabled={busy} className="min-h-11 w-full rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60">
+            {busy ? t("adding") : t("libSubmitBtn")}
+          </button>
+          {msg && <p className="text-center text-sm text-success">{msg}</p>}
+          {err && <p className="text-center text-sm text-error">{err}</p>}
+        </form>
+      )}
+
+      {mySubmissions.length > 0 && (
+        <ul className="mt-3 space-y-1 border-t border-flint-blue/10 pt-3">
+          {mySubmissions.map((s, i) => (
+            <li key={i} className="flex items-center justify-between gap-3 text-sm">
+              <span className="min-w-0 truncate text-flint-black">{s.title}</span>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] uppercase ${
+                  s.status === "PENDING" ? "bg-amber-500/10 text-amber-700" : "bg-error/10 text-error"
+                }`}
+              >
+                {s.status === "PENDING" ? t("libPending") : t("corrRejected")}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 export function Library({ data }: { data: LibraryData }) {
   const { t } = useI18n();
@@ -68,6 +181,18 @@ export function Library({ data }: { data: LibraryData }) {
         <LanguageToggle />
       </header>
 
+      {data.isCurator && data.pendingCount > 0 && (
+        <a
+          href="/curate"
+          className="mb-4 flex min-h-11 items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3"
+        >
+          <span className="font-medium text-amber-800">
+            {t("libReviewQueue")} · {data.pendingCount}
+          </span>
+          <span className="font-mono text-xs text-amber-700">→</span>
+        </a>
+      )}
+
       {/* Kind tabs */}
       <div className="flex gap-2" role="tablist">
         {KINDS.map((k) => (
@@ -102,6 +227,8 @@ export function Library({ data }: { data: LibraryData }) {
           onChange={(e) => setQ(e.target.value)}
         />
       </div>
+
+      {data.canContribute && <ContributeCard mySubmissions={data.mySubmissions} />}
 
       {/* Shelf */}
       {groups.length === 0 ? (
