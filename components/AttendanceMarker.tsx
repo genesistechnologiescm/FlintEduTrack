@@ -133,6 +133,9 @@ export function AttendanceMarker({
           <a href="/wellbeing" className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
             {t("wellbeingNav")} →
           </a>
+          <a href="/handover" className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+            {t("handoverNav")} →
+          </a>
         </div>
         <p className="mt-3 rounded-lg bg-black/5 px-3 py-2 text-sm text-muted">
           {t("tapHint")}

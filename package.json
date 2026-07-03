@@ -32,6 +32,7 @@
     "db:seed:wellbeing": "node --env-file=.env --env-file=.env.local prisma/seed-wellbeing.js",
     "db:seed:overdue": "node --env-file=.env --env-file=.env.local prisma/seed-overdue.js",
     "db:seed:quizdeadline": "node --env-file=.env --env-file=.env.local prisma/seed-quiz-deadline.js",
+    "db:seed:handover": "node --env-file=.env --env-file=.env.local prisma/seed-handover.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

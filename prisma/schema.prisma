@@ -133,6 +133,7 @@ model User {
   paymentsMade  Payment[]                     @relation("PaymentsMade")
   correctionRequests GradeCorrection[]        @relation("CorrectionRequests")
   gateCheckIns  GateCheckIn[]                 @relation("GateCheckIns")
+  handoverNotes HandoverNote[]                @relation("HandoverNotes")
 }
 
 // ───────────────────────── Tenant + calendar ─────────────────────────
@@ -223,6 +224,7 @@ model ClassGroup {
   announcements  Announcement[]
   resources      LessonResource[]
   feeItems       FeeItem[]
+  handoverNotes  HandoverNote[]
   @@index([schoolId])
   @@index([academicYearId])
 }
@@ -546,6 +548,23 @@ model Grade {
   @@unique([studentId, subjectId, termId, sequence])
   @@index([schoolId, termId])
   @@index([studentId])
+}
+
+// Substitute handover note — a teacher leaves dated cover instructions on a
+// class; any staff member covering it sees the note on the attendance screen
+// until it expires (Phase-2 Communications spec).
+model HandoverNote {
+  id           String     @id @default(uuid())
+  schoolId     String
+  classGroupId String
+  body         String
+  activeUntil  DateTime   @db.Date
+  authorUserId String
+  createdAt    DateTime   @default(now())
+  deletedAt    DateTime?
+  classGroup   ClassGroup @relation(fields: [classGroupId], references: [id])
+  author       User       @relation("HandoverNotes", fields: [authorUserId], references: [id])
+  @@index([schoolId, classGroupId, activeUntil])
 }
 
 // Gate check-in — a staff member's timestamped arrival tap (one per day).

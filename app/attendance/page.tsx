@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { AttendanceMarker } from "@/components/AttendanceMarker";
 import { GateBanner } from "@/components/GateBanner";
+import { HandoverNotice } from "@/components/HandoverNotice";
 import { formatWat, isOnTime, watTodayISO } from "@/lib/gate";
 
 export const dynamic = "force-dynamic";
@@ -62,10 +63,27 @@ export default async function AttendancePage() {
     if (record) gate = { time: formatWat(record.arrivedAt), onTime: isOnTime(record.arrivedAt) };
   }
 
+  // Active handover notes for this class — the substitute's briefing.
+  const handoverRows = await prisma.handoverNote.findMany({
+    where: {
+      classGroupId: slot.classGroupId,
+      deletedAt: null,
+      activeUntil: { gte: new Date(watTodayISO()) },
+    },
+    orderBy: { activeUntil: "asc" },
+    include: { author: { select: { displayName: true } } },
+  });
+  const handoverNotes = handoverRows.map((n) => ({
+    body: n.body,
+    until: n.activeUntil.toISOString().slice(0, 10),
+    author: n.author.displayName,
+  }));
+
   return (
     <>
       <div className="px-4 pt-4">
         <GateBanner initial={gate} />
+        <HandoverNotice notes={handoverNotes} />
       </div>
       <AttendanceMarker
         slotId={slot.id}
