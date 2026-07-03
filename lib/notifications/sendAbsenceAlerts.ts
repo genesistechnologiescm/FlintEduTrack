@@ -1,21 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendWebPush } from "./sendWebPush";
-
-// ── Mock sender ──────────────────────────────────────────────
-// Logs instead of sending. Swap for Africa's Talking at pilot (Notification
-// Router, doc 05) — this is the ONLY thing that changes to go live.
-async function mockSend(channel: "SMS", to: string, body: string) {
-  // Dev-only visibility — never a parent's phone or child's name in production
-  // logs (security review #6). NotificationLog already records the send.
-  if (process.env.NODE_ENV !== "production") {
-    // eslint-disable-next-line no-console
-    console.log(`[MOCK ${channel}] -> ${to}: ${body}`);
-  }
-  return {
-    providerMsgId: `mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    costFcfa: 5, // Africa's Talking ~5 FCFA/SMS (real cost logged once live)
-  };
-}
+import { pickPaidChannel, deliver } from "./router";
 
 function absenceMessage(lang: "EN" | "FR", studentName: string, dateISO: string, school: string) {
   return lang === "FR"
@@ -71,22 +56,47 @@ export async function sendAbsenceAlerts(params: {
         schoolName,
       );
 
+      // Free push is always attempted first (if the parent's PWA is subscribed);
+      // the paid channel decision below depends on whether it exists.
+      const push = await prisma.parentChannel.findFirst({
+        where: { parentUserId: link.parentUserId, type: "PUSH", optedIn: true },
+      });
+
       if (immediate) {
-        const res = await mockSend("SMS", link.parent.phone, body);
-        await prisma.notificationLog.create({
-          data: {
-            parentUserId: link.parentUserId,
-            studentId,
-            eventType: "ABSENCE_FIRST_UNEXCUSED",
-            criticality: "CRITICAL",
-            channelAttempted: "SMS",
-            channelSucceeded: "SMS",
-            costFcfa: res.costFcfa,
-            idempotencyKey,
-            deliveryStatus: "SENT",
-            providerMsgId: res.providerMsgId,
-          },
-        });
+        // Router v2: cheapest capable channel for THIS parent —
+        // WhatsApp (1 FCFA) > SMS (5 FCFA); free push alone when it suffices.
+        const channel = pickPaidChannel(link.parent.contactCapability, !!push);
+        if (channel) {
+          const res = await deliver(channel, link.parent.phone, body);
+          await prisma.notificationLog.create({
+            data: {
+              parentUserId: link.parentUserId,
+              studentId,
+              eventType: "ABSENCE_FIRST_UNEXCUSED",
+              criticality: "CRITICAL",
+              channelAttempted: channel,
+              channelSucceeded: channel,
+              costFcfa: res.costFcfa,
+              idempotencyKey,
+              deliveryStatus: "SENT",
+              providerMsgId: res.providerMsgId,
+            },
+          });
+        } else {
+          await prisma.notificationLog.create({
+            data: {
+              parentUserId: link.parentUserId,
+              studentId,
+              eventType: "ABSENCE_FIRST_UNEXCUSED",
+              criticality: "CRITICAL",
+              channelAttempted: "PUSH",
+              channelSucceeded: "PUSH",
+              costFcfa: 0,
+              idempotencyKey,
+              deliveryStatus: "SENT",
+            },
+          });
+        }
         sent++;
       } else {
         await prisma.notificationLog.create({
@@ -95,7 +105,7 @@ export async function sendAbsenceAlerts(params: {
             studentId,
             eventType: "ABSENCE_DIGEST",
             criticality: "ROUTINE",
-            channelAttempted: "SMS",
+            channelAttempted: pickPaidChannel(link.parent.contactCapability, !!push) ?? "PUSH",
             costFcfa: 0,
             idempotencyKey,
             deliveryStatus: "QUEUED",
@@ -104,10 +114,6 @@ export async function sendAbsenceAlerts(params: {
         queued++;
       }
 
-      // Free active push to the parent's installed PWA, if they've subscribed.
-      const push = await prisma.parentChannel.findFirst({
-        where: { parentUserId: link.parentUserId, type: "PUSH", optedIn: true },
-      });
       if (push) {
         try {
           await sendWebPush(JSON.parse(push.address), { title: "EduTrack", body, url: "/parent" });

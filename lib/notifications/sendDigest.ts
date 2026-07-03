@@ -5,6 +5,7 @@
 // flip to SENT. Called by the Vercel cron (16:00 UTC = 17:00 Cameroon).
 import { prisma } from "@/lib/prisma";
 import { sendWebPush } from "./sendWebPush";
+import { pickPaidChannel, deliver } from "./router";
 
 function digestBody(lang: "EN" | "FR", names: string[], count: number): string {
   const list = names.join(", ");
@@ -46,28 +47,41 @@ export async function sendDigest(): Promise<{ parents: number; absences: number;
     const names = [...new Set(rows.map((r) => (r.studentId ? nameById.get(r.studentId) : null)).filter((n): n is string => !!n))];
     const body = digestBody(parent.preferredLang, names.length ? names : ["your child"], rows.length);
 
-    // One mock SMS per parent — the whole point of batching.
-    const providerMsgId = `mock_digest_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const smsCost = 5;
-    totalCost += smsCost;
+    const push = await prisma.parentChannel.findFirst({
+      where: { parentUserId, type: "PUSH", optedIn: true },
+    });
+
+    // Router v2: ONE delivery per parent on their cheapest capable channel —
+    // WhatsApp (1 FCFA) / SMS (5 FCFA) / free push alone when it suffices.
+    const channel = pickPaidChannel(parent.contactCapability, !!push);
+    let providerMsgId: string | null = null;
+    let cost = 0;
+    if (channel) {
+      const res = await deliver(channel, parent.phone, body);
+      providerMsgId = res.providerMsgId;
+      cost = res.costFcfa;
+      totalCost += cost;
+    }
 
     const now = new Date();
     // Cost lands on the first row of the batch; the rest flip to SENT at 0 cost.
     await prisma.notificationLog.update({
       where: { id: rows[0].id },
-      data: { deliveryStatus: "SENT", channelSucceeded: "SMS", providerMsgId, costFcfa: smsCost, deliveredAt: now },
+      data: {
+        deliveryStatus: "SENT",
+        channelSucceeded: channel ?? "PUSH",
+        providerMsgId,
+        costFcfa: cost,
+        deliveredAt: now,
+      },
     });
     if (rows.length > 1) {
       await prisma.notificationLog.updateMany({
         where: { id: { in: rows.slice(1).map((r) => r.id) } },
-        data: { deliveryStatus: "SENT", channelSucceeded: "SMS", providerMsgId, deliveredAt: now },
+        data: { deliveryStatus: "SENT", channelSucceeded: channel ?? "PUSH", providerMsgId, deliveredAt: now },
       });
     }
 
-    // Free push too, if the parent's PWA is subscribed.
-    const push = await prisma.parentChannel.findFirst({
-      where: { parentUserId, type: "PUSH", optedIn: true },
-    });
     if (push) {
       try {
         await sendWebPush(JSON.parse(push.address), { title: "EduTrack", body, url: "/parent" });
