@@ -98,22 +98,25 @@ export function NationalDashboard({ data }: { data: NationalData }) {
       <ul className="space-y-3">
         {data.regions.map((r) => (
           <li key={r.region}>
-            <div className="mb-1 flex items-center justify-between text-sm">
-              <span className="font-medium text-flint-black">
-                {r.region}
-                {r.crisis && <span className="ml-2 rounded-full bg-error/10 px-2 py-0.5 font-mono text-[10px] uppercase text-error">crisis</span>}
-              </span>
-              <span className="font-mono tabular-nums text-muted">
-                {pct(r.rate)} · {r.students}
-                {r.atRisk > 0 && <span className="text-error"> · {r.atRisk} {t("natAtRiskShort")}</span>}
-              </span>
-            </div>
-            <div className="h-2.5 w-full overflow-hidden rounded-full bg-black/5">
-              <div
-                className={`h-full rounded-full ${r.crisis ? "bg-error" : "bg-flint-blue"}`}
-                style={{ width: `${r.rate ?? 0}%` }}
-              />
-            </div>
+            <a href={`/national/${encodeURIComponent(r.region)}`} className="group block">
+              <div className="mb-1 flex items-center justify-between text-sm">
+                <span className="font-medium text-flint-black group-hover:text-flint-blue">
+                  {r.region}
+                  {r.crisis && <span className="ml-2 rounded-full bg-error/10 px-2 py-0.5 font-mono text-[10px] uppercase text-error">crisis</span>}
+                </span>
+                <span className="font-mono tabular-nums text-muted">
+                  {pct(r.rate)} · {r.students}
+                  {r.atRisk > 0 && <span className="text-error"> · {r.atRisk} {t("natAtRiskShort")}</span>}
+                  <span className="ml-2 text-flint-blue">→</span>
+                </span>
+              </div>
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-black/5">
+                <div
+                  className={`h-full rounded-full ${r.crisis ? "bg-error" : "bg-flint-blue"}`}
+                  style={{ width: `${r.rate ?? 0}%` }}
+                />
+              </div>
+            </a>
           </li>
         ))}
       </ul>
