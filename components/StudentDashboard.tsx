@@ -56,6 +56,18 @@ export function StudentDashboard({ data }: { data: StudentData }) {
         <span className="font-mono text-xs text-flint-blue">→</span>
       </a>
 
+      {/* Digital library */}
+      <a
+        href="/library"
+        className="mb-4 flex min-h-11 items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 transition-colors hover:bg-black/[0.02]"
+      >
+        <span>
+          <span className="block font-medium text-flint-black">{t("libraryNav")}</span>
+          <span className="block font-mono text-[11px] text-muted">{t("libTeaser")}</span>
+        </span>
+        <span className="font-mono text-xs text-flint-blue">→</span>
+      </a>
+
       {/* Attendance */}
       <section className="rounded-2xl border border-black/10 bg-white p-5">
         <div className="flex items-center justify-between">

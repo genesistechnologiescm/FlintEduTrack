@@ -522,6 +522,33 @@ model Grade {
   @@index([studentId])
 }
 
+// Digital library — platform-level study shelf (past GCE papers, syllabi,
+// study guides). Deliberately NOT school-scoped: one curated national shelf,
+// readable by every authenticated user. Writes are server-side only (curated).
+enum LibraryKind {
+  PAST_PAPER
+  SYLLABUS
+  STUDY_GUIDE
+}
+
+model LibraryItem {
+  id        String      @id @default(uuid())
+  kind      LibraryKind @default(PAST_PAPER)
+  title     String
+  subject   String
+  exam      String? // e.g. "GCE O Level", "GCE A Level"
+  year      Int?
+  paper     Int?
+  url       String?
+  body      String?
+  lang      Lang        @default(EN)
+  createdBy String
+  createdAt DateTime    @default(now())
+  deletedAt DateTime?
+  @@index([subject, year])
+  @@index([kind])
+}
+
 // School calendar — staff publish term dates/events; parents and students read.
 model CalendarEvent {
   id        String    @id @default(uuid())
