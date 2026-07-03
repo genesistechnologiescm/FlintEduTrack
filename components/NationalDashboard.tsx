@@ -1,6 +1,7 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n/LanguageProvider";
+import { RiskMap, type MapRow } from "./RiskMap";
 import { LanguageToggle } from "./LanguageToggle";
 
 type Region = { region: string; crisis: boolean; students: number; rate: number | null; atRisk: number };
@@ -64,6 +65,7 @@ export type NationalData = {
   restAtRisk: number;
   regions: Region[];
   trend: TrendPoint[];
+  mapRows: MapRow[];
 };
 
 function pct(n: number | null) {
@@ -140,6 +142,12 @@ export function NationalDashboard({ data }: { data: NationalData }) {
             {data.crisisAtRisk} {t("natRiskInCrisis")}
           </p>
         )}
+      </section>
+
+      {/* Risk map — schematic region tiles */}
+      <section className="mt-8 rounded-2xl border border-black/10 bg-white p-4">
+        <h2 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">{t("natMapTitle")}</h2>
+        <RiskMap rows={data.mapRows} />
       </section>
 
       {/* 30-day trend */}

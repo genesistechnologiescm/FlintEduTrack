@@ -127,6 +127,12 @@ export default async function NationalPage() {
     restAtRisk,
     regions,
     trend,
+    mapRows: regions.map((r) => ({
+      region: r.region,
+      atRisk: r.atRisk,
+      students: r.students,
+      hasData: true,
+    })),
   };
 
   return <NationalDashboard data={data} />;
