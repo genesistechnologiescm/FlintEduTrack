@@ -4,6 +4,7 @@ import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { LogoutButton } from "./LogoutButton";
 import { OfflineLessons } from "./OfflineLessons";
+import { recordResourceView } from "@/app/student/actions";
 import type { SubjectGrade } from "@/lib/grades";
 
 type Lesson = { id: string; title: string; type: "LINK" | "NOTE"; url: string | null; body: string | null };
@@ -196,12 +197,18 @@ export function StudentDashboard({ data }: { data: StudentData }) {
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => void recordResourceView(item.id)}
                         className="mt-1 inline-flex min-h-9 items-center font-mono text-xs text-flint-blue hover:underline"
                       >
                         {t("resOpen")} →
                       </a>
                     ) : (
-                      <p className="mt-1 whitespace-pre-wrap text-sm text-flint-black">{item.body}</p>
+                      <details onToggle={(e) => (e.target as HTMLDetailsElement).open && void recordResourceView(item.id)}>
+                        <summary className="mt-1 cursor-pointer font-mono text-xs uppercase tracking-widest text-flint-blue">
+                          {t("libRead")}
+                        </summary>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-flint-black">{item.body}</p>
+                      </details>
                     )}
                   </li>
                 ))}

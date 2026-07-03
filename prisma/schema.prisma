@@ -744,8 +744,22 @@ model LessonResource {
   subject      Subject      @relation(fields: [subjectId], references: [id])
   classGroup   ClassGroup?  @relation(fields: [classGroupId], references: [id])
   author       User         @relation("AuthoredResources", fields: [createdBy], references: [id])
+  views        ResourceView[]
   @@index([schoolId, subjectId])
   @@index([classGroupId])
+}
+
+// Engagement telemetry: one row per student per resource per day (deduped —
+// reach, not click-inflation). Server-written only; teachers read aggregates.
+model ResourceView {
+  id         String         @id @default(uuid())
+  resourceId String
+  userId     String
+  day        DateTime       @db.Date
+  createdAt  DateTime       @default(now())
+  resource   LessonResource @relation(fields: [resourceId], references: [id])
+  @@unique([resourceId, userId, day])
+  @@index([resourceId])
 }
 
 // ───────────────────────── Fees & payments (mocked MoMo for the demo) ─────────────────────────

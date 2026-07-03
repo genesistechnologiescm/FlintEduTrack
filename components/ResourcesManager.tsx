@@ -14,6 +14,8 @@ type Resource = {
   body: string | null;
   subject: string;
   target: string | null;
+  views: number;
+  reach: number;
 };
 export type ResourcesData = {
   schoolName: string;
@@ -147,6 +149,9 @@ export function ResourcesManager({ data }: { data: ResourcesData }) {
                   <h3 className="font-display font-bold text-flint-black">{r.title}</h3>
                   <p className="font-mono text-xs text-muted">
                     {r.subject} · {r.target ?? t("resAllClasses")}
+                    {r.views > 0 && (
+                      <span className="text-flint-blue"> · {r.views} {t("viewsWord")} · {r.reach} {t("reachWord")}</span>
+                    )}
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full bg-flint-blue/10 px-2 py-0.5 font-mono text-[10px] uppercase text-flint-blue">

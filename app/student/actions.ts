@@ -53,6 +53,39 @@ export async function submitQuiz(raw: z.infer<typeof SubmitSchema>): Promise<{ o
   return { ok: true, score, correct, total };
 }
 
+// Engagement telemetry: a student opened a lesson. Deduped per student per day
+// (unique constraint) — reach, not click counting. Best-effort, never audited
+// (telemetry, not governance) and never blocks the UI.
+export async function recordResourceView(resourceId: string): Promise<{ ok: boolean }> {
+  const parsed = z.string().uuid().safeParse(resourceId);
+  if (!parsed.success) return { ok: false };
+  try {
+    const { studentId, schoolId } = await studentContext();
+    void studentId;
+    const resource = await prisma.lessonResource.findFirst({ where: { id: parsed.data, schoolId, deletedAt: null } });
+    if (!resource) return { ok: false };
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { ok: false };
+    await prisma.resourceView.upsert({
+      where: {
+        resourceId_userId_day: {
+          resourceId: parsed.data,
+          userId: user.id,
+          day: new Date(new Date().toISOString().slice(0, 10)),
+        },
+      },
+      update: {},
+      create: { resourceId: parsed.data, userId: user.id, day: new Date(new Date().toISOString().slice(0, 10)) },
+    });
+    return { ok: true };
+  } catch {
+    return { ok: false };
+  }
+}
+
 // Chariot — student AI study tutor. Gated to logged-in students; per-request bounds
 // (≤16 turns, ≤1500 chars each) cap the cost of any one call. Chat is ephemeral —
 // nothing is stored. The key lives server-side in lib/ai/tutor.

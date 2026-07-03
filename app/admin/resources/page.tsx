@@ -29,6 +29,19 @@ export default async function ResourcesPage() {
     }),
   ]);
 
+  // Engagement summary per piece of content (views deduped per student per day).
+  const viewRows = await prisma.resourceView.findMany({
+    where: { resourceId: { in: resources.map((r) => r.id) } },
+    select: { resourceId: true, userId: true },
+  });
+  const engagement = new Map<string, { views: number; students: Set<string> }>();
+  for (const v of viewRows) {
+    const g = engagement.get(v.resourceId) ?? { views: 0, students: new Set<string>() };
+    g.views++;
+    g.students.add(v.userId);
+    engagement.set(v.resourceId, g);
+  }
+
   const data: ResourcesData = {
     schoolName: membership.school.name,
     isAdmin: membership.role === "ADMIN",
@@ -42,6 +55,8 @@ export default async function ResourcesPage() {
       body: r.body,
       subject: r.subject.name,
       target: r.classGroup?.name ?? null,
+      views: engagement.get(r.id)?.views ?? 0,
+      reach: engagement.get(r.id)?.students.size ?? 0,
     })),
   };
 
