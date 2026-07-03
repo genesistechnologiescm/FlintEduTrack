@@ -29,6 +29,9 @@ const StudentSchema = z.object({
   classGroupId: z.string().uuid(),
   parentPhone: z.string().trim().min(6).max(20),
   parentName: z.string().trim().max(80).optional(),
+  // Contact-capability capture (Phase-1 spec): what can the parent's phone do?
+  // This single answer sets the school's SMS bill — free push vs paid SMS.
+  parentCapability: z.enum(["SMARTPHONE", "WHATSAPP", "SMS_ONLY"]).optional(),
 });
 type StudentInput = z.infer<typeof StudentSchema>;
 
@@ -49,8 +52,16 @@ async function createOne(schoolId: string, input: StudentInput): Promise<string>
   let parent = await prisma.user.findUnique({ where: { phone: input.parentPhone } });
   if (!parent) {
     parent = await prisma.user.create({
-      data: { id: randomUUID(), phone: input.parentPhone, displayName: input.parentName || `Parent of ${input.firstName}` },
+      data: {
+        id: randomUUID(),
+        phone: input.parentPhone,
+        displayName: input.parentName || `Parent of ${input.firstName}`,
+        contactCapability: input.parentCapability ?? null,
+      },
     });
+  } else if (input.parentCapability) {
+    // Re-declared at a later enrolment — keep the newest answer.
+    parent = await prisma.user.update({ where: { id: parent.id }, data: { contactCapability: input.parentCapability } });
   }
   await prisma.parentLink.upsert({
     where: { parentUserId_studentId_schoolId: { parentUserId: parent.id, studentId: student.id, schoolId } },

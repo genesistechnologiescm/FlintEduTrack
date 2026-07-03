@@ -59,6 +59,7 @@ export function StudentsManager({ data }: { data: StudentsData }) {
   const [classGroupId, setClassGroupId] = useState(data.classes[0]?.id ?? "");
   const [parentPhone, setParentPhone] = useState("");
   const [parentName, setParentName] = useState("");
+  const [parentCapability, setParentCapability] = useState("");
   const [adding, setAdding] = useState(false);
 
   const [csv, setCsv] = useState("");
@@ -70,12 +71,21 @@ export function StudentsManager({ data }: { data: StudentsData }) {
     setAdding(true);
     setMsg(null);
     try {
-      await addStudent({ firstName, lastName, gender: gender || undefined, classGroupId, parentPhone, parentName: parentName || undefined });
+      await addStudent({
+        firstName,
+        lastName,
+        gender: gender || undefined,
+        classGroupId,
+        parentPhone,
+        parentName: parentName || undefined,
+        parentCapability: (parentCapability || undefined) as "SMARTPHONE" | "WHATSAPP" | "SMS_ONLY" | undefined,
+      });
       setFirstName("");
       setLastName("");
       setGender("");
       setParentPhone("");
       setParentName("");
+      setParentCapability("");
       router.refresh();
     } catch {
       setMsg("error");
@@ -132,6 +142,12 @@ export function StudentsManager({ data }: { data: StudentsData }) {
           <input className={field} placeholder={t("fldGender")} maxLength={1} value={gender} onChange={(e) => setGender(e.target.value.toUpperCase())} />
           <input className={field} placeholder={t("fldParentPhone")} value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} required />
           <input className={field} placeholder={t("fldParentName")} value={parentName} onChange={(e) => setParentName(e.target.value)} />
+          <select className={`${field} col-span-2`} value={parentCapability} onChange={(e) => setParentCapability(e.target.value)} aria-label={t("capLabel")}>
+            <option value="">{t("capUnknown")}</option>
+            <option value="SMARTPHONE">{t("capSmart")}</option>
+            <option value="WHATSAPP">{t("capWhatsapp")}</option>
+            <option value="SMS_ONLY">{t("capSms")}</option>
+          </select>
           <button
             type="submit"
             disabled={adding || !classGroupId}

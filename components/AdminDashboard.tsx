@@ -29,6 +29,7 @@ export type AdminData = {
     costFcfa: number;
     recent: { phone: string; status: string }[];
   };
+  reach: { smartphone: number; whatsapp: number; smsOnly: number; unknown: number; total: number };
 };
 
 function StatCard({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "alert" }) {
@@ -222,6 +223,35 @@ export function AdminDashboard({ data }: { data: AdminData }) {
               </li>
             ))}
           </ul>
+        )}
+
+        {/* Reach / cost profile — the number that sets the SMS bill */}
+        {data.reach.total > 0 && (
+          <div className="mt-3 border-t border-black/5 pt-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-widest text-muted">{t("reachTitle")}</span>
+              <span className="font-mono text-xs text-flint-black">
+                <span className="font-bold text-error">{data.reach.smsOnly}</span>
+                <span className="text-muted">/{data.reach.total} {t("reachNeedSms")}</span>
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]">
+              <span className="rounded-full bg-success/10 px-2 py-0.5 text-success">
+                {data.reach.smartphone} {t("capSmartShort")}
+              </span>
+              <span className="rounded-full bg-flint-blue/10 px-2 py-0.5 text-flint-blue">
+                {data.reach.whatsapp} {t("capWaShort")}
+              </span>
+              <span className="rounded-full bg-error/10 px-2 py-0.5 text-error">
+                {data.reach.smsOnly} {t("capSmsShort")}
+              </span>
+              {data.reach.unknown > 0 && (
+                <span className="rounded-full bg-black/5 px-2 py-0.5 text-muted">
+                  {data.reach.unknown} {t("capUnkShort")}
+                </span>
+              )}
+            </div>
+          </div>
         )}
       </section>
 

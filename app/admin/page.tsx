@@ -83,6 +83,20 @@ export default async function AdminPage() {
   });
   const phoneById = new Map(recentParents.map((p) => [p.id, p.phone]));
 
+  // Reach / cost profile: how many of this school's parents need paid SMS?
+  const parentLinks = await prisma.parentLink.findMany({
+    where: { schoolId: school.id, status: "active" },
+    select: { parent: { select: { id: true, contactCapability: true } } },
+    distinct: ["parentUserId"],
+  });
+  const reach = { smartphone: 0, whatsapp: 0, smsOnly: 0, unknown: 0, total: parentLinks.length };
+  for (const l of parentLinks) {
+    if (l.parent.contactCapability === "SMARTPHONE") reach.smartphone++;
+    else if (l.parent.contactCapability === "WHATSAPP") reach.whatsapp++;
+    else if (l.parent.contactCapability === "SMS_ONLY") reach.smsOnly++;
+    else reach.unknown++;
+  }
+
   const data: AdminData = {
     schoolName: school.name,
     attendanceRate: total > 0 ? Math.round((present / total) * 100) : null,
@@ -100,6 +114,7 @@ export default async function AdminPage() {
         status: n.deliveryStatus,
       })),
     },
+    reach,
   };
 
   return <AdminDashboard data={data} />;

@@ -61,6 +61,14 @@ enum ChannelType {
   SMS
 }
 
+// Declared at enrolment: what can this parent's phone do? Drives the router's
+// cost profile — smartphone parents are free (push), SMS-only parents cost money.
+enum ContactCapability {
+  SMARTPHONE
+  WHATSAPP
+  SMS_ONLY
+}
+
 enum ChannelStatus {
   ACTIVE
   FAILING
@@ -105,6 +113,7 @@ model User {
   phone         String             @unique
   displayName   String
   preferredLang Lang               @default(EN)
+  contactCapability ContactCapability?
   isFlintAdmin  Boolean            @default(false)
   isGovernment  Boolean            @default(false) // ministry account — read-only aggregate layer
   status        String             @default("active")
