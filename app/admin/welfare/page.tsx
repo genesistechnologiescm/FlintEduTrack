@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 import { WelfarePanel, type AtRiskRow } from "@/components/WelfarePanel";
 import { wellbeingWeekStartISO } from "@/lib/wellbeing";
 
@@ -12,6 +14,17 @@ function stageFor(absences: number): Stage {
 }
 
 export default async function WelfarePage() {
+  // Scoped gate: welfare is for FULL or WELFARE admins.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const membership = await prisma.schoolMembership.findFirst({
+    where: { userId: user.id, role: "ADMIN", status: "active", adminScope: { in: ["FULL", "WELFARE"] } },
+  });
+  if (!membership) redirect("/login");
+
   const school = await prisma.school.findFirst();
   if (!school) {
     return (

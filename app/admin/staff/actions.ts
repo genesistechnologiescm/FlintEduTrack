@@ -6,24 +6,21 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
+import { requireAdmin } from "@/lib/adminScope";
 import { phoneToAuthEmail } from "@/lib/auth";
 import { provisionAuthUser, authProvisioningAvailable } from "@/lib/provisionAuth";
 
+// Scoped authorization — see lib/adminScope.ts.
 async function adminContext() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const m = await prisma.schoolMembership.findFirst({
-    where: { userId: user.id, role: "ADMIN", status: "active" },
-  });
-  if (!m) throw new Error("Not authorized");
-  return { userId: user.id, schoolId: m.schoolId };
+  return requireAdmin();
 }
 
 async function activeAdminCount(schoolId: string) {
   return prisma.schoolMembership.count({ where: { schoolId, role: "ADMIN", status: "active" } });
+}
+
+async function fullAdminCount(schoolId: string) {
+  return prisma.schoolMembership.count({ where: { schoolId, role: "ADMIN", status: "active", adminScope: "FULL" } });
 }
 
 const AddSchema = z.object({
@@ -31,6 +28,7 @@ const AddSchema = z.object({
   phone: z.string().trim().min(6).max(20),
   role: z.enum(["ADMIN", "TEACHER"]),
   title: z.string().trim().max(40).optional(),
+  adminScope: z.enum(["FULL", "FINANCE", "WELFARE"]).optional(),
 });
 
 export async function addStaff(raw: z.infer<typeof AddSchema>): Promise<{ ok: boolean; pin?: string; existing?: boolean; error?: string }> {
@@ -54,9 +52,14 @@ export async function addStaff(raw: z.infer<typeof AddSchema>): Promise<{ ok: bo
 
   const existingM = await prisma.schoolMembership.findFirst({ where: { userId: targetUserId, schoolId } });
   if (existingM) {
-    await prisma.schoolMembership.update({ where: { id: existingM.id }, data: { role: input.role, title: input.title ?? null, status: "active" } });
+    await prisma.schoolMembership.update({
+      where: { id: existingM.id },
+      data: { role: input.role, title: input.title ?? null, adminScope: input.adminScope ?? "FULL", status: "active" },
+    });
   } else {
-    await prisma.schoolMembership.create({ data: { userId: targetUserId, schoolId, role: input.role, title: input.title ?? null } });
+    await prisma.schoolMembership.create({
+      data: { userId: targetUserId, schoolId, role: input.role, title: input.title ?? null, adminScope: input.adminScope ?? "FULL" },
+    });
   }
 
   await writeAudit({
@@ -65,7 +68,7 @@ export async function addStaff(raw: z.infer<typeof AddSchema>): Promise<{ ok: bo
     action: "staff.added",
     entityType: "SchoolMembership",
     entityId: targetUserId,
-    after: { name: input.name, role: input.role, title: input.title ?? null },
+    after: { name: input.name, role: input.role, title: input.title ?? null, adminScope: input.adminScope ?? "FULL" },
   });
   revalidatePath("/admin/staff");
   return { ok: true, pin, existing: !!existingUser };
@@ -75,6 +78,7 @@ const UpdateSchema = z.object({
   userId: z.string().uuid(),
   role: z.enum(["ADMIN", "TEACHER"]),
   title: z.string().trim().max(40).optional(),
+  adminScope: z.enum(["FULL", "FINANCE", "WELFARE"]).optional(),
 });
 
 export async function updateStaff(raw: z.infer<typeof UpdateSchema>): Promise<{ ok: boolean; error?: string }> {
@@ -88,15 +92,27 @@ export async function updateStaff(raw: z.infer<typeof UpdateSchema>): Promise<{ 
   if (membership.role === "ADMIN" && input.role !== "ADMIN" && (await activeAdminCount(schoolId)) <= 1) {
     return { ok: false, error: "Keep at least one admin" };
   }
+  // Nor the last FULL-scope admin narrowed — someone must hold the keys.
+  if (
+    membership.role === "ADMIN" &&
+    membership.adminScope === "FULL" &&
+    (input.role !== "ADMIN" || (input.adminScope ?? "FULL") !== "FULL") &&
+    (await fullAdminCount(schoolId)) <= 1
+  ) {
+    return { ok: false, error: "Keep at least one full-scope admin" };
+  }
 
-  await prisma.schoolMembership.update({ where: { id: membership.id }, data: { role: input.role, title: input.title ?? null } });
+  await prisma.schoolMembership.update({
+    where: { id: membership.id },
+    data: { role: input.role, title: input.title ?? null, adminScope: input.adminScope ?? "FULL" },
+  });
   await writeAudit({
     schoolId,
     actorUserId: me,
     action: "staff.updated",
     entityType: "SchoolMembership",
     entityId: input.userId,
-    after: { role: input.role, title: input.title ?? null },
+    after: { role: input.role, title: input.title ?? null, adminScope: input.adminScope ?? "FULL" },
   });
   revalidatePath("/admin/staff");
   return { ok: true };

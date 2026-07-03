@@ -35,6 +35,7 @@
     "db:seed:handover": "node --env-file=.env --env-file=.env.local prisma/seed-handover.js",
     "db:seed:views": "node --env-file=.env --env-file=.env.local prisma/seed-views.js",
     "db:seed:ca": "node --env-file=.env --env-file=.env.local prisma/seed-ca.js",
+    "db:seed:scopes": "node --env-file=.env --env-file=.env.local prisma/seed-scopes.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

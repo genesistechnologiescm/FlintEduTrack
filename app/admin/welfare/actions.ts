@@ -29,7 +29,7 @@ export async function logWelfareAction(raw: LogWelfareInput) {
   } = await supabase.auth.getUser();
   if (!authUser) throw new Error("Not authenticated");
   const adminMembership = await prisma.schoolMembership.findFirst({
-    where: { userId: authUser.id, schoolId: school.id, role: "ADMIN", status: "active" },
+    where: { userId: authUser.id, schoolId: school.id, role: "ADMIN", status: "active", adminScope: { in: ["FULL", "WELFARE"] } },
   });
   if (!adminMembership) throw new Error("Not authorized");
   const actorUserId = authUser.id;

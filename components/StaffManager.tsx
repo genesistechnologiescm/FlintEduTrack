@@ -6,7 +6,8 @@ import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { addStaff, updateStaff, removeStaff } from "@/app/admin/staff/actions";
 
-type Staff = { userId: string; name: string; phone: string; role: "ADMIN" | "TEACHER"; title: string | null; isSelf: boolean };
+type Scope = "FULL" | "FINANCE" | "WELFARE";
+type Staff = { userId: string; name: string; phone: string; role: "ADMIN" | "TEACHER"; title: string | null; adminScope: Scope; isSelf: boolean };
 export type StaffData = { schoolName: string; staff: Staff[] };
 
 const field = "min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base";
@@ -17,13 +18,14 @@ function StaffRow({ m }: { m: Staff }) {
   const [editing, setEditing] = useState(false);
   const [role, setRole] = useState(m.role);
   const [title, setTitle] = useState(m.title ?? "");
+  const [scope, setScope] = useState<Scope>(m.adminScope);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function save() {
     setBusy(true);
     setErr(null);
-    const res = await updateStaff({ userId: m.userId, role, title: title || undefined });
+    const res = await updateStaff({ userId: m.userId, role, title: title || undefined, adminScope: role === "ADMIN" ? scope : undefined });
     setBusy(false);
     if (res.ok) {
       setEditing(false);
@@ -50,8 +52,15 @@ function StaffRow({ m }: { m: Staff }) {
           </div>
           <div className="font-mono text-xs text-muted">{m.phone}{m.title ? ` · ${m.title}` : ""}</div>
         </div>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] uppercase ${m.role === "ADMIN" ? "bg-flint-blue/10 text-flint-blue" : "bg-black/5 text-muted"}`}>
-          {m.role === "ADMIN" ? t("roleAdmin") : t("roleTeacher")}
+        <span className="flex shrink-0 items-center gap-1.5">
+          {m.role === "ADMIN" && m.adminScope !== "FULL" && (
+            <span className="rounded-full bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] uppercase text-amber-700">
+              {m.adminScope === "FINANCE" ? t("scopeFinance") : t("scopeWelfare")}
+            </span>
+          )}
+          <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] uppercase ${m.role === "ADMIN" ? "bg-flint-blue/10 text-flint-blue" : "bg-black/5 text-muted"}`}>
+            {m.role === "ADMIN" ? t("roleAdmin") : t("roleTeacher")}
+          </span>
         </span>
       </div>
 
@@ -62,6 +71,13 @@ function StaffRow({ m }: { m: Staff }) {
             <option value="TEACHER">{t("roleTeacher")}</option>
           </select>
           <input className={field} placeholder={t("staffTitle")} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={40} />
+          {role === "ADMIN" && (
+            <select className={`${field} col-span-2`} value={scope} onChange={(e) => setScope(e.target.value as Scope)} aria-label={t("staffScope")}>
+              <option value="FULL">{t("scopeFull")}</option>
+              <option value="FINANCE">{t("scopeFinance")}</option>
+              <option value="WELFARE">{t("scopeWelfare")}</option>
+            </select>
+          )}
           <button type="button" onClick={save} disabled={busy} className="min-h-10 rounded-full bg-flint-blue font-mono text-xs uppercase tracking-widest text-white disabled:opacity-60">
             {busy ? t("adding") : t("save")}
           </button>
@@ -93,6 +109,7 @@ export function StaffManager({ data }: { data: StaffData }) {
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<"ADMIN" | "TEACHER">("TEACHER");
   const [title, setTitle] = useState("");
+  const [scope, setScope] = useState<Scope>("FULL");
   const [busy, setBusy] = useState(false);
   const [issued, setIssued] = useState<{ pin?: string; existing?: boolean } | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -102,7 +119,7 @@ export function StaffManager({ data }: { data: StaffData }) {
     setBusy(true);
     setErr(null);
     setIssued(null);
-    const res = await addStaff({ name, phone, role, title: title || undefined });
+    const res = await addStaff({ name, phone, role, title: title || undefined, adminScope: role === "ADMIN" ? scope : undefined });
     setBusy(false);
     if (res.ok) {
       setIssued({ pin: res.pin, existing: res.existing });
@@ -136,6 +153,13 @@ export function StaffManager({ data }: { data: StaffData }) {
             <option value="ADMIN">{t("roleAdmin")}</option>
           </select>
           <input className={field} placeholder={t("staffTitle")} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={40} />
+          {role === "ADMIN" && (
+            <select className={`${field} col-span-2`} value={scope} onChange={(e) => setScope(e.target.value as Scope)} aria-label={t("staffScope")}>
+              <option value="FULL">{t("scopeFull")}</option>
+              <option value="FINANCE">{t("scopeFinance")}</option>
+              <option value="WELFARE">{t("scopeWelfare")}</option>
+            </select>
+          )}
           <button type="submit" disabled={busy} className="col-span-2 min-h-11 rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60">
             {busy ? t("adding") : t("addStaffBtn")}
           </button>

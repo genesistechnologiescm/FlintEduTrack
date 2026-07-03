@@ -18,7 +18,7 @@ export default async function SetupPage() {
   if (!user) redirect("/login");
 
   const membership = await prisma.schoolMembership.findFirst({
-    where: { userId: user.id, role: "ADMIN", status: "active" },
+    where: { userId: user.id, role: "ADMIN", status: "active", adminScope: "FULL" },
     include: { school: true },
   });
   if (!membership) redirect("/login");

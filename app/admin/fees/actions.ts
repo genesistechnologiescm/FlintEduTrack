@@ -5,22 +5,15 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
+import { requireAdmin } from "@/lib/adminScope";
 import { ensureCurrentYear } from "@/lib/academicYear";
 import { computeOverdue } from "@/lib/overdue";
 import { pickPaidChannel, deliver } from "@/lib/notifications/router";
 import { sendWebPush } from "@/lib/notifications/sendWebPush";
 
+// Scoped authorization — see lib/adminScope.ts.
 async function adminContext() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const m = await prisma.schoolMembership.findFirst({
-    where: { userId: user.id, role: "ADMIN", status: "active" },
-  });
-  if (!m) throw new Error("Not authorized");
-  return { userId: user.id, schoolId: m.schoolId };
+  return requireAdmin("FINANCE");
 }
 
 const FeeSchema = z.object({

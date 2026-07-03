@@ -6,20 +6,13 @@ import { randomUUID, randomInt } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
+import { requireAdmin } from "@/lib/adminScope";
 import { studentCodeToAuthEmail } from "@/lib/auth";
 import { provisionAuthUser, authProvisioningAvailable } from "@/lib/provisionAuth";
 
+// Scoped authorization — see lib/adminScope.ts.
 async function adminContext() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const m = await prisma.schoolMembership.findFirst({
-    where: { userId: user.id, role: "ADMIN", status: "active" },
-  });
-  if (!m) throw new Error("Not authorized");
-  return { userId: user.id, schoolId: m.schoolId };
+  return requireAdmin();
 }
 
 const StudentSchema = z.object({

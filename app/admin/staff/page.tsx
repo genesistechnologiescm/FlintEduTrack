@@ -13,7 +13,7 @@ export default async function StaffPage() {
   if (!user) redirect("/login");
 
   const membership = await prisma.schoolMembership.findFirst({
-    where: { userId: user.id, role: "ADMIN", status: "active" },
+    where: { userId: user.id, role: "ADMIN", status: "active", adminScope: "FULL" },
     include: { school: true },
   });
   if (!membership) redirect("/login");
@@ -33,6 +33,7 @@ export default async function StaffPage() {
       phone: m.user.phone,
       role: m.role as "ADMIN" | "TEACHER",
       title: m.title,
+      adminScope: m.adminScope as "FULL" | "FINANCE" | "WELFARE",
       isSelf: m.userId === user.id,
     })),
   };

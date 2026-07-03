@@ -15,7 +15,7 @@ export default async function AbsencesPage() {
   if (!user) redirect("/login");
 
   const membership = await prisma.schoolMembership.findFirst({
-    where: { userId: user.id, role: "ADMIN", status: "active" },
+    where: { userId: user.id, role: "ADMIN", status: "active", adminScope: { in: ["FULL", "WELFARE"] } },
     include: { school: true },
   });
   if (!membership) redirect("/login");

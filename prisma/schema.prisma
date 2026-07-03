@@ -164,12 +164,22 @@ model School {
   @@index([region])
 }
 
+// Admin scope — what an ADMIN may administer (P2: "each scoped").
+// FULL = everything; FINANCE = fees/payments/reminders; WELFARE = welfare,
+// excused absences, wellbeing. Enforced server-side in every admin action.
+enum AdminScope {
+  FULL
+  FINANCE
+  WELFARE
+}
+
 model SchoolMembership {
   id        String     @id @default(uuid())
   userId    String
   schoolId  String
   role      SchoolRole
   title     String? // job title for display (Principal, Bursar, …); role is the permission level
+  adminScope AdminScope @default(FULL) // meaningful for ADMIN rows only
   status    String     @default("active")
   createdAt DateTime   @default(now())
   user      User       @relation(fields: [userId], references: [id])

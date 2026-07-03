@@ -5,18 +5,11 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
+import { requireAdmin } from "@/lib/adminScope";
 
+// Scoped authorization — see lib/adminScope.ts.
 async function adminContext() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  const m = await prisma.schoolMembership.findFirst({
-    where: { userId: user.id, role: "ADMIN", status: "active" },
-  });
-  if (!m) throw new Error("Not authorized");
-  return { userId: user.id, schoolId: m.schoolId };
+  return requireAdmin();
 }
 
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
