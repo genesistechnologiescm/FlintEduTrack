@@ -25,6 +25,7 @@
     "db:seed:corrections": "node --env-file=.env --env-file=.env.local prisma/seed-corrections.js",
     "db:seed:calendar": "node --env-file=.env --env-file=.env.local prisma/seed-calendar.js",
     "db:seed:capability": "node --env-file=.env --env-file=.env.local prisma/seed-capability.js",
+    "db:seed:digest": "node --env-file=.env --env-file=.env.local prisma/seed-digest.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
