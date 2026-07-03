@@ -2,10 +2,20 @@
 // Purpose now: make the app installable + a basic app-shell cache.
 // The real offline attendance write-queue is added with the attendance feature.
 
-const SHELL_CACHE = "edutrack-shell-v1";
+const SHELL_CACHE = "edutrack-shell-v2";
 
-self.addEventListener("install", () => {
+// Precache the offline-lessons page + its framework-free renderer so a student
+// who saved lessons can open them with NO network at all (Phase-3 continuity).
+self.addEventListener("install", (event) => {
   self.skipWaiting();
+  event.waitUntil(
+    caches
+      .open(SHELL_CACHE)
+      .then((cache) => cache.addAll(["/offline-lessons", "/offline-lessons.js"]))
+      .catch(() => {
+        // precache is best-effort; the fetch handler still caches on first visit
+      }),
+  );
 });
 
 self.addEventListener("activate", (event) => {

@@ -3,6 +3,7 @@
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { LogoutButton } from "./LogoutButton";
+import { OfflineLessons } from "./OfflineLessons";
 import type { SubjectGrade } from "@/lib/grades";
 
 type Lesson = { id: string; title: string; type: "LINK" | "NOTE"; url: string | null; body: string | null };
@@ -152,6 +153,7 @@ export function StudentDashboard({ data }: { data: StudentData }) {
 
       {/* Lessons */}
       <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">{t("resourcesNav")}</h2>
+      <OfflineLessons lessons={data.lessons} studentName={data.name} />
       {data.lessons.length === 0 ? (
         <p className="rounded-xl border border-black/10 bg-white px-4 py-5 text-center text-muted">{t("resNone")}</p>
       ) : (
