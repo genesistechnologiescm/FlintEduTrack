@@ -10,6 +10,7 @@ export async function writeAudit(entry: {
   action: string;
   entityType: string;
   entityId: string;
+  before?: Prisma.InputJsonValue;
   after?: Prisma.InputJsonValue;
   reason?: string;
 }): Promise<void> {
@@ -21,6 +22,7 @@ export async function writeAudit(entry: {
         action: entry.action,
         entityType: entry.entityType,
         entityId: entry.entityId,
+        before: entry.before,
         after: entry.after,
         reason: entry.reason,
       },

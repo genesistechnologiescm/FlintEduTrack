@@ -71,7 +71,7 @@ const SaveSchema = z.object({
     .max(2000),
 });
 
-export async function saveGrades(raw: z.infer<typeof SaveSchema>): Promise<{ ok: boolean; saved: number; error?: string }> {
+export async function saveGrades(raw: z.infer<typeof SaveSchema>): Promise<{ ok: boolean; saved: number; pending: number; error?: string }> {
   const input = SaveSchema.parse(raw);
   const { userId, schoolId } = await staffContext();
 
@@ -80,18 +80,22 @@ export async function saveGrades(raw: z.infer<typeof SaveSchema>): Promise<{ ok:
     prisma.subject.findFirst({ where: { id: input.subjectId, schoolId } }),
     prisma.term.findFirst({ where: { id: input.termId, academicYear: { schoolId } } }),
   ]);
-  if (!klass || !subject || !term) return { ok: false, saved: 0, error: "Class, subject or term not in your school" };
-  if (input.sequence > term.sequenceCount) return { ok: false, saved: 0, error: "That sequence is not part of this term" };
+  if (!klass || !subject || !term) return { ok: false, saved: 0, pending: 0, error: "Class, subject or term not in your school" };
+  if (input.sequence > term.sequenceCount) return { ok: false, saved: 0, pending: 0, error: "That sequence is not part of this term" };
 
   // Only students actually enrolled in the class may be graded here.
   const enrolled = new Set(
     (await prisma.enrollment.findMany({ where: { classGroupId: input.classGroupId, schoolId, status: "ACTIVE" }, select: { studentId: true } })).map((e) => e.studentId),
   );
 
+  // Tamper-evident grading: first entry writes directly; CHANGING a recorded
+  // grade never writes — it files a correction request an admin must approve.
   let saved = 0;
+  let pending = 0;
   for (const row of input.scores) {
     if (!enrolled.has(row.studentId)) continue;
-    await prisma.grade.upsert({
+
+    const existing = await prisma.grade.findUnique({
       where: {
         studentId_subjectId_termId_sequence: {
           studentId: row.studentId,
@@ -100,18 +104,36 @@ export async function saveGrades(raw: z.infer<typeof SaveSchema>): Promise<{ ok:
           sequence: input.sequence,
         },
       },
-      update: { score: row.score, enteredBy: userId },
-      create: {
-        studentId: row.studentId,
-        subjectId: input.subjectId,
-        schoolId,
-        termId: input.termId,
-        sequence: input.sequence,
-        score: row.score,
-        enteredBy: userId,
-      },
     });
-    saved++;
+
+    if (!existing) {
+      await prisma.grade.create({
+        data: {
+          studentId: row.studentId,
+          subjectId: input.subjectId,
+          schoolId,
+          termId: input.termId,
+          sequence: input.sequence,
+          score: row.score,
+          enteredBy: userId,
+        },
+      });
+      saved++;
+      continue;
+    }
+
+    if (Number(existing.score) === row.score) continue; // unchanged
+
+    // One live request per grade: refresh it if the teacher re-edits.
+    const open = await prisma.gradeCorrection.findFirst({ where: { gradeId: existing.id, status: "PENDING" } });
+    if (open) {
+      await prisma.gradeCorrection.update({ where: { id: open.id }, data: { newScore: row.score, requestedBy: userId } });
+    } else {
+      await prisma.gradeCorrection.create({
+        data: { schoolId, gradeId: existing.id, oldScore: existing.score, newScore: row.score, requestedBy: userId },
+      });
+    }
+    pending++;
   }
 
   await writeAudit({
@@ -120,9 +142,10 @@ export async function saveGrades(raw: z.infer<typeof SaveSchema>): Promise<{ ok:
     action: "grades.entered",
     entityType: "ClassGroup",
     entityId: input.classGroupId,
-    after: { subject: subject.name, class: klass.name, term: term.label, sequence: input.sequence, count: saved },
+    after: { subject: subject.name, class: klass.name, term: term.label, sequence: input.sequence, saved, correctionsRequested: pending },
   });
   // Report cards are server-rendered per student; nudge their cache.
   revalidatePath("/report", "layout");
-  return { ok: true, saved };
+  revalidatePath("/admin/corrections");
+  return { ok: true, saved, pending };
 }

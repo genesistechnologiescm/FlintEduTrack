@@ -22,6 +22,7 @@
     "db:seed:risk": "node --env-file=.env --env-file=.env.local prisma/seed-risk.js",
     "db:seed:government": "node --env-file=.env --env-file=.env.local prisma/seed-government.js",
     "db:seed:quiz": "node --env-file=.env --env-file=.env.local prisma/seed-quiz.js",
+    "db:seed:corrections": "node --env-file=.env --env-file=.env.local prisma/seed-corrections.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

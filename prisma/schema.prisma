@@ -122,6 +122,7 @@ model User {
   sentMessages  Message[]                     @relation("SentMessages")
   authoredResources LessonResource[]          @relation("AuthoredResources")
   paymentsMade  Payment[]                     @relation("PaymentsMade")
+  correctionRequests GradeCorrection[]        @relation("CorrectionRequests")
 }
 
 // ───────────────────────── Tenant + calendar ─────────────────────────
@@ -505,9 +506,30 @@ model Grade {
   updatedAt DateTime @updatedAt
   student   Student  @relation(fields: [studentId], references: [id])
   subject   Subject  @relation(fields: [subjectId], references: [id])
+  corrections GradeCorrection[]
   @@unique([studentId, subjectId, termId, sequence])
   @@index([schoolId, termId])
   @@index([studentId])
+}
+
+// Grade-correction workflow — once a grade is recorded, changing it requires an
+// admin-approved correction (tamper-evident grading; Phase 2 spec). One PENDING
+// request per grade at a time (enforced in code).
+model GradeCorrection {
+  id          String    @id @default(uuid())
+  schoolId    String
+  gradeId     String
+  oldScore    Decimal   @db.Decimal(4, 2)
+  newScore    Decimal   @db.Decimal(4, 2)
+  status      String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  requestedBy String
+  decidedBy   String?
+  decidedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  grade       Grade     @relation(fields: [gradeId], references: [id])
+  requester   User      @relation("CorrectionRequests", fields: [requestedBy], references: [id])
+  @@index([schoolId, status])
+  @@index([gradeId])
 }
 
 // ───────────────────────── Messaging — school announcements ─────────────────────────

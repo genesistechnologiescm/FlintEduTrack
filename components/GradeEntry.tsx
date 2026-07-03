@@ -69,8 +69,11 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
     setMsg(null);
     try {
       const res = await saveGrades({ classGroupId, subjectId, termId, sequence: Number(sequence), scores: payload });
-      if (res.ok) setMsg(`${t("savedMarks")}: ${res.saved}`);
-      else setErr(res.error ?? "error");
+      if (res.ok) {
+        const parts = [`${t("savedMarks")}: ${res.saved}`];
+        if (res.pending > 0) parts.push(`${res.pending} ${t("corrSentForApproval")}`);
+        setMsg(parts.join(" · "));
+      } else setErr(res.error ?? "error");
     } finally {
       setSaving(false);
     }
