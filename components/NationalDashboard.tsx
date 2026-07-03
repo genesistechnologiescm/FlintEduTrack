@@ -5,6 +5,54 @@ import { LanguageToggle } from "./LanguageToggle";
 
 type Region = { region: string; crisis: boolean; students: number; rate: number | null; atRisk: number };
 
+type TrendPoint = { date: string; national: number | null; crisis: number | null; rest: number | null };
+
+// Minimal hand-rolled SVG line chart (no library): three series over ~30 days.
+function TrendChart({ points }: { points: TrendPoint[] }) {
+  const W = 560;
+  const H = 150;
+  const PAD = { l: 30, r: 8, t: 10, b: 18 };
+  const values = points.flatMap((p) => [p.national, p.crisis, p.rest]).filter((v): v is number => v !== null);
+  if (points.length < 2 || values.length === 0) return null;
+  const yMin = Math.max(0, Math.min(...values) - 10);
+  const yMax = 100;
+  const x = (i: number) => PAD.l + (i * (W - PAD.l - PAD.r)) / (points.length - 1);
+  const y = (v: number) => PAD.t + (1 - (v - yMin) / (yMax - yMin)) * (H - PAD.t - PAD.b);
+
+  const path = (pick: (p: TrendPoint) => number | null) =>
+    points
+      .map((p, i) => ({ v: pick(p), i }))
+      .filter((d): d is { v: number; i: number } => d.v !== null)
+      .map((d, j) => `${j === 0 ? "M" : "L"}${x(d.i).toFixed(1)},${y(d.v).toFixed(1)}`)
+      .join(" ");
+
+  const grid = [yMin, Math.round((yMin + 100) / 2), 100];
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`Attendance trend, ${points[0].date} to ${points[points.length - 1].date}`}>
+      {grid.map((g) => (
+        <g key={g}>
+          <line x1={PAD.l} x2={W - PAD.r} y1={y(g)} y2={y(g)} stroke="rgba(0,0,0,0.07)" strokeWidth="1" />
+          <text x={PAD.l - 6} y={y(g) + 3} textAnchor="end" fontSize="9" fill="#8A94A6" fontFamily="monospace">
+            {g}
+          </text>
+        </g>
+      ))}
+      <path d={path((p) => p.rest)} fill="none" stroke="#00C48C" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d={path((p) => p.crisis)} fill="none" stroke="#FF4444" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d={path((p) => p.national)} fill="none" stroke="#1A6BFF" strokeWidth="2.5" strokeLinejoin="round" />
+      {points.map((p, i) =>
+        p.national !== null ? <circle key={i} cx={x(i)} cy={y(p.national)} r="2.5" fill="#1A6BFF" /> : null,
+      )}
+      <text x={PAD.l} y={H - 4} fontSize="9" fill="#8A94A6" fontFamily="monospace">
+        {points[0].date.slice(5)}
+      </text>
+      <text x={W - PAD.r} y={H - 4} textAnchor="end" fontSize="9" fill="#8A94A6" fontFamily="monospace">
+        {points[points.length - 1].date.slice(5)}
+      </text>
+    </svg>
+  );
+}
+
 export type NationalData = {
   totalSchools: number;
   totalStudents: number;
@@ -15,6 +63,7 @@ export type NationalData = {
   crisisAtRisk: number;
   restAtRisk: number;
   regions: Region[];
+  trend: TrendPoint[];
 };
 
 function pct(n: number | null) {
@@ -92,6 +141,27 @@ export function NationalDashboard({ data }: { data: NationalData }) {
           </p>
         )}
       </section>
+
+      {/* 30-day trend */}
+      {data.trend.length >= 2 && (
+        <section className="mt-8 rounded-2xl border border-black/10 bg-white p-4">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-mono text-xs uppercase tracking-widest text-muted">{t("natTrendTitle")}</h2>
+            <div className="flex flex-wrap gap-2 font-mono text-[10px]">
+              <span className="inline-flex items-center gap-1 text-flint-blue">
+                <span className="inline-block h-0.5 w-4 bg-flint-blue" /> {t("natNational")}
+              </span>
+              <span className="inline-flex items-center gap-1 text-error">
+                <span className="inline-block h-0.5 w-4 bg-error" /> {t("natCrisisZones")}
+              </span>
+              <span className="inline-flex items-center gap-1 text-success">
+                <span className="inline-block h-0.5 w-4 bg-success" /> {t("natRest")}
+              </span>
+            </div>
+          </div>
+          <TrendChart points={data.trend} />
+        </section>
+      )}
 
       {/* By region */}
       <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">{t("natByRegion")}</h2>
