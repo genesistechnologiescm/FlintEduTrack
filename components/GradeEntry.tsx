@@ -5,6 +5,8 @@ import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { loadRoster, saveGrades, type RosterRow } from "@/app/grades/actions";
 
+type Component = { id: string; name: string; weight: number };
+
 export type GradeEntryData = {
   schoolName: string;
   isAdmin: boolean;
@@ -23,7 +25,10 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
   const [sequence, setSequence] = useState("1");
 
   const [roster, setRoster] = useState<RosterRow[] | null>(null);
+  const [components, setComponents] = useState<Component[]>([]);
   const [scores, setScores] = useState<Record<string, string>>({});
+  // Component mode: compScores[studentId][componentId] = raw input.
+  const [compScores, setCompScores] = useState<Record<string, Record<string, string>>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -41,9 +46,11 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
     setErr(null);
     setMsg(null);
     try {
-      const rows = await loadRoster({ classGroupId, subjectId, termId, sequence: Number(sequence) });
-      setRoster(rows);
-      setScores(Object.fromEntries(rows.map((r) => [r.studentId, r.score === null ? "" : String(r.score)])));
+      const payload = await loadRoster({ classGroupId, subjectId, termId, sequence: Number(sequence) });
+      setRoster(payload.rows);
+      setComponents(payload.components);
+      setScores(Object.fromEntries(payload.rows.map((r) => [r.studentId, r.score === null ? "" : String(r.score)])));
+      setCompScores({});
     } catch {
       setErr(t("loadFailed"));
     } finally {
@@ -51,18 +58,55 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
     }
   }
 
+  // Weighted preview shown per row; the SERVER recomputes it authoritatively.
+  function weightedOf(studentId: string): number | null {
+    const row = compScores[studentId];
+    if (!row) return null;
+    let total = 0;
+    for (const c of components) {
+      const raw = (row[c.id] ?? "").trim();
+      if (raw === "") return null;
+      const n = Number(raw);
+      if (Number.isNaN(n) || n < 0 || n > 20) return null;
+      total += n * (c.weight / 100);
+    }
+    return Math.min(20, Math.round(total * 100) / 100);
+  }
+
   async function onSave() {
     if (!roster) return;
-    const payload: { studentId: string; score: number }[] = [];
-    for (const r of roster) {
-      const raw = (scores[r.studentId] ?? "").trim();
-      if (raw === "") continue;
-      const n = Number(raw);
-      if (Number.isNaN(n) || n < 0 || n > 20) {
-        setErr(t("badScore"));
-        return;
+    const payload: { studentId: string; score?: number; components?: { componentId: string; score: number }[] }[] = [];
+    if (components.length > 0) {
+      for (const r of roster) {
+        const row = compScores[r.studentId];
+        if (!row) continue;
+        const filled = components.map((c) => (row[c.id] ?? "").trim());
+        if (filled.every((v) => v === "")) continue; // untouched row
+        if (filled.some((v) => v === "")) {
+          setErr(t("caIncomplete"));
+          return;
+        }
+        const comps = components.map((c) => {
+          const n = Number((row[c.id] ?? "").trim());
+          return { componentId: c.id, score: Math.round(n * 100) / 100 };
+        });
+        if (comps.some((c) => Number.isNaN(c.score) || c.score < 0 || c.score > 20)) {
+          setErr(t("badScore"));
+          return;
+        }
+        payload.push({ studentId: r.studentId, components: comps });
       }
-      payload.push({ studentId: r.studentId, score: Math.round(n * 100) / 100 });
+    } else {
+      for (const r of roster) {
+        const raw = (scores[r.studentId] ?? "").trim();
+        if (raw === "") continue;
+        const n = Number(raw);
+        if (Number.isNaN(n) || n < 0 || n > 20) {
+          setErr(t("badScore"));
+          return;
+        }
+        payload.push({ studentId: r.studentId, score: Math.round(n * 100) / 100 });
+      }
     }
     setSaving(true);
     setErr(null);
@@ -151,27 +195,66 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
                 <p className="py-4 text-center text-muted">{t("noStudents")}</p>
               ) : (
                 <>
+                  {components.length > 0 && (
+                    <p className="mb-2 rounded-lg bg-flint-blue/5 px-3 py-2 font-mono text-[11px] text-muted">
+                      {components.map((c) => `${c.name} ×${c.weight}%`).join(" + ")} → /20
+                    </p>
+                  )}
                   <div className="mb-2 flex items-center justify-between font-mono text-xs uppercase tracking-widest text-muted">
                     <span>{t("studentsWord")}</span>
-                    <span>{t("scoreOf20")}</span>
+                    <span>{components.length > 0 ? t("caTotalCol") : t("scoreOf20")}</span>
                   </div>
                   <ul className="divide-y divide-black/5">
-                    {roster.map((r) => (
-                      <li key={r.studentId} className="flex items-center justify-between gap-3 py-2">
-                        <span className="min-w-0 truncate text-flint-black">{r.name}</span>
-                        <input
-                          type="number"
-                          min={0}
-                          max={20}
-                          step={0.25}
-                          inputMode="decimal"
-                          aria-label={`${r.name} ${t("scoreOf20")}`}
-                          value={scores[r.studentId] ?? ""}
-                          onChange={(e) => setScores((s) => ({ ...s, [r.studentId]: e.target.value }))}
-                          className="h-11 w-20 rounded-lg border border-black/15 bg-white px-2 text-center text-base tabular-nums"
-                        />
-                      </li>
-                    ))}
+                    {roster.map((r) =>
+                      components.length > 0 ? (
+                        <li key={r.studentId} className="py-2">
+                          <div className="mb-1.5 flex items-center justify-between gap-3">
+                            <span className="min-w-0 truncate text-flint-black">{r.name}</span>
+                            <span className="shrink-0 font-mono text-sm font-bold tabular-nums text-flint-blue">
+                              {weightedOf(r.studentId) ?? (r.score !== null ? `${r.score}` : "—")}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {components.map((c) => (
+                              <label key={c.id} className="flex items-center gap-1.5">
+                                <span className="font-mono text-[10px] uppercase text-muted">{c.name}</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={20}
+                                  step={0.25}
+                                  inputMode="decimal"
+                                  aria-label={`${r.name} ${c.name}`}
+                                  value={compScores[r.studentId]?.[c.id] ?? ""}
+                                  onChange={(e) =>
+                                    setCompScores((s) => ({
+                                      ...s,
+                                      [r.studentId]: { ...(s[r.studentId] ?? {}), [c.id]: e.target.value },
+                                    }))
+                                  }
+                                  className="h-10 w-16 rounded-lg border border-black/15 bg-white px-1 text-center text-sm tabular-nums"
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        </li>
+                      ) : (
+                        <li key={r.studentId} className="flex items-center justify-between gap-3 py-2">
+                          <span className="min-w-0 truncate text-flint-black">{r.name}</span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={20}
+                            step={0.25}
+                            inputMode="decimal"
+                            aria-label={`${r.name} ${t("scoreOf20")}`}
+                            value={scores[r.studentId] ?? ""}
+                            onChange={(e) => setScores((s) => ({ ...s, [r.studentId]: e.target.value }))}
+                            className="h-11 w-20 rounded-lg border border-black/15 bg-white px-2 text-center text-base tabular-nums"
+                          />
+                        </li>
+                      ),
+                    )}
                   </ul>
                   <button
                     type="button"

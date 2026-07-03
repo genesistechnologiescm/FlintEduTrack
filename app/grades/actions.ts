@@ -30,8 +30,22 @@ const RosterSchema = z.object({
 });
 
 export type RosterRow = { studentId: string; name: string; score: number | null };
+export type RosterPayload = {
+  // CA components (Phase-2): present only when the school's weights total 100%.
+  components: { id: string; name: string; weight: number }[];
+  rows: RosterRow[];
+};
 
-export async function loadRoster(raw: z.infer<typeof RosterSchema>): Promise<RosterRow[]> {
+async function activeComponents(schoolId: string) {
+  const components = await prisma.assessmentComponent.findMany({
+    where: { schoolId, deletedAt: null },
+    orderBy: { order: "asc" },
+  });
+  const sum = components.reduce((n, c) => n + c.weight, 0);
+  return sum === 100 ? components : [];
+}
+
+export async function loadRoster(raw: z.infer<typeof RosterSchema>): Promise<RosterPayload> {
   const input = RosterSchema.parse(raw);
   const { schoolId } = await staffContext();
 
@@ -54,11 +68,16 @@ export async function loadRoster(raw: z.infer<typeof RosterSchema>): Promise<Ros
   });
   const scoreByStudent = new Map(grades.map((g) => [g.studentId, Number(g.score)]));
 
-  return enrollments.map((e) => ({
-    studentId: e.studentId,
-    name: `${e.student.lastName} ${e.student.firstName}`.trim(),
-    score: scoreByStudent.get(e.studentId) ?? null,
-  }));
+  const components = await activeComponents(schoolId);
+
+  return {
+    components: components.map((c) => ({ id: c.id, name: c.name, weight: c.weight })),
+    rows: enrollments.map((e) => ({
+      studentId: e.studentId,
+      name: `${e.student.lastName} ${e.student.firstName}`.trim(),
+      score: scoreByStudent.get(e.studentId) ?? null,
+    })),
+  };
 }
 
 const SaveSchema = z.object({
@@ -67,7 +86,13 @@ const SaveSchema = z.object({
   termId: z.string().uuid(),
   sequence: z.coerce.number().int().min(1).max(2),
   scores: z
-    .array(z.object({ studentId: z.string().uuid(), score: z.number().min(0).max(20) }))
+    .array(
+      z.object({
+        studentId: z.string().uuid(),
+        score: z.number().min(0).max(20).optional(),
+        components: z.array(z.object({ componentId: z.string().uuid(), score: z.number().min(0).max(20) })).optional(),
+      }),
+    )
     .max(2000),
 });
 
@@ -88,12 +113,28 @@ export async function saveGrades(raw: z.infer<typeof SaveSchema>): Promise<{ ok:
     (await prisma.enrollment.findMany({ where: { classGroupId: input.classGroupId, schoolId, status: "ACTIVE" }, select: { studentId: true } })).map((e) => e.studentId),
   );
 
+  // CA components: when configured (weights = 100%), the server computes the
+  // weighted final from component marks — the client is never trusted with it.
+  const components = await activeComponents(schoolId);
+  const weightById = new Map(components.map((c) => [c.id, c.weight]));
+
   // Tamper-evident grading: first entry writes directly; CHANGING a recorded
   // grade never writes — it files a correction request an admin must approve.
   let saved = 0;
   let pending = 0;
   for (const row of input.scores) {
     if (!enrolled.has(row.studentId)) continue;
+
+    let finalScore: number;
+    if (components.length > 0) {
+      if (!row.components || row.components.length !== components.length) continue; // incomplete row — skip
+      if (!row.components.every((c) => weightById.has(c.componentId))) continue;
+      const weighted = row.components.reduce((n, c) => n + c.score * (weightById.get(c.componentId)! / 100), 0);
+      finalScore = Math.min(20, Math.round(weighted * 100) / 100);
+    } else {
+      if (row.score === undefined) continue;
+      finalScore = row.score;
+    }
 
     const existing = await prisma.grade.findUnique({
       where: {
@@ -114,7 +155,7 @@ export async function saveGrades(raw: z.infer<typeof SaveSchema>): Promise<{ ok:
           schoolId,
           termId: input.termId,
           sequence: input.sequence,
-          score: row.score,
+          score: finalScore,
           enteredBy: userId,
         },
       });
@@ -122,15 +163,15 @@ export async function saveGrades(raw: z.infer<typeof SaveSchema>): Promise<{ ok:
       continue;
     }
 
-    if (Number(existing.score) === row.score) continue; // unchanged
+    if (Number(existing.score) === finalScore) continue; // unchanged
 
     // One live request per grade: refresh it if the teacher re-edits.
     const open = await prisma.gradeCorrection.findFirst({ where: { gradeId: existing.id, status: "PENDING" } });
     if (open) {
-      await prisma.gradeCorrection.update({ where: { id: open.id }, data: { newScore: row.score, requestedBy: userId } });
+      await prisma.gradeCorrection.update({ where: { id: open.id }, data: { newScore: finalScore, requestedBy: userId } });
     } else {
       await prisma.gradeCorrection.create({
-        data: { schoolId, gradeId: existing.id, oldScore: existing.score, newScore: row.score, requestedBy: userId },
+        data: { schoolId, gradeId: existing.id, oldScore: existing.score, newScore: finalScore, requestedBy: userId },
       });
     }
     pending++;

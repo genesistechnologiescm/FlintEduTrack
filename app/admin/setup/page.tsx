@@ -24,10 +24,11 @@ export default async function SetupPage() {
   if (!membership) redirect("/login");
   const schoolId = membership.schoolId;
 
-  const [classes, subjects, year] = await Promise.all([
+  const [classes, subjects, year, components] = await Promise.all([
     prisma.classGroup.findMany({ where: { schoolId, deletedAt: null }, orderBy: [{ formLevel: "asc" }, { name: "asc" }] }),
     prisma.subject.findMany({ where: { schoolId }, orderBy: { name: "asc" } }),
     prisma.academicYear.findFirst({ where: { schoolId, isCurrent: true } }),
+    prisma.assessmentComponent.findMany({ where: { schoolId, deletedAt: null }, orderBy: { order: "asc" } }),
   ]);
 
   const data: SetupData = {
@@ -40,6 +41,7 @@ export default async function SetupPage() {
       stream: c.streamType,
     })),
     subjects: subjects.map((s) => ({ id: s.id, name: s.name, code: s.code, stream: s.streamType })),
+    components: components.map((c) => ({ id: c.id, name: c.name, weight: c.weight })),
   };
 
   return <SchoolSetup data={data} />;

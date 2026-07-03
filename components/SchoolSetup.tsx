@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
-import { addClass, addSubject } from "@/app/admin/setup/actions";
+import { addClass, addSubject, addComponent, deleteComponent } from "@/app/admin/setup/actions";
 
 type Stream = "SCIENCES" | "ARTS" | "COMMERCIAL" | "TECHNICAL" | null;
 export type SetupData = {
@@ -12,6 +12,7 @@ export type SetupData = {
   yearLabel: string | null;
   classes: { id: string; name: string; form: string; stream: Stream }[];
   subjects: { id: string; name: string; code: string | null; stream: Stream }[];
+  components: { id: string; name: string; weight: number }[];
 };
 
 const field = "min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base";
@@ -167,6 +168,81 @@ export function SchoolSetup({ data }: { data: SetupData }) {
           </ul>
         )}
       </section>
+
+      <ComponentsSection components={data.components} />
     </main>
+  );
+}
+
+// Assessment components (CA configuration): how a sequence mark is composed.
+// Grade entry switches to component-wise input only when weights total 100%.
+function ComponentsSection({ components }: { components: { id: string; name: string; weight: number }[] }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [weight, setWeight] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const sum = components.reduce((n, c) => n + c.weight, 0);
+  const active = sum === 100;
+
+  async function onAdd(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setErr(null);
+    const res = await addComponent({ name, weight: Number(weight) });
+    setBusy(false);
+    if (res.ok) {
+      setName("");
+      setWeight("");
+      router.refresh();
+    } else setErr(res.error ?? "error");
+  }
+
+  async function onDelete(id: string) {
+    await deleteComponent(id);
+    router.refresh();
+  }
+
+  return (
+    <section className="mt-4 rounded-2xl border border-black/10 bg-white p-5">
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-bold text-flint-black">{t("caTitle")}</h2>
+        <span
+          className={`rounded-full px-2 py-0.5 font-mono text-[11px] tabular-nums ${
+            active ? "bg-success/15 text-success" : "bg-amber-500/10 text-amber-700"
+          }`}
+        >
+          {sum}%
+        </span>
+      </div>
+      <p className="mb-3 text-sm text-muted">{active ? t("caActive") : t("caSumNote")}</p>
+
+      <form onSubmit={onAdd} className="grid grid-cols-3 gap-2">
+        <input className={`${field} col-span-2`} placeholder={t("caName")} value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required />
+        <input className={field} type="number" min={1} max={100} inputMode="numeric" placeholder={t("caWeight")} value={weight} onChange={(e) => setWeight(e.target.value)} required />
+        <button type="submit" disabled={busy} className="col-span-3 min-h-11 rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60">
+          {busy ? t("adding") : t("caAdd")}
+        </button>
+        {err && <p className="col-span-3 text-center text-sm text-error">{err}</p>}
+      </form>
+
+      {components.length > 0 && (
+        <ul className="mt-4 space-y-2 border-t border-black/5 pt-4">
+          {components.map((c) => (
+            <li key={c.id} className="flex items-center justify-between gap-3">
+              <span className="font-medium text-flint-black">{c.name}</span>
+              <span className="flex items-center gap-3">
+                <span className="font-mono text-sm tabular-nums text-flint-black">{c.weight}%</span>
+                <button type="button" onClick={() => onDelete(c.id)} className="font-mono text-xs uppercase text-error hover:underline">
+                  {t("resDelete")}
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

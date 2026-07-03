@@ -530,6 +530,20 @@ model AuthAttempt {
   @@index([ip, at])
 }
 
+// Assessment components — how a sequence mark is composed (Phase-2 spec:
+// "CA component configuration"), e.g. Continuous Assessment 40 + Exam 60.
+// Grade entry becomes component-wise when a school's weights total exactly 100;
+// the WEIGHTED FINAL is what Grade.score stores (report cards etc. unchanged).
+model AssessmentComponent {
+  id        String    @id @default(uuid())
+  schoolId  String
+  name      String
+  weight    Int // percent; entry activates only when the school's sum == 100
+  order     Int       @default(1)
+  deletedAt DateTime?
+  @@index([schoolId])
+}
+
 // Grades — Cameroon sequence model (2 sequences/term, score out of 20).
 model Grade {
   id        String   @id @default(uuid())

@@ -20,6 +20,56 @@ async function adminContext() {
   return { userId: user.id, schoolId: m.schoolId };
 }
 
+// ── Assessment components (CA configuration) ────────────────────────────────
+const ComponentSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+  weight: z.coerce.number().int().min(1).max(100),
+});
+
+export async function addComponent(raw: z.infer<typeof ComponentSchema>): Promise<{ ok: boolean; error?: string }> {
+  const input = ComponentSchema.parse(raw);
+  const { userId, schoolId } = await adminContext();
+
+  const existing = await prisma.assessmentComponent.findMany({ where: { schoolId, deletedAt: null } });
+  const sum = existing.reduce((n, c) => n + c.weight, 0);
+  if (sum + input.weight > 100) {
+    return { ok: false, error: `Weights would total ${sum + input.weight}% — they must not exceed 100%` };
+  }
+
+  const component = await prisma.assessmentComponent.create({
+    data: { schoolId, name: input.name, weight: input.weight, order: existing.length + 1 },
+  });
+  await writeAudit({
+    schoolId,
+    actorUserId: userId,
+    action: "assessment.component_added",
+    entityType: "AssessmentComponent",
+    entityId: component.id,
+    after: { name: input.name, weight: input.weight },
+  });
+  revalidatePath("/admin/setup");
+  revalidatePath("/grades");
+  return { ok: true };
+}
+
+export async function deleteComponent(id: string): Promise<{ ok: boolean }> {
+  const { userId, schoolId } = await adminContext();
+  const component = await prisma.assessmentComponent.findFirst({ where: { id, schoolId, deletedAt: null } });
+  if (!component) return { ok: false };
+  await prisma.assessmentComponent.update({ where: { id }, data: { deletedAt: new Date() } });
+  await writeAudit({
+    schoolId,
+    actorUserId: userId,
+    action: "assessment.component_removed",
+    entityType: "AssessmentComponent",
+    entityId: id,
+    before: { name: component.name, weight: component.weight },
+  });
+  revalidatePath("/admin/setup");
+  revalidatePath("/grades");
+  return { ok: true };
+}
+
 const STREAMS = ["SCIENCES", "ARTS", "COMMERCIAL", "TECHNICAL"] as const;
 
 const ClassSchema = z.object({
