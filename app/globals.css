@@ -1,26 +1,92 @@
 @import "tailwindcss";
 
-/* ── Flint · Design Tokens (EduTrack) ────────────────────────── */
+/* ── Flint · EduTrack design tokens ─────────────────────────────
+   Primitive brand tokens + a semantic layer that flips with
+   [data-theme="dark"]. Components use the semantic utilities
+   (bg-surface, text-ink, border-line…) so every screen supports
+   light + dark for free. Light is the default (sunlight, cheap
+   Android); dark is opt-in / follows the device. */
 @theme {
+  /* Primitives (brand) */
   --color-flint-black: #0a0a0f;
   --color-flint-blue: #1a6bff;
   --color-flint-cyan: #00e5ff;
   --color-flint-grey: #8a94a6;
   --color-flint-white: #f4f6fa;
-  --color-muted: #4a5160;
-  --color-success: #00c48c;
-  --color-error: #ff4444;
+
+  /* Semantic — resolve to flipping CSS vars declared below */
+  --color-bg: var(--et-bg);
+  --color-surface: var(--et-surface);
+  --color-elevated: var(--et-elevated);
+  --color-ink: var(--et-text);
+  --color-sub: var(--et-sub);
+  --color-muted: var(--et-muted);
+  --color-line: var(--et-line);
+  --color-chip: var(--et-chip);
+  --color-primary: var(--et-primary);
+  --color-cyan: var(--et-cyan);
+  --color-ok: var(--et-ok);
+  --color-warn: var(--et-warn);
+  --color-danger: var(--et-danger);
+  --color-amber: var(--et-amber);
+  --color-ok-bg: var(--et-ok-bg);
+  --color-warn-bg: var(--et-warn-bg);
+  --color-danger-bg: var(--et-danger-bg);
+  --color-blue-bg: var(--et-blue-bg);
+  --color-hero: var(--et-hero);
+  /* Back-compat with pre-rebuild screens */
+  --color-error: var(--et-danger);
+  --color-success: var(--et-ok);
 
   --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   --font-body: var(--font-inter), "Inter", sans-serif;
   --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 }
 
-/* Mobile-first base — high contrast for sunlight readability on cheap Android */
 :root {
-  --bg: #f4f6fa;
-  --surface: #ffffff;
-  --text: #0a0a0f;
+  --et-bg: #f4f6fa;
+  --et-surface: #ffffff;
+  --et-elevated: #ffffff;
+  --et-text: #0a0a0f;
+  --et-sub: #3b4657;
+  --et-muted: #6b7482;
+  --et-line: #e6e9f0;
+  --et-chip: #eef1f6;
+  --et-primary: #1a6bff;
+  --et-cyan: #0091a6;
+  --et-ok: #0e9f6e;
+  --et-warn: #b7791f;
+  --et-danger: #d64545;
+  --et-amber: #f5a623;
+  --et-ok-bg: #e7f7f0;
+  --et-warn-bg: #fdf3e2;
+  --et-danger-bg: #fdecec;
+  --et-blue-bg: #eaf1ff;
+  --et-hero: #0c1222;
+  --et-hero-sub: rgba(255, 255, 255, 0.64);
+  --et-hero-track: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme="dark"] {
+  --et-bg: #0b0b12;
+  --et-surface: #16161f;
+  --et-elevated: #1c1c28;
+  --et-text: #f4f6fa;
+  --et-sub: #c6ccd8;
+  --et-muted: #9aa3b2;
+  --et-line: rgba(255, 255, 255, 0.10);
+  --et-chip: rgba(255, 255, 255, 0.10);
+  --et-primary: #4d90ff;
+  --et-cyan: #00e5ff;
+  --et-ok: #3dd0a0;
+  --et-warn: #f2b45c;
+  --et-danger: #ff8b8b;
+  --et-amber: #f5a623;
+  --et-ok-bg: rgba(0, 196, 140, 0.15);
+  --et-warn-bg: rgba(245, 166, 35, 0.15);
+  --et-danger-bg: rgba(255, 110, 110, 0.14);
+  --et-blue-bg: rgba(77, 144, 255, 0.15);
+  --et-hero: #151b2e;
 }
 
 html {
@@ -29,18 +95,125 @@ html {
 
 body {
   min-height: 100dvh;
-  background: var(--bg);
-  color: var(--text);
+  background: var(--et-bg);
+  color: var(--et-text);
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.6;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Respect reduced motion (Non-Negotiable Rule 15) */
+/* ── Reusable component layer ─────────────────────────────────── */
+.et-card {
+  background: var(--et-surface);
+  border: 1px solid var(--et-line);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(10, 15, 30, 0.04);
+}
+.et-hero {
+  background: var(--et-hero);
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(8, 12, 24, 0.22);
+}
+.et-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  background: var(--et-primary);
+  color: #fff;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.et-btn:active {
+  transform: scale(0.98);
+}
+.et-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.et-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.et-input {
+  width: 100%;
+  border: 1px solid var(--et-line);
+  background: var(--et-surface);
+  color: var(--et-text);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.et-input:focus {
+  border-color: var(--et-primary);
+  box-shadow: 0 0 0 3px var(--et-blue-bg);
+}
+.et-input::placeholder {
+  color: var(--et-muted);
+}
+.et-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--et-text);
+}
+.et-nav {
+  display: flex;
+  background: var(--et-surface);
+  border-top: 1px solid var(--et-line);
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 6px));
+}
+.et-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--et-muted);
+  text-decoration: none;
+  padding: 4px 2px;
+  min-height: 44px;
+  position: relative;
+}
+.et-nav-item[aria-current="page"] {
+  color: var(--et-primary);
+}
+
+/* ── Motion (respect reduced motion) ──────────────────────────── */
+@keyframes et-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes et-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+.et-anim > * { animation: et-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.et-anim > *:nth-child(2) { animation-delay: 0.05s; }
+.et-anim > *:nth-child(3) { animation-delay: 0.1s; }
+.et-anim > *:nth-child(4) { animation-delay: 0.15s; }
+.et-anim > *:nth-child(5) { animation-delay: 0.2s; }
+.et-anim > *:nth-child(6) { animation-delay: 0.25s; }
+.et-pop { animation: et-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
