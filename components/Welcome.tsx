@@ -1,82 +1,98 @@
 "use client";
 
+import { ArrowRight, BarChart3, BellRing, ClipboardCheck } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import type { MessageKey } from "@/lib/i18n/dictionary";
-import { LanguageToggle } from "./LanguageToggle";
+import { OriginMark } from "./OriginMark";
+import { ThemeToggle } from "./ThemeToggle";
 
-function Win({ titleKey, bodyKey }: { titleKey: MessageKey; bodyKey: MessageKey }) {
+function Win({ icon: Icon, titleKey, bodyKey }: { icon: typeof BellRing; titleKey: MessageKey; bodyKey: MessageKey }) {
   const { t } = useI18n();
   return (
-    <div className="rounded-2xl border border-black/10 bg-white p-5">
-      <span className="inline-block size-2 rounded-full bg-flint-cyan" />
-      <h3 className="mt-3 font-display text-lg font-bold text-flint-black">{t(titleKey)}</h3>
+    <div className="et-card p-5">
+      <span className="grid size-10 place-items-center rounded-xl bg-blue-bg">
+        <Icon size={20} className="text-primary" aria-hidden="true" />
+      </span>
+      <h3 className="mt-3 font-display text-lg font-semibold">{t(titleKey)}</h3>
       <p className="mt-1 text-sm leading-relaxed text-muted">{t(bodyKey)}</p>
     </div>
   );
 }
 
 export function Welcome() {
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
 
   return (
-    <main className="mx-auto max-w-[920px] px-6">
-      {/* Top bar */}
-      <div className="flex items-center justify-between py-6">
-        <div className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest text-flint-blue">
-          <span className="size-2 rounded-full bg-flint-cyan" />
-          {t("brand")}
+    <main className="min-h-dvh bg-bg text-ink">
+      <div className="mx-auto max-w-[1000px] px-6">
+        {/* Top bar */}
+        <div className="flex items-center gap-2 py-5">
+          <span className="text-ink">
+            <OriginMark size={20} />
+          </span>
+          <span className="font-mono text-xs uppercase tracking-widest text-primary">{t("brand")}</span>
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+            <div className="flex overflow-hidden rounded-full border border-line text-xs">
+              {(["en", "fr"] as const).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setLocale(l)}
+                  aria-pressed={locale === l}
+                  className={`px-2.5 py-1.5 ${locale === l ? "bg-primary text-white" : "text-muted"}`}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <LanguageToggle />
+
+        {/* Hero */}
+        <section className="et-hero et-pop my-4 px-7 py-12 text-white sm:px-12 sm:py-16">
+          <div className="mb-5 text-white">
+            <OriginMark size={52} rings />
+          </div>
+          <h1 className="font-display text-5xl font-bold tracking-tight sm:text-6xl">{t("appName")}</h1>
+          <p className="mt-4 max-w-[640px] font-display text-2xl font-semibold leading-tight sm:text-3xl" style={{ color: "var(--et-cyan)" }}>
+            {t("landingHook")}
+          </p>
+          <p className="mt-5 max-w-[600px] text-lg leading-relaxed" style={{ color: "var(--et-hero-sub)" }}>
+            {t("landingSub")}
+          </p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <a href="/login" className="et-btn px-7 py-3 text-sm">
+              {t("landingDemo")} <ArrowRight size={16} aria-hidden="true" />
+            </a>
+            <a
+              href="/national"
+              className="inline-flex items-center gap-1.5 rounded-xl border px-6 py-3 text-sm font-medium text-white"
+              style={{ borderColor: "rgba(255,255,255,.22)" }}
+            >
+              {t("natCta")} <ArrowRight size={16} aria-hidden="true" />
+            </a>
+          </div>
+        </section>
+
+        {/* Three wins */}
+        <section className="grid gap-4 py-6 sm:grid-cols-3">
+          <Win icon={ClipboardCheck} titleKey="landingW1Title" bodyKey="landingW1Body" />
+          <Win icon={BellRing} titleKey="landingW2Title" bodyKey="landingW2Body" />
+          <Win icon={BarChart3} titleKey="landingW3Title" bodyKey="landingW3Body" />
+        </section>
+
+        {/* Crisis-impact callout — the funder hook */}
+        <section className="my-6 rounded-2xl p-6 sm:p-8" style={{ background: "var(--et-blue-bg)" }}>
+          <h2 className="font-display text-xl font-semibold">{t("landingCrisisTitle")}</h2>
+          <p className="mt-2 max-w-[660px] leading-relaxed text-sub">{t("landingCrisisBody")}</p>
+        </section>
+
+        {/* Footer */}
+        <footer className="mt-4 border-t border-line py-8 text-center font-mono text-xs uppercase tracking-widest text-muted">
+          {t("landingFooter")}
+        </footer>
       </div>
-
-      {/* Hero */}
-      <section className="py-10 sm:py-16">
-        <h1 className="font-display text-5xl font-bold tracking-tight text-flint-black sm:text-6xl">
-          {t("appName")}
-        </h1>
-        <p className="mt-4 max-w-[640px] font-display text-2xl font-semibold leading-tight text-flint-blue sm:text-3xl">
-          {t("landingHook")}
-        </p>
-        <p className="mt-5 max-w-[600px] text-lg leading-relaxed text-muted">
-          {t("landingSub")}
-        </p>
-        <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-          <a
-            href="/login"
-            className="inline-flex min-h-12 items-center rounded-full bg-flint-blue px-8 font-mono text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-flint-blue"
-          >
-            {t("landingDemo")} →
-          </a>
-          <a
-            href="/national"
-            className="inline-flex min-h-11 items-center font-mono text-sm text-flint-blue hover:underline"
-          >
-            {t("natCta")} →
-          </a>
-        </div>
-      </section>
-
-      {/* Three wins */}
-      <section className="grid gap-4 py-6 sm:grid-cols-3">
-        <Win titleKey="landingW1Title" bodyKey="landingW1Body" />
-        <Win titleKey="landingW2Title" bodyKey="landingW2Body" />
-        <Win titleKey="landingW3Title" bodyKey="landingW3Body" />
-      </section>
-
-      {/* Crisis-impact callout — the funder hook */}
-      <section className="my-8 rounded-2xl border border-flint-blue/15 bg-flint-blue/5 p-6 sm:p-8">
-        <h2 className="font-display text-xl font-bold text-flint-black">
-          {t("landingCrisisTitle")}
-        </h2>
-        <p className="mt-2 max-w-[660px] leading-relaxed text-muted">
-          {t("landingCrisisBody")}
-        </p>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-black/10 py-8 text-center font-mono text-xs uppercase tracking-widest text-muted">
-        {t("landingFooter")}
-      </footer>
     </main>
   );
 }
