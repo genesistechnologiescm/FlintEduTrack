@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { AttendanceMarker } from "@/components/AttendanceMarker";
@@ -15,6 +16,18 @@ function todayISO() {
 }
 
 export default async function AttendancePage() {
+  // Authorization: attendance is a staff screen (teacher or admin of a school).
+  // Parents / students / government have no school membership → blocked.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const membership = await prisma.schoolMembership.findFirst({
+    where: { userId: user.id, status: "active" },
+  });
+  if (!membership) redirect("/login");
+
   // Pick today's period if the timetable has one; otherwise fall back to any slot
   // so the demo always shows something.
   const jsDay = new Date().getDay(); // 0=Sun..6=Sat ; our scheme is Mon=1..Sat=6
@@ -51,17 +64,11 @@ export default async function AttendancePage() {
     .sort((a, b) => a.lastName.localeCompare(b.lastName));
 
   // Gate check-in state for the signed-in staff member (banner above the roster).
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   let gate: { time: string; onTime: boolean } | null = null;
-  if (user) {
-    const record = await prisma.gateCheckIn.findUnique({
-      where: { userId_date: { userId: user.id, date: new Date(watTodayISO()) } },
-    });
-    if (record) gate = { time: formatWat(record.arrivedAt), onTime: isOnTime(record.arrivedAt) };
-  }
+  const record = await prisma.gateCheckIn.findUnique({
+    where: { userId_date: { userId: user.id, date: new Date(watTodayISO()) } },
+  });
+  if (record) gate = { time: formatWat(record.arrivedAt), onTime: isOnTime(record.arrivedAt) };
 
   // Active handover notes for this class — the substitute's briefing.
   const handoverRows = await prisma.handoverNote.findMany({

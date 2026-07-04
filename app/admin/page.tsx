@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 import { formatWat, isOnTime, watTodayISO } from "@/lib/gate";
 import { AdminDashboard, type AdminData } from "@/components/AdminDashboard";
 
@@ -12,6 +14,18 @@ function todayISO() {
 }
 
 export default async function AdminPage() {
+  // Authorization: the dashboard is the admin home (any admin scope — FULL/FINANCE/
+  // WELFARE). Non-admins (teacher / parent / student / government) must never read it.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const membership = await prisma.schoolMembership.findFirst({
+    where: { userId: user.id, role: "ADMIN", status: "active" },
+  });
+  if (!membership) redirect("/login");
+
   const school = await prisma.school.findFirst();
   if (!school) {
     return (
