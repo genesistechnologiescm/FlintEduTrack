@@ -38,8 +38,8 @@ function StudentRow({ studentId, name, initial }: { studentId: string; name: str
   }
 
   return (
-    <li className="rounded-xl border border-black/10 bg-white p-3">
-      <div className="mb-2 font-medium text-flint-black">{name}</div>
+    <li className="rounded-xl border border-line bg-surface p-3">
+      <div className="mb-2 font-medium text-ink">{name}</div>
       <div className="flex gap-1.5" role="radiogroup" aria-label={name}>
         {LEVELS.map((l) => (
           <button
@@ -50,7 +50,7 @@ function StudentRow({ studentId, name, initial }: { studentId: string; name: str
             disabled={busy}
             onClick={() => tap(l)}
             className={`min-h-10 flex-1 rounded-full font-mono text-[10px] uppercase tracking-wider transition-colors disabled:opacity-60 ${
-              level === l ? activeTone(l) : "border border-black/15 text-muted"
+              level === l ? activeTone(l) : "border border-line text-muted"
             }`}
           >
             {label(l)}
@@ -72,11 +72,11 @@ export function WellbeingBoard({ data }: { data: WellbeingData }) {
         <div>
           <a
             href={data.isAdmin ? "/admin" : "/attendance"}
-            className="font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+            className="font-mono text-xs uppercase tracking-widest text-primary hover:underline"
           >
             ← {data.isAdmin ? t("backDash") : t("backAttendance")}
           </a>
-          <h1 className="mt-1 font-display text-2xl font-bold text-flint-black">{t("wellbeingNav")}</h1>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("wellbeingNav")}</h1>
           <p className="text-sm text-muted">
             {t("wbWeekOf")} {data.weekStartISO} · {done}/{data.students.length}
           </p>
@@ -88,7 +88,7 @@ export function WellbeingBoard({ data }: { data: WellbeingData }) {
 
       {data.classes.length > 1 && (
         <select
-          className="mb-4 min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base"
+          className="mb-4 min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base"
           value={data.classGroupId}
           onChange={(e) => router.push(`/wellbeing?class=${e.target.value}`)}
           aria-label={t("fldClass")}
@@ -100,7 +100,7 @@ export function WellbeingBoard({ data }: { data: WellbeingData }) {
       )}
 
       {data.students.length === 0 ? (
-        <p className="rounded-2xl border border-black/10 bg-white px-4 py-6 text-center text-muted">{t("noStudents")}</p>
+        <p className="rounded-2xl border border-line bg-surface px-4 py-6 text-center text-muted">{t("noStudents")}</p>
       ) : (
         <ul className="space-y-2">
           {data.students.map((s) => (

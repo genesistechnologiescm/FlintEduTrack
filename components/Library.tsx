@@ -26,7 +26,7 @@ export type LibraryData = {
 };
 
 const KINDS = ["PAST_PAPER", "SYLLABUS", "STUDY_GUIDE"] as const;
-const field = "min-h-11 rounded-lg border border-black/15 bg-white px-3 text-base";
+const field = "min-h-11 rounded-lg border border-line bg-surface px-3 text-base";
 
 // Staff-only: submit a contribution to the national shelf (curated before it appears).
 function ContributeCard({ mySubmissions }: { mySubmissions: LibraryData["mySubmissions"] }) {
@@ -71,16 +71,16 @@ function ContributeCard({ mySubmissions }: { mySubmissions: LibraryData["mySubmi
   }
 
   return (
-    <section className="mt-5 rounded-2xl border border-flint-blue/20 bg-flint-blue/5 p-4">
+    <section className="mt-5 rounded-2xl border border-flint-blue/20 bg-blue-bg p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="font-medium text-flint-black">{t("libContribute")}</div>
+          <div className="font-medium text-ink">{t("libContribute")}</div>
           <div className="font-mono text-[11px] text-muted">{t("libContributeHint")}</div>
         </div>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="min-h-10 shrink-0 rounded-full border border-flint-blue/30 px-4 font-mono text-xs uppercase tracking-widest text-flint-blue"
+          className="min-h-10 shrink-0 rounded-full border border-flint-blue/30 px-4 font-mono text-xs uppercase tracking-widest text-primary"
         >
           {open ? t("cancel") : t("libContributeBtn")}
         </button>
@@ -99,13 +99,13 @@ function ContributeCard({ mySubmissions }: { mySubmissions: LibraryData["mySubmi
           <input className={`${field} w-full`} placeholder={t("fldTitle")} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={140} required />
           <input className={`${field} w-full`} type="url" inputMode="url" placeholder={t("libLinkOptional")} value={url} onChange={(e) => setUrl(e.target.value)} />
           <textarea
-            className="min-h-24 w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-base"
+            className="min-h-24 w-full rounded-lg border border-line bg-surface px-3 py-2 text-base"
             placeholder={t("libBodyOptional")}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={8000}
           />
-          <button type="submit" disabled={busy} className="min-h-11 w-full rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60">
+          <button type="submit" disabled={busy} className="min-h-11 w-full rounded-full bg-primary font-mono text-sm font-medium text-white disabled:opacity-60">
             {busy ? t("adding") : t("libSubmitBtn")}
           </button>
           {msg && <p className="text-center text-sm text-success">{msg}</p>}
@@ -117,10 +117,10 @@ function ContributeCard({ mySubmissions }: { mySubmissions: LibraryData["mySubmi
         <ul className="mt-3 space-y-1 border-t border-flint-blue/10 pt-3">
           {mySubmissions.map((s, i) => (
             <li key={i} className="flex items-center justify-between gap-3 text-sm">
-              <span className="min-w-0 truncate text-flint-black">{s.title}</span>
+              <span className="min-w-0 truncate text-ink">{s.title}</span>
               <span
                 className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] uppercase ${
-                  s.status === "PENDING" ? "bg-amber-500/10 text-amber-700" : "bg-error/10 text-error"
+                  s.status === "PENDING" ? "bg-warn-bg text-warn" : "bg-error/10 text-error"
                 }`}
               >
                 {s.status === "PENDING" ? t("libPending") : t("corrRejected")}
@@ -172,10 +172,10 @@ export function Library({ data }: { data: LibraryData }) {
     <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <a href="/student" className="font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+          <a href="/student" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
             ← {t("backStudent")}
           </a>
-          <h1 className="mt-1 font-display text-2xl font-bold text-flint-black">{t("libraryNav")}</h1>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("libraryNav")}</h1>
           <p className="text-sm text-muted">{t("libIntro")}</p>
         </div>
         <LanguageToggle />
@@ -184,12 +184,12 @@ export function Library({ data }: { data: LibraryData }) {
       {data.isCurator && data.pendingCount > 0 && (
         <a
           href="/curate"
-          className="mb-4 flex min-h-11 items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3"
+          className="mb-4 flex min-h-11 items-center justify-between rounded-2xl border border-amber-500/30 bg-warn-bg px-4 py-3"
         >
-          <span className="font-medium text-amber-800">
+          <span className="font-medium text-warn">
             {t("libReviewQueue")} · {data.pendingCount}
           </span>
-          <span className="font-mono text-xs text-amber-700">→</span>
+          <span className="font-mono text-xs text-warn">→</span>
         </a>
       )}
 
@@ -203,7 +203,7 @@ export function Library({ data }: { data: LibraryData }) {
             aria-selected={kind === k}
             onClick={() => setKind(k)}
             className={`min-h-10 flex-1 rounded-full font-mono text-[11px] uppercase tracking-widest ${
-              kind === k ? "bg-flint-blue text-white" : "border border-black/15 text-muted"
+              kind === k ? "bg-primary text-white" : "border border-line text-muted"
             }`}
           >
             {kindLabel(k)}
@@ -232,7 +232,7 @@ export function Library({ data }: { data: LibraryData }) {
 
       {/* Shelf */}
       {groups.length === 0 ? (
-        <p className="mt-6 rounded-2xl border border-black/10 bg-white px-4 py-6 text-center text-muted">{t("libNone")}</p>
+        <p className="mt-6 rounded-2xl border border-line bg-surface px-4 py-6 text-center text-muted">{t("libNone")}</p>
       ) : (
         <div className="mt-5 space-y-5">
           {groups.map(([subj, items]) => (
@@ -240,10 +240,10 @@ export function Library({ data }: { data: LibraryData }) {
               <h2 className="mb-2 font-mono text-xs uppercase tracking-widest text-muted">{subj}</h2>
               <ul className="space-y-2">
                 {items.map((i) => (
-                  <li key={i.id} className="rounded-2xl border border-black/10 bg-white p-4">
+                  <li key={i.id} className="rounded-2xl border border-line bg-surface p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="font-medium text-flint-black">{i.title}</div>
+                        <div className="font-medium text-ink">{i.title}</div>
                         <div className="font-mono text-[11px] text-muted">
                           {[i.exam, i.year, i.paper ? `${t("libPaper")} ${i.paper}` : null].filter(Boolean).join(" · ")}
                         </div>
@@ -253,7 +253,7 @@ export function Library({ data }: { data: LibraryData }) {
                           href={i.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex min-h-9 shrink-0 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+                          className="inline-flex min-h-9 shrink-0 items-center font-mono text-xs uppercase tracking-widest text-primary hover:underline"
                         >
                           {t("resOpen")} →
                         </a>
@@ -261,10 +261,10 @@ export function Library({ data }: { data: LibraryData }) {
                     </div>
                     {i.body && (
                       <details className="mt-2">
-                        <summary className="cursor-pointer font-mono text-[11px] uppercase tracking-widest text-flint-blue">
+                        <summary className="cursor-pointer font-mono text-[11px] uppercase tracking-widest text-primary">
                           {t("libRead")}
                         </summary>
-                        <p className="mt-2 whitespace-pre-wrap border-t border-black/5 pt-2 text-sm text-flint-black">{i.body}</p>
+                        <p className="mt-2 whitespace-pre-wrap border-t border-line pt-2 text-sm text-ink">{i.body}</p>
                       </details>
                     )}
                   </li>

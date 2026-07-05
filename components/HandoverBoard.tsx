@@ -15,7 +15,7 @@ export type HandoverData = {
   notes: Note[];
 };
 
-const field = "min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base";
+const field = "min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base";
 
 export function HandoverBoard({ data }: { data: HandoverData }) {
   const { t } = useI18n();
@@ -50,18 +50,18 @@ export function HandoverBoard({ data }: { data: HandoverData }) {
         <div>
           <a
             href={data.isAdmin ? "/admin" : "/attendance"}
-            className="font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
+            className="font-mono text-xs uppercase tracking-widest text-primary hover:underline"
           >
             ← {data.isAdmin ? t("backDash") : t("backAttendance")}
           </a>
-          <h1 className="mt-1 font-display text-2xl font-bold text-flint-black">{t("handoverNav")}</h1>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("handoverNav")}</h1>
           <p className="text-sm text-muted">{t("hoIntro")}</p>
         </div>
         <LanguageToggle />
       </header>
 
-      <section className="rounded-2xl border border-black/10 bg-white p-5">
-        <h2 className="mb-3 font-display text-lg font-bold text-flint-black">{t("hoLeave")}</h2>
+      <section className="rounded-2xl border border-line bg-surface p-5">
+        <h2 className="mb-3 font-display text-lg font-bold text-ink">{t("hoLeave")}</h2>
         <form onSubmit={onAdd} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <select className={field} value={classGroupId} onChange={(e) => setClassGroupId(e.target.value)} aria-label={t("fldClass")}>
@@ -75,14 +75,14 @@ export function HandoverBoard({ data }: { data: HandoverData }) {
             </label>
           </div>
           <textarea
-            className="min-h-28 w-full rounded-lg border border-black/15 bg-white px-3 py-2 text-base"
+            className="min-h-28 w-full rounded-lg border border-line bg-surface px-3 py-2 text-base"
             placeholder={t("hoPlaceholder")}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             maxLength={2000}
             required
           />
-          <button type="submit" disabled={busy} className="min-h-11 w-full rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60">
+          <button type="submit" disabled={busy} className="min-h-11 w-full rounded-full bg-primary font-mono text-sm font-medium text-white disabled:opacity-60">
             {busy ? t("adding") : t("hoLeave")}
           </button>
           {err && <p className="text-center text-sm text-error">{err}</p>}
@@ -93,13 +93,13 @@ export function HandoverBoard({ data }: { data: HandoverData }) {
         {t("hoActive")} · {data.notes.length}
       </h2>
       {data.notes.length === 0 ? (
-        <p className="rounded-2xl border border-black/10 bg-white px-4 py-6 text-center text-muted">{t("hoNone")}</p>
+        <p className="rounded-2xl border border-line bg-surface px-4 py-6 text-center text-muted">{t("hoNone")}</p>
       ) : (
         <ul className="space-y-2">
           {data.notes.map((n) => (
             <li key={n.id} className="rounded-2xl border border-amber-500/25 bg-amber-500/5 p-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="font-mono text-[11px] uppercase tracking-widest text-amber-800">
+                <div className="font-mono text-[11px] uppercase tracking-widest text-warn">
                   {n.className} · {t("hoUntilShort")} {n.until}
                 </div>
                 {(n.mine || data.isAdmin) && (
@@ -108,7 +108,7 @@ export function HandoverBoard({ data }: { data: HandoverData }) {
                   </button>
                 )}
               </div>
-              <p className="mt-1.5 whitespace-pre-wrap text-sm text-flint-black">{n.body}</p>
+              <p className="mt-1.5 whitespace-pre-wrap text-sm text-ink">{n.body}</p>
               <p className="mt-1.5 font-mono text-[11px] text-muted">{t("hoFrom")} {n.author}</p>
             </li>
           ))}

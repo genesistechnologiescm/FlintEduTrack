@@ -15,7 +15,7 @@ export type GradeEntryData = {
   terms: { id: string; label: string; sequenceCount: number }[];
 };
 
-const field = "min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base";
+const field = "min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base";
 
 export function GradeEntry({ data }: { data: GradeEntryData }) {
   const { t } = useI18n();
@@ -129,22 +129,22 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
     <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <a href={data.isAdmin ? "/admin" : "/attendance"} className="font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+          <a href={data.isAdmin ? "/admin" : "/attendance"} className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
             ← {data.isAdmin ? t("backDash") : t("backAttendance")}
           </a>
-          <h1 className="mt-1 font-display text-2xl font-bold text-flint-black">{t("enterGrades")}</h1>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("enterGrades")}</h1>
           <p className="text-muted">{data.schoolName}</p>
         </div>
         <LanguageToggle />
       </header>
 
       {noTerms ? (
-        <p className="rounded-2xl border border-black/10 bg-white px-4 py-6 text-center text-muted">
+        <p className="rounded-2xl border border-line bg-surface px-4 py-6 text-center text-muted">
           {t("noTermsYet")}
         </p>
       ) : (
         <>
-          <section className="rounded-2xl border border-black/10 bg-white p-5">
+          <section className="rounded-2xl border border-line bg-surface p-5">
             <div className="grid grid-cols-2 gap-3">
               <label className="col-span-2 text-sm">
                 <span className="mb-1 block font-mono text-xs uppercase tracking-widest text-muted">{t("fldClass")}</span>
@@ -183,20 +183,20 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
               type="button"
               onClick={onLoad}
               disabled={!ready || loading}
-              className="mt-4 min-h-11 w-full rounded-full border border-flint-blue/30 font-mono text-xs uppercase tracking-widest text-flint-blue disabled:opacity-60"
+              className="mt-4 min-h-11 w-full rounded-full border border-flint-blue/30 font-mono text-xs uppercase tracking-widest text-primary disabled:opacity-60"
             >
               {loading ? t("adding") : t("loadClass")}
             </button>
           </section>
 
           {roster && (
-            <section className="mt-4 rounded-2xl border border-black/10 bg-white p-5">
+            <section className="mt-4 rounded-2xl border border-line bg-surface p-5">
               {roster.length === 0 ? (
                 <p className="py-4 text-center text-muted">{t("noStudents")}</p>
               ) : (
                 <>
                   {components.length > 0 && (
-                    <p className="mb-2 rounded-lg bg-flint-blue/5 px-3 py-2 font-mono text-[11px] text-muted">
+                    <p className="mb-2 rounded-lg bg-blue-bg px-3 py-2 font-mono text-[11px] text-muted">
                       {components.map((c) => `${c.name} ×${c.weight}%`).join(" + ")} → /20
                     </p>
                   )}
@@ -209,8 +209,8 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
                       components.length > 0 ? (
                         <li key={r.studentId} className="py-2">
                           <div className="mb-1.5 flex items-center justify-between gap-3">
-                            <span className="min-w-0 truncate text-flint-black">{r.name}</span>
-                            <span className="shrink-0 font-mono text-sm font-bold tabular-nums text-flint-blue">
+                            <span className="min-w-0 truncate text-ink">{r.name}</span>
+                            <span className="shrink-0 font-mono text-sm font-bold tabular-nums text-primary">
                               {weightedOf(r.studentId) ?? (r.score !== null ? `${r.score}` : "—")}
                             </span>
                           </div>
@@ -232,7 +232,7 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
                                       [r.studentId]: { ...(s[r.studentId] ?? {}), [c.id]: e.target.value },
                                     }))
                                   }
-                                  className="h-10 w-16 rounded-lg border border-black/15 bg-white px-1 text-center text-sm tabular-nums"
+                                  className="h-10 w-16 rounded-lg border border-line bg-surface px-1 text-center text-sm tabular-nums"
                                 />
                               </label>
                             ))}
@@ -240,7 +240,7 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
                         </li>
                       ) : (
                         <li key={r.studentId} className="flex items-center justify-between gap-3 py-2">
-                          <span className="min-w-0 truncate text-flint-black">{r.name}</span>
+                          <span className="min-w-0 truncate text-ink">{r.name}</span>
                           <input
                             type="number"
                             min={0}
@@ -250,7 +250,7 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
                             aria-label={`${r.name} ${t("scoreOf20")}`}
                             value={scores[r.studentId] ?? ""}
                             onChange={(e) => setScores((s) => ({ ...s, [r.studentId]: e.target.value }))}
-                            className="h-11 w-20 rounded-lg border border-black/15 bg-white px-2 text-center text-base tabular-nums"
+                            className="h-11 w-20 rounded-lg border border-line bg-surface px-2 text-center text-base tabular-nums"
                           />
                         </li>
                       ),
@@ -260,7 +260,7 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
                     type="button"
                     onClick={onSave}
                     disabled={saving}
-                    className="mt-4 min-h-11 w-full rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60"
+                    className="mt-4 min-h-11 w-full rounded-full bg-primary font-mono text-sm font-medium text-white disabled:opacity-60"
                   >
                     {saving ? t("adding") : t("saveMarks")}
                   </button>
