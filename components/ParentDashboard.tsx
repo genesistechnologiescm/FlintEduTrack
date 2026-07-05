@@ -5,17 +5,13 @@ import {
   AlertTriangle,
   ArrowRight,
   Bell,
-  BookOpen,
   Calendar,
   CheckCircle2,
   FileText,
-  Home,
   MessageCircle,
   Wallet,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { AppHeader } from "./AppHeader";
-import { BottomNav } from "./BottomNav";
 import type { SubjectGrade } from "@/lib/grades";
 
 type Child = {
@@ -120,19 +116,9 @@ export function ParentDashboard({ data }: { data: ParentData }) {
   const firstName = data.parentName.split(" ")[0] || data.parentName;
   const today = new Date().toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
 
-  const nav = [
-    { href: "/parent", label: t.navHome, icon: Home, current: true },
-    { href: "/parent/messages", label: t.navMsg, icon: MessageCircle },
-    { href: "/parent/fees", label: t.navFees, icon: Wallet },
-    { href: "/parent/resources", label: t.navLessons, icon: BookOpen },
-  ];
-
   return (
-    <div className="flex h-dvh flex-col bg-bg text-ink">
-      <AppHeader logout avatar={{ initials: firstName.slice(0, 2).toUpperCase() }} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-[560px] px-4 pb-6">
-          <h1 className="mt-2 font-display text-xl font-semibold">
+    <>
+      <h1 className="font-display text-xl font-semibold">
             {greet}, {firstName}
           </h1>
           <p className="text-[12.5px] capitalize text-muted">{today}</p>
@@ -392,9 +378,6 @@ export function ParentDashboard({ data }: { data: ParentData }) {
               </div>
             </div>
           )}
-        </div>
-      </main>
-      <BottomNav items={nav} />
-    </div>
+    </>
   );
 }

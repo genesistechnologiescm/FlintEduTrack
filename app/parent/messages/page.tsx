@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { ThreadList, NewThreadForm, ThreadView, type ThreadSummary, type ThreadMessage } from "@/components/Messaging";
-import { MessagesHeader } from "@/components/MessagesHeader";
+import { PageTitle } from "@/components/PageTitle";
 
 export const dynamic = "force-dynamic";
 
@@ -36,12 +36,7 @@ export default async function ParentMessagesPage({ searchParams }: { searchParam
       const aboutName = thread.student
         ? `${thread.student.firstName} ${thread.student.lastName} · ${thread.school.name}`
         : thread.school.name;
-      return (
-        <main className="mx-auto max-w-[560px] px-4 pb-16 pt-6">
-          <MessagesHeader backHref="/parent" parent />
-          <ThreadView threadId={thread.id} subject={thread.subject} aboutName={aboutName} isStaff={false} messages={messages} basePath={BASE} />
-        </main>
-      );
+      return <ThreadView threadId={thread.id} subject={thread.subject} aboutName={aboutName} isStaff={false} messages={messages} basePath={BASE} />;
     }
   }
 
@@ -66,14 +61,14 @@ export default async function ParentMessagesPage({ searchParams }: { searchParam
   }));
 
   return (
-    <main className="mx-auto max-w-[560px] px-4 pb-16 pt-6">
-      <MessagesHeader backHref="/parent" parent />
+    <>
+      <PageTitle titleKey="messagesNav" />
       {children.length > 0 && (
         <div className="mb-4">
           <NewThreadForm children={children} basePath={BASE} />
         </div>
       )}
       <ThreadList items={items} basePath={BASE} />
-    </main>
+    </>
   );
 }

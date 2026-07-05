@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { MessagesHeader } from "./MessagesHeader";
+import { PageTitle } from "./PageTitle";
 
 type Item = { id: string; title: string; type: "LINK" | "NOTE"; url: string | null; body: string | null };
 type SubjectGroup = { subject: string; items: Item[] };
@@ -15,12 +15,9 @@ export function ParentResources({ data }: { data: ParentResourcesData }) {
   const hasAny = data.children.some((c) => c.subjects.length > 0);
 
   return (
-    <main className="min-h-dvh bg-bg text-ink">
-      <div className="mx-auto max-w-[560px] px-4 pb-16">
-        <MessagesHeader backHref="/parent" parent titleKey="resourcesNav" />
-        <p className="mb-4 text-sm text-muted">{t("resIntro")}</p>
-
-        {!hasAny ? (
+    <>
+      <PageTitle titleKey="resourcesNav" subKey="resIntro" />
+      {!hasAny ? (
           <p className="et-card px-4 py-6 text-center text-muted">{t("resNone")}</p>
         ) : (
           <div className="space-y-4">
@@ -65,7 +62,6 @@ export function ParentResources({ data }: { data: ParentResourcesData }) {
             ))}
           </div>
         )}
-      </div>
-    </main>
+    </>
   );
 }

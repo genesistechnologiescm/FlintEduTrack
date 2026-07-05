@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { MessagesHeader } from "./MessagesHeader";
+import { PageTitle } from "./PageTitle";
 import { formatFcfa } from "@/lib/fees";
 import { payFees } from "@/app/parent/fees/actions";
 
@@ -89,12 +89,9 @@ export function ParentFees({ data }: { data: ParentFeesData }) {
   const { t } = useI18n();
 
   return (
-    <main className="min-h-dvh bg-bg text-ink">
-      <div className="mx-auto max-w-[560px] px-4 pb-16">
-        <MessagesHeader backHref="/parent" parent titleKey="feesNav" />
-        <p className="mb-4 text-sm text-muted">{t("feeIntro")}</p>
-
-        <div className="space-y-4">
+    <>
+      <PageTitle titleKey="feesNav" subKey="feeIntro" />
+      <div className="space-y-4">
           {data.children.map((c) => (
             <section key={c.studentId} className="et-card p-5">
               <div className="flex items-start justify-between gap-3">
@@ -138,7 +135,6 @@ export function ParentFees({ data }: { data: ParentFeesData }) {
             </section>
           ))}
         </div>
-      </div>
-    </main>
+    </>
   );
 }
