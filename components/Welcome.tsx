@@ -52,7 +52,7 @@ export function Welcome() {
         {/* Hero */}
         <section className="et-hero et-pop my-4 px-7 py-12 text-white sm:px-12 sm:py-16">
           <div className="mb-5 text-white">
-            <OriginMark size={52} rings />
+            <OriginMark size={52} rings mono />
           </div>
           <h1 className="font-display text-5xl font-bold tracking-tight sm:text-6xl">{t("appName")}</h1>
           <p className="mt-4 max-w-[640px] font-display text-2xl font-semibold leading-tight sm:text-3xl" style={{ color: "#fff" }}>
