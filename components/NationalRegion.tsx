@@ -68,8 +68,10 @@ export function NationalRegion({ data }: { data: RegionData }) {
       <div className="mx-auto max-w-[720px] px-4 pb-16">
         {/* Top bar */}
         <div className="flex items-center gap-2 py-5">
-          <span className="text-ink"><OriginMark size={20} /></span>
-          <span className="font-mono text-xs uppercase tracking-widest text-primary">Flint Intelligence</span>
+          <a href="/" className="flex items-center gap-2">
+            <span className="text-ink"><OriginMark size={20} /></span>
+            <span className="font-mono text-xs uppercase tracking-widest text-primary">Flint Intelligence</span>
+          </a>
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <div className="flex overflow-hidden rounded-full border border-line text-xs">

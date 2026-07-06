@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowRight, Eye, EyeOff, GraduationCap, Loader2, Lock, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, EyeOff, GraduationCap, Loader2, Lock, Phone } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { signIn, signInStudent } from "@/app/login/actions";
 import { OriginMark } from "./OriginMark";
@@ -25,6 +25,7 @@ const STR = {
     forgot: "Forgot your PIN?",
     forgotAction: "Ask your school to reset it.",
     secured: "Secured by EduTrack · Flint Technologies",
+    backHome: "Back to home",
   },
   fr: {
     welcome: "Bon retour",
@@ -43,6 +44,7 @@ const STR = {
     forgot: "PIN oublié ?",
     forgotAction: "Demandez à votre école de le réinitialiser.",
     secured: "Sécurisé par EduTrack · Flint Technologies",
+    backHome: "Retour à l'accueil",
   },
 };
 
@@ -85,7 +87,10 @@ export function LoginForm() {
 
   return (
     <main className="flex min-h-dvh flex-col bg-bg text-ink">
-      <div className="flex items-center justify-end gap-2 p-4">
+      <div className="flex items-center gap-2 p-4">
+        <a href="/" aria-label={t.backHome} className="mr-auto grid size-9 place-items-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink">
+          <ArrowLeft size={18} aria-hidden="true" />
+        </a>
         <ThemeToggle />
         <div className="flex overflow-hidden rounded-full border border-line text-xs">
           {(["en", "fr"] as const).map((l) => (

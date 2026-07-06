@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { RiskMap, type MapRow } from "./RiskMap";
 import { OriginMark } from "./OriginMark";
@@ -68,8 +69,13 @@ export function NationalDashboard({ data }: { data: NationalData }) {
       <div className="mx-auto max-w-[900px] px-5 pb-16">
         {/* Top bar */}
         <div className="flex items-center gap-2 py-5">
-          <span className="text-ink"><OriginMark size={20} /></span>
-          <span className="font-mono text-xs uppercase tracking-widest text-primary">Flint Intelligence</span>
+          <a href="/" aria-label={t("navHome")} className="grid size-9 place-items-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink">
+            <ArrowLeft size={18} aria-hidden="true" />
+          </a>
+          <a href="/" className="flex items-center gap-2">
+            <span className="text-ink"><OriginMark size={20} /></span>
+            <span className="font-mono text-xs uppercase tracking-widest text-primary">Flint Intelligence</span>
+          </a>
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <div className="flex overflow-hidden rounded-full border border-line text-xs">
