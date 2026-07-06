@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { setWellbeing } from "@/app/wellbeing/actions";
 
 type Level = "ENGAGED" | "NEUTRAL" | "NEEDS_ATTENTION" | null;
@@ -67,7 +66,7 @@ export function WellbeingBoard({ data }: { data: WellbeingData }) {
   const done = data.students.filter((s) => s.level !== null).length;
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a
@@ -81,7 +80,6 @@ export function WellbeingBoard({ data }: { data: WellbeingData }) {
             {t("wbWeekOf")} {data.weekStartISO} · {done}/{data.students.length}
           </p>
         </div>
-        <LanguageToggle />
       </header>
 
       <p className="mb-4 text-sm text-muted">{t("wbIntro")}</p>
@@ -108,6 +106,6 @@ export function WellbeingBoard({ data }: { data: WellbeingData }) {
           ))}
         </ul>
       )}
-    </main>
+    </>
   );
 }

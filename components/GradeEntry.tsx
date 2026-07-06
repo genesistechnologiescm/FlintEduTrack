@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { loadRoster, saveGrades, type RosterRow } from "@/app/grades/actions";
 
 type Component = { id: string; name: string; weight: number };
@@ -126,7 +125,7 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
   const noTerms = data.terms.length === 0;
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href={data.isAdmin ? "/admin" : "/attendance"} className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -135,7 +134,6 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
           <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("enterGrades")}</h1>
           <p className="text-muted">{data.schoolName}</p>
         </div>
-        <LanguageToggle />
       </header>
 
       {noTerms ? (
@@ -273,6 +271,6 @@ export function GradeEntry({ data }: { data: GradeEntryData }) {
           {err && <p className="mt-3 text-center text-sm text-error">{err}</p>}
         </>
       )}
-    </main>
+    </>
   );
 }

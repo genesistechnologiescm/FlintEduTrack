@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { addClass, addSubject, addComponent, deleteComponent } from "@/app/admin/setup/actions";
 
 type Stream = "SCIENCES" | "ARTS" | "COMMERCIAL" | "TECHNICAL" | null;
@@ -90,7 +89,7 @@ export function SchoolSetup({ data }: { data: SetupData }) {
   }
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -102,7 +101,6 @@ export function SchoolSetup({ data }: { data: SetupData }) {
             {data.yearLabel ? ` · ${data.yearLabel}` : ""}
           </p>
         </div>
-        <LanguageToggle />
       </header>
 
       {/* Classes */}
@@ -170,7 +168,7 @@ export function SchoolSetup({ data }: { data: SetupData }) {
       </section>
 
       <ComponentsSection components={data.components} />
-    </main>
+    </>
   );
 }
 

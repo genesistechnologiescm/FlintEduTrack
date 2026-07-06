@@ -99,7 +99,7 @@ export function NationalDashboard({ data }: { data: NationalData }) {
               </div>
             </div>
             {gap !== null && gap > 0 && (
-              <p className="mt-3 text-center text-sm font-medium" style={{ color: "var(--et-cyan)" }}>▼ {gap} {t("natGap")}</p>
+              <p className="mt-3 text-center text-sm font-medium" style={{ color: "#fff" }}>▼ {gap} {t("natGap")}</p>
             )}
             <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-1 text-[11.5px]" style={{ color: "var(--et-hero-sub)" }}>
               <span><b className="text-white">{data.totalSchools}</b> {t("natSchools")}</span>

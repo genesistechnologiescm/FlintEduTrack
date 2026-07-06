@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { postAnnouncement } from "@/app/admin/announcements/actions";
 
 type Sent = {
@@ -62,7 +61,7 @@ export function AnnouncementsManager({ data }: { data: AnnouncementsData }) {
   }
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href={data.isAdmin ? "/admin" : "/attendance"} className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -71,7 +70,6 @@ export function AnnouncementsManager({ data }: { data: AnnouncementsData }) {
           <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("announcementsNav")}</h1>
           <p className="text-muted">{data.schoolName}</p>
         </div>
-        <LanguageToggle />
       </header>
 
       <section className="rounded-2xl border border-line bg-surface p-5">
@@ -141,6 +139,6 @@ export function AnnouncementsManager({ data }: { data: AnnouncementsData }) {
           ))}
         </ul>
       )}
-    </main>
+    </>
   );
 }

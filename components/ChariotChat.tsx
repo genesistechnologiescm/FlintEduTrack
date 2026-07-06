@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Send, Sparkles } from "lucide-react";
+import { Send, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { ThemeToggle } from "./ThemeToggle";
 import { sendToChariot } from "@/app/student/actions";
 
 type Turn = { role: "user" | "assistant"; text: string };
 
 export function ChariotChat({ firstName, configured }: { firstName: string; configured: boolean }) {
-  const { t, locale, setLocale } = useI18n();
+  const { t } = useI18n();
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -39,35 +38,24 @@ export function ChariotChat({ firstName, configured }: { firstName: string; conf
   }
 
   return (
-    <div className="flex h-dvh flex-col bg-bg text-ink">
-      <header className="flex items-center gap-3 px-4 pb-2 pt-4">
-        <a href="/student" aria-label={t("backStudent")} className="grid size-9 place-items-center rounded-full text-muted hover:bg-line">
-          <ArrowLeft size={18} aria-hidden="true" />
-        </a>
-        <span className="grid size-9 place-items-center rounded-xl" style={{ background: "var(--et-blue-bg)" }}>
-          <Sparkles size={18} className="text-primary" aria-hidden="true" />
+    <>
+      <div className="mb-4 flex items-center gap-3">
+        <span className="grid size-10 place-items-center rounded-xl" style={{ background: "var(--et-blue-bg)" }}>
+          <Sparkles size={20} className="text-primary" aria-hidden="true" />
         </span>
-        <div className="flex-1">
-          <div className="font-display text-base font-semibold">{t("chariotName")}</div>
+        <div>
+          <div className="font-display text-lg font-semibold">{t("chariotName")}</div>
           <div className="text-[11.5px] text-muted">{t("chariotTagline")}</div>
         </div>
-        <ThemeToggle />
-        <div className="flex overflow-hidden rounded-full border border-line text-xs">
-          {(["en", "fr"] as const).map((l) => (
-            <button key={l} type="button" onClick={() => setLocale(l)} aria-pressed={locale === l}
-              className={`px-2.5 py-1.5 ${locale === l ? "bg-primary text-white" : "text-muted"}`}>{l.toUpperCase()}</button>
-          ))}
+      </div>
+
+      {!configured && (
+        <div className="mb-3 rounded-xl px-4 py-3 text-sm" style={{ background: "var(--et-warn-bg)", color: "var(--et-warn)" }}>
+          {t("chariotNotConfigured")}
         </div>
-      </header>
+      )}
 
-      <div className="mx-auto flex w-full max-w-[560px] flex-1 flex-col overflow-hidden px-4">
-        {!configured && (
-          <div className="mb-3 rounded-xl px-4 py-3 text-sm" style={{ background: "var(--et-warn-bg)", color: "var(--et-warn)" }}>
-            {t("chariotNotConfigured")}
-          </div>
-        )}
-
-        <div className="et-card flex-1 space-y-3 overflow-y-auto p-4">
+      <div className="et-card h-[58vh] space-y-3 overflow-y-auto p-4">
           {turns.length === 0 ? (
             <div className="grid h-full place-items-center px-6 text-center">
               <div>
@@ -119,7 +107,6 @@ export function ChariotChat({ firstName, configured }: { firstName: string; conf
           </button>
         </form>
         <p className="mb-3 mt-2 text-center font-mono text-[10px] text-muted">{t("chariotDisclaimer")}</p>
-      </div>
-    </div>
+    </>
   );
 }

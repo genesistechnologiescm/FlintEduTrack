@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { addResource, deleteResource } from "@/app/admin/resources/actions";
 
 type Resource = {
@@ -69,7 +68,7 @@ export function ResourcesManager({ data }: { data: ResourcesData }) {
   }
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href={data.isAdmin ? "/admin" : "/attendance"} className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -78,7 +77,6 @@ export function ResourcesManager({ data }: { data: ResourcesData }) {
           <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("resourcesNav")}</h1>
           <p className="text-muted">{data.schoolName}</p>
         </div>
-        <LanguageToggle />
       </header>
 
       {noSubjects ? (
@@ -176,6 +174,6 @@ export function ResourcesManager({ data }: { data: ResourcesData }) {
           ))}
         </ul>
       )}
-    </main>
+    </>
   );
 }

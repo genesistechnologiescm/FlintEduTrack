@@ -62,9 +62,9 @@
   --et-warn-bg: #fdf3e2;
   --et-danger-bg: #fdecec;
   --et-blue-bg: #eaf1ff;
-  --et-hero: #0c1222;
-  --et-hero-sub: rgba(255, 255, 255, 0.64);
-  --et-hero-track: rgba(255, 255, 255, 0.14);
+  --et-hero: #1a6bff;
+  --et-hero-sub: rgba(255, 255, 255, 0.85);
+  --et-hero-track: rgba(255, 255, 255, 0.24);
 }
 
 [data-theme="dark"] {
@@ -87,6 +87,8 @@
   --et-danger-bg: rgba(255, 110, 110, 0.14);
   --et-blue-bg: rgba(77, 144, 255, 0.15);
   --et-hero: #151b2e;
+  --et-hero-sub: rgba(255, 255, 255, 0.64);
+  --et-hero-track: rgba(255, 255, 255, 0.14);
 }
 
 html {

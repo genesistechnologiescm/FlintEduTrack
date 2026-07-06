@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { formatFcfa } from "@/lib/fees";
 import { addFeeItem, deleteFeeItem, sendOverdueReminders } from "@/app/admin/fees/actions";
 
@@ -78,7 +77,7 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
   }
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -90,7 +89,6 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
             {data.termLabel ? ` · ${data.termLabel}` : ""}
           </p>
         </div>
-        <LanguageToggle />
       </header>
 
       <div className="grid grid-cols-2 gap-3">
@@ -206,6 +204,6 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
           </ul>
         )}
       </section>
-    </main>
+    </>
   );
 }

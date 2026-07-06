@@ -3,19 +3,13 @@
 import { useState } from "react";
 import {
   ArrowRight,
-  BookOpen,
   Check,
   CheckCircle2,
-  ClipboardCheck,
   Clock,
   CloudOff,
-  FileText,
-  Heart,
   Loader2,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { AppHeader } from "./AppHeader";
-import { BottomNav } from "./BottomNav";
 import { submitAttendance, type SubmitResult } from "@/app/attendance/actions";
 import { checkInAtGate } from "@/app/gate/actions";
 import { enqueue } from "@/lib/offline/queue";
@@ -123,22 +117,12 @@ export function AttendanceMarker({
     { href: "/wellbeing", label: t.wellbeing },
     { href: "/handover", label: t.handover },
   ];
-  const nav = [
-    { href: "/attendance", label: t.navToday, icon: ClipboardCheck, current: true },
-    { href: "/grades", label: t.navGrades, icon: FileText },
-    { href: "/library", label: t.navLessons, icon: BookOpen },
-    { href: "/wellbeing", label: t.navWell, icon: Heart },
-  ];
-
   return (
-    <div className="flex h-dvh flex-col bg-bg text-ink">
-      <AppHeader logout avatar={{ initials: first.slice(0, 2).toUpperCase() }} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-[560px] px-4 pb-4">
-          <h1 className="mt-2 font-display text-xl font-semibold">{greet}, {first}</h1>
-          <p className="text-[12.5px] capitalize text-muted">{today}</p>
+    <>
+      <h1 className="font-display text-xl font-semibold">{greet}, {first}</h1>
+      <p className="text-[12.5px] capitalize text-muted">{today}</p>
 
-          <div className="et-anim mt-3 flex flex-col gap-3">
+      <div className="et-anim mt-3 flex flex-col gap-3">
             {/* Context + gate check-in */}
             <div className="et-card p-4">
               <div className="flex items-start justify-between gap-3">
@@ -237,13 +221,10 @@ export function AttendanceMarker({
               })}
             </div>
           </div>
-        </div>
-      </main>
 
       {/* Submit bar */}
-      <div className="border-t border-line bg-surface px-4 py-3">
-        <div className="mx-auto flex w-full max-w-[560px] items-center gap-3">
-          <span className="text-xs text-muted">{t.alertNote}</span>
+      <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
+        <span className="text-xs text-muted">{t.alertNote}</span>
           <button
             type="button"
             onClick={onSubmit}
@@ -260,11 +241,8 @@ export function AttendanceMarker({
               </>
             )}
           </button>
-        </div>
       </div>
-
-      <BottomNav items={nav} />
-    </div>
+    </>
   );
 }
 

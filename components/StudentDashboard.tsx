@@ -1,9 +1,7 @@
 "use client";
 
-import { ArrowRight, BookOpen, FileText, Home, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { AppHeader } from "./AppHeader";
-import { BottomNav } from "./BottomNav";
 import { OfflineLessons } from "./OfflineLessons";
 import { recordResourceView } from "@/app/student/actions";
 import type { SubjectGrade } from "@/lib/grades";
@@ -29,19 +27,9 @@ export function StudentDashboard({ data }: { data: StudentData }) {
   const hour = new Date().getHours();
   const greet = hour < 12 ? (locale === "fr" ? "Bonjour" : "Good morning") : hour < 17 ? (locale === "fr" ? "Bon après-midi" : "Good afternoon") : (locale === "fr" ? "Bonsoir" : "Good evening");
 
-  const nav = [
-    { href: "/student", label: locale === "fr" ? "Accueil" : "Home", icon: Home, current: true },
-    { href: "/library", label: t("libraryNav"), icon: BookOpen },
-    { href: "/student/tutor", label: t("chariotNav"), icon: Sparkles },
-    { href: `/report/${data.studentId}`, label: t("gradesTitle"), icon: FileText },
-  ];
-
   return (
-    <div className="flex h-dvh flex-col bg-bg text-ink">
-      <AppHeader logout avatar={{ initials: first.slice(0, 2).toUpperCase(), color: "var(--et-amber)" }} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-[560px] px-4 pb-6">
-          <h1 className="mt-2 font-display text-xl font-semibold">{greet}, {first}</h1>
+    <>
+      <h1 className="font-display text-xl font-semibold">{greet}, {first}</h1>
           <p className="text-[12.5px] text-muted">{data.school} · {data.className}</p>
 
           <div className="et-anim mt-3 flex flex-col gap-3">
@@ -49,7 +37,7 @@ export function StudentDashboard({ data }: { data: StudentData }) {
             <a href="/student/tutor" className="et-hero et-pop block p-5 text-white">
               <div className="flex items-center gap-3">
                 <span className="grid size-11 place-items-center rounded-xl" style={{ background: "rgba(0,229,255,.16)" }}>
-                  <Sparkles size={20} style={{ color: "var(--et-cyan)" }} aria-hidden="true" />
+                  <Sparkles size={20} style={{ color: "#fff" }} aria-hidden="true" />
                 </span>
                 <div className="flex-1">
                   <div className="font-display text-base font-semibold">{t("chariotNav")}</div>
@@ -183,9 +171,6 @@ export function StudentDashboard({ data }: { data: StudentData }) {
               )}
             </div>
           </div>
-        </div>
-      </main>
-      <BottomNav items={nav} />
-    </div>
+    </>
   );
 }

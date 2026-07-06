@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { addStaff, updateStaff, removeStaff } from "@/app/admin/staff/actions";
 
 type Scope = "FULL" | "FINANCE" | "WELFARE";
@@ -131,7 +130,7 @@ export function StaffManager({ data }: { data: StaffData }) {
   }
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -140,7 +139,6 @@ export function StaffManager({ data }: { data: StaffData }) {
           <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("staffNav")}</h1>
           <p className="text-muted">{data.schoolName} · {data.staff.length}</p>
         </div>
-        <LanguageToggle />
       </header>
 
       <section className="rounded-2xl border border-line bg-surface p-5">
@@ -177,6 +175,6 @@ export function StaffManager({ data }: { data: StaffData }) {
           <StaffRow key={m.userId} m={m} />
         ))}
       </ul>
-    </main>
+    </>
   );
 }

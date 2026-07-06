@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { excuseAbsence } from "@/app/admin/absences/actions";
 
 type Row = { recordId: string; student: string; className: string; subject: string; date: string };
@@ -81,7 +80,7 @@ export function AbsencesPanel({ data }: { data: AbsencesData }) {
   const { t } = useI18n();
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -90,7 +89,6 @@ export function AbsencesPanel({ data }: { data: AbsencesData }) {
           <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("absencesNav")}</h1>
           <p className="text-sm text-muted">{t("absencesIntro")}</p>
         </div>
-        <LanguageToggle />
       </header>
 
       <h2 className="mb-3 font-mono text-xs uppercase tracking-widest text-muted">
@@ -121,6 +119,6 @@ export function AbsencesPanel({ data }: { data: AbsencesData }) {
           </ul>
         </>
       )}
-    </main>
+    </>
   );
 }

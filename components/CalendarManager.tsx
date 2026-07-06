@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { addEvent, deleteEvent } from "@/app/admin/calendar/actions";
 
 type Evt = { id: string; title: string; startDate: string; endDate: string | null; note: string | null; past: boolean };
@@ -54,7 +53,7 @@ export function CalendarManager({ data }: { data: CalendarData }) {
   }
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -63,7 +62,6 @@ export function CalendarManager({ data }: { data: CalendarData }) {
           <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("calendarNav")}</h1>
           <p className="text-muted">{data.schoolName}</p>
         </div>
-        <LanguageToggle />
       </header>
 
       <p className="mb-4 text-sm text-muted">{t("calIntro")}</p>
@@ -131,6 +129,6 @@ export function CalendarManager({ data }: { data: CalendarData }) {
           </ul>
         </>
       )}
-    </main>
+    </>
   );
 }

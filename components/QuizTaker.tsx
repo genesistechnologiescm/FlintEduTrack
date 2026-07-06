@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { ThemeToggle } from "./ThemeToggle";
 import { submitQuiz } from "@/app/student/actions";
 
 export type TakerQuestion = { id: string; prompt: string; options: string[] };
@@ -20,7 +18,7 @@ export function QuizTaker({
   questions: TakerQuestion[];
   alreadyScore: number | null;
 }) {
-  const { t, locale, setLocale } = useI18n();
+  const { t } = useI18n();
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [busy, setBusy] = useState(false);
@@ -43,23 +41,10 @@ export function QuizTaker({
   }
 
   return (
-    <main className="min-h-dvh bg-bg text-ink">
-      <div className="mx-auto max-w-[560px] px-4 pb-16">
-        <div className="flex items-center gap-2 py-4">
-          <a href="/student" aria-label={t("backStudent")} className="grid size-9 place-items-center rounded-full text-muted hover:bg-line">
-            <ArrowLeft size={18} aria-hidden="true" />
-          </a>
-          <span className="min-w-0 flex-1 truncate font-display text-lg font-semibold">{title}</span>
-          <ThemeToggle />
-          <div className="flex overflow-hidden rounded-full border border-line text-xs">
-            {(["en", "fr"] as const).map((l) => (
-              <button key={l} type="button" onClick={() => setLocale(l)} aria-pressed={locale === l}
-                className={`px-2.5 py-1.5 ${locale === l ? "bg-primary text-white" : "text-muted"}`}>{l.toUpperCase()}</button>
-            ))}
-          </div>
-        </div>
+    <>
+      <h1 className="mb-4 font-display text-xl font-semibold">{title}</h1>
 
-        {done || result ? (
+      {done || result ? (
           <div className="et-card p-6 text-center" style={{ background: "var(--et-ok-bg)", borderColor: "transparent" }}>
             <div className="text-xs uppercase tracking-widest text-muted">{t("quizYourScore")}</div>
             <div className="mt-1 font-display text-5xl font-bold tabular-nums" style={{ color: "var(--et-ok)" }}>
@@ -94,7 +79,6 @@ export function QuizTaker({
             {err && <p className="text-center text-sm text-danger">{err}</p>}
           </form>
         )}
-      </div>
-    </main>
+    </>
   );
 }

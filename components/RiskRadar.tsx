@@ -1,7 +1,6 @@
 "use client";
 
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 
 type Row = {
   studentId: string;
@@ -38,7 +37,7 @@ export function RiskRadar({ data }: { data: RiskData }) {
   const { t } = useI18n();
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -49,7 +48,6 @@ export function RiskRadar({ data }: { data: RiskData }) {
             {data.schoolName} · {data.total} {t("studentsWord")}
           </p>
         </div>
-        <LanguageToggle />
       </header>
 
       <p className="mb-4 text-sm text-muted">{t("riskIntro")}</p>
@@ -103,6 +101,6 @@ export function RiskRadar({ data }: { data: RiskData }) {
           })}
         </ul>
       )}
-    </main>
+    </>
   );
 }

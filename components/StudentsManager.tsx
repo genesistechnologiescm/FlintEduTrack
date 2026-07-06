@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { addStudent, bulkAddStudents, enableStudentLogin } from "@/app/admin/students/actions";
 
 export type StudentsData = {
@@ -112,7 +111,7 @@ export function StudentsManager({ data }: { data: StudentsData }) {
   const field = "min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base";
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -123,7 +122,6 @@ export function StudentsManager({ data }: { data: StudentsData }) {
             {data.schoolName} · {data.students.length} {t("enrolled")}
           </p>
         </div>
-        <LanguageToggle />
       </header>
 
       {/* Add one */}
@@ -196,6 +194,6 @@ export function StudentsManager({ data }: { data: StudentsData }) {
           </li>
         ))}
       </ul>
-    </main>
+    </>
   );
 }

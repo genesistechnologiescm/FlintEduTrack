@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { logWelfareAction } from "@/app/admin/welfare/actions";
 
 type EventType = "NOTE" | "MEETING_SCHEDULED" | "HOME_VISIT" | "OUTCOME_LOGGED" | "STAFF_ASSIGNED";
@@ -135,7 +134,7 @@ function StudentCard({ row }: { row: AtRiskRow }) {
 export function WelfarePanel({ rows, wellbeingFlags = [] }: { rows: AtRiskRow[]; wellbeingFlags?: string[] }) {
   const { t } = useI18n();
   return (
-    <div className="mx-auto max-w-[560px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-4 flex items-start justify-between gap-4">
         <div>
           <a href="/admin" className="font-mono text-xs text-primary hover:underline">
@@ -145,7 +144,6 @@ export function WelfarePanel({ rows, wellbeingFlags = [] }: { rows: AtRiskRow[];
             {t("welfareTitle")}
           </h1>
         </div>
-        <LanguageToggle />
       </header>
 
       <p className="mb-5 rounded-lg bg-blue-bg px-3 py-2 text-sm text-muted">
@@ -179,6 +177,6 @@ export function WelfarePanel({ rows, wellbeingFlags = [] }: { rows: AtRiskRow[];
           ))}
         </ul>
       )}
-    </div>
+    </>
   );
 }

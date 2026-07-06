@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { submitLibraryItem } from "@/app/library/actions";
 
 type Item = {
@@ -169,7 +168,7 @@ export function Library({ data }: { data: LibraryData }) {
     k === "PAST_PAPER" ? t("libPapers") : k === "SYLLABUS" ? t("libSyllabi") : t("libGuides");
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href="/student" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -178,7 +177,6 @@ export function Library({ data }: { data: LibraryData }) {
           <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("libraryNav")}</h1>
           <p className="text-sm text-muted">{t("libIntro")}</p>
         </div>
-        <LanguageToggle />
       </header>
 
       {data.isCurator && data.pendingCount > 0 && (
@@ -274,6 +272,6 @@ export function Library({ data }: { data: LibraryData }) {
           ))}
         </div>
       )}
-    </main>
+    </>
   );
 }

@@ -198,7 +198,7 @@ export function ParentDashboard({ data }: { data: ParentData }) {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <div className="text-[11.5px]" style={{ color: "var(--et-cyan)" }}>
+                    <div className="text-[11.5px]" style={{ color: "#fff" }}>
                       {t.term}
                     </div>
                     {child.recent.length > 0 && (

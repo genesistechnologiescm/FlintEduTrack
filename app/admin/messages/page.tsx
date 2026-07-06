@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { ThreadList, ThreadView, type ThreadSummary, type ThreadMessage } from "@/components/Messaging";
-import { MessagesHeader } from "@/components/MessagesHeader";
+import { PageTitle } from "@/components/PageTitle";
 
 export const dynamic = "force-dynamic";
 
@@ -43,10 +43,7 @@ export default async function AdminMessagesPage({ searchParams }: { searchParams
         ? `${thread.parent.displayName} · ${thread.student.firstName} ${thread.student.lastName}`
         : thread.parent.displayName;
       return (
-        <main className="mx-auto max-w-[560px] px-4 pb-16 pt-6">
-          <MessagesHeader backHref="/admin" />
-          <ThreadView threadId={thread.id} subject={thread.subject} aboutName={aboutName} isStaff messages={messages} basePath={BASE} />
-        </main>
+        <ThreadView threadId={thread.id} subject={thread.subject} aboutName={aboutName} isStaff messages={messages} basePath={BASE} />
       );
     }
   }
@@ -68,9 +65,9 @@ export default async function AdminMessagesPage({ searchParams }: { searchParams
   }));
 
   return (
-    <main className="mx-auto max-w-[560px] px-4 pb-16 pt-6">
-      <MessagesHeader backHref="/admin" />
+    <>
+      <PageTitle titleKey="messagesNav" />
       <ThreadList items={items} basePath={BASE} />
-    </main>
+    </>
   );
 }

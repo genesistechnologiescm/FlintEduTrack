@@ -3,12 +3,10 @@
 import { useEffect, useState } from "react";
 import {
   AlertTriangle, ArrowRight, BookOpen, Calendar, CalendarX, CheckCircle2, FilePen, FileText,
-  GraduationCap, Heart, LayoutDashboard, ListChecks, Megaphone, MessageCircle, Phone, Settings,
+  GraduationCap, Heart, ListChecks, Megaphone, MessageCircle, Phone, Settings,
   ShieldCheck, Users, Wallet,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { AppHeader } from "./AppHeader";
-import { BottomNav } from "./BottomNav";
 
 type Period = { id: string; subject: string; className: string; teacher: string; time: string; submitted: boolean; present: number; absent: number };
 
@@ -47,13 +45,6 @@ export function AdminDashboard({ data }: { data: AdminData }) {
     return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
   }, [rate]);
 
-  const nav = [
-    { href: "/admin", label: t("adminTitle").split(" ")[0], icon: LayoutDashboard, current: true },
-    { href: "/admin/students", label: t("manageStudents").split(" ").pop() ?? "Students", icon: Users },
-    { href: "/admin/fees", label: t("feesNav"), icon: Wallet },
-    { href: "/admin/welfare", label: t("welfareCta"), icon: Heart },
-  ];
-
   const manage: [string, string, typeof Users][] = [
     ["/admin/setup", t("setupNav"), Settings],
     ["/admin/students", t("manageStudents"), Users],
@@ -73,11 +64,8 @@ export function AdminDashboard({ data }: { data: AdminData }) {
   ];
 
   return (
-    <div className="flex h-dvh flex-col bg-bg text-ink">
-      <AppHeader logout />
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-[600px] px-4 pb-6">
-          <h1 className="mt-2 font-display text-xl font-semibold">{t("adminTitle")}</h1>
+    <>
+      <h1 className="font-display text-xl font-semibold">{t("adminTitle")}</h1>
           <p className="text-[12.5px] text-muted">{data.schoolName} · {data.studentsEnrolled} {t("studentsWord")}</p>
 
           <div className="et-anim mt-3 flex flex-col gap-3">
@@ -213,9 +201,6 @@ export function AdminDashboard({ data }: { data: AdminData }) {
               </div>
             </section>
           </div>
-        </div>
-      </main>
-      <BottomNav items={nav} />
-    </div>
+    </>
   );
 }

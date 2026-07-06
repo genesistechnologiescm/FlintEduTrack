@@ -55,7 +55,7 @@ export function Welcome() {
             <OriginMark size={52} rings />
           </div>
           <h1 className="font-display text-5xl font-bold tracking-tight sm:text-6xl">{t("appName")}</h1>
-          <p className="mt-4 max-w-[640px] font-display text-2xl font-semibold leading-tight sm:text-3xl" style={{ color: "var(--et-cyan)" }}>
+          <p className="mt-4 max-w-[640px] font-display text-2xl font-semibold leading-tight sm:text-3xl" style={{ color: "#fff" }}>
             {t("landingHook")}
           </p>
           <p className="mt-5 max-w-[600px] text-lg leading-relaxed" style={{ color: "var(--et-hero-sub)" }}>

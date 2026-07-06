@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { addTeacher, assignTeacher } from "@/app/admin/teachers/actions";
 
 type Teacher = { userId: string; name: string; phone: string; assignments: string[] };
@@ -83,7 +82,7 @@ export function TeachersManager({ data }: { data: TeachersData }) {
   }
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
           <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
@@ -94,7 +93,6 @@ export function TeachersManager({ data }: { data: TeachersData }) {
             {data.schoolName} · {data.teachers.length}
           </p>
         </div>
-        <LanguageToggle />
       </header>
 
       <section className="rounded-2xl border border-line bg-surface p-5">
@@ -123,6 +121,6 @@ export function TeachersManager({ data }: { data: TeachersData }) {
           </li>
         ))}
       </ul>
-    </main>
+    </>
   );
 }

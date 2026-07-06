@@ -2,7 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import {
-  BookOpen, Heart, Home, LayoutDashboard, LogOut, MessageCircle, Sparkles, Users, Wallet, type LucideIcon,
+  BookOpen, ClipboardCheck, FileText, Heart, Home, LayoutDashboard, LogOut,
+  MessageCircle, Sparkles, Users, Wallet, type LucideIcon,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { signOut } from "@/app/login/actions";
@@ -10,37 +11,62 @@ import { OriginMark } from "./OriginMark";
 import { ThemeToggle } from "./ThemeToggle";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
-export type Section = "parent" | "student" | "admin";
+export type ShellRole = "parent" | "student" | "admin" | "teacher";
+export type AdminScope = "FULL" | "FINANCE" | "WELFARE";
 
-// Responsive shell shared by every page in a section: a left sidebar on desktop,
-// a bottom bar on mobile. It wraps the whole section via layout.tsx, so the nav
-// is always present — Home is one tap/click away from any sub-page.
-export function AppShell({ section, children }: { section: Section; children: React.ReactNode }) {
+// Responsive shell shared by every signed-in page: a left sidebar on desktop, a
+// bottom bar on mobile. The nav follows the viewer's ROLE (not the URL) so it is
+// always correct — e.g. a teacher on /admin/quizzes still sees the teacher nav,
+// and Home is one tap/click away from any sub-page. Admin nav is scope-aware so
+// a FINANCE/WELFARE admin only sees links they can actually open.
+export function AppShell({
+  role,
+  scope,
+  children,
+}: {
+  role: ShellRole;
+  scope?: AdminScope | null;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
   const { t, locale, setLocale } = useI18n();
   const active = (href: string) => pathname === href;
   const home = locale === "fr" ? "Accueil" : "Home";
 
-  const NAV: Record<Section, NavItem[]> = {
-    parent: [
-      { href: "/parent", label: home, icon: Home },
-      { href: "/parent/messages", label: t("messagesNav"), icon: MessageCircle },
-      { href: "/parent/fees", label: t("feesNav"), icon: Wallet },
-      { href: "/parent/resources", label: t("resourcesNav"), icon: BookOpen },
-    ],
-    student: [
-      { href: "/student", label: home, icon: Home },
-      { href: "/library", label: t("libraryNav"), icon: BookOpen },
-      { href: "/student/tutor", label: t("chariotNav"), icon: Sparkles },
-    ],
-    admin: [
-      { href: "/admin", label: home, icon: LayoutDashboard },
-      { href: "/admin/students", label: locale === "fr" ? "Élèves" : "Students", icon: Users },
-      { href: "/admin/fees", label: t("feesNav"), icon: Wallet },
-      { href: "/admin/welfare", label: t("welfareCta"), icon: Heart },
-    ],
-  };
-  const nav = NAV[section];
+  function buildNav(): NavItem[] {
+    switch (role) {
+      case "parent":
+        return [
+          { href: "/parent", label: home, icon: Home },
+          { href: "/parent/messages", label: t("messagesNav"), icon: MessageCircle },
+          { href: "/parent/fees", label: t("feesNav"), icon: Wallet },
+          { href: "/parent/resources", label: t("resourcesNav"), icon: BookOpen },
+        ];
+      case "student":
+        return [
+          { href: "/student", label: home, icon: Home },
+          { href: "/library", label: t("libraryNav"), icon: BookOpen },
+          { href: "/student/tutor", label: t("chariotNav"), icon: Sparkles },
+        ];
+      case "teacher":
+        return [
+          { href: "/attendance", label: locale === "fr" ? "Aujourd'hui" : "Today", icon: ClipboardCheck },
+          { href: "/grades", label: t("gradesNav"), icon: FileText },
+          { href: "/library", label: t("libraryNav"), icon: BookOpen },
+          { href: "/wellbeing", label: t("wellbeingNav"), icon: Heart },
+        ];
+      case "admin": {
+        const items: NavItem[] = [
+          { href: "/admin", label: home, icon: LayoutDashboard },
+          { href: "/admin/students", label: locale === "fr" ? "Élèves" : "Students", icon: Users },
+        ];
+        if (scope === "FULL" || scope === "FINANCE") items.push({ href: "/admin/fees", label: t("feesNav"), icon: Wallet });
+        if (scope === "FULL" || scope === "WELFARE") items.push({ href: "/admin/welfare", label: t("welfareCta"), icon: Heart });
+        return items;
+      }
+    }
+  }
+  const nav = buildNav();
 
   const chrome = (
     <div className="flex items-center gap-2">
