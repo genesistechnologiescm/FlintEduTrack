@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/adminScope";
+import { canonicalCmPhone } from "@/lib/auth";
 
 // Scoped authorization — see lib/adminScope.ts.
 async function adminContext() {
@@ -22,10 +23,13 @@ export async function addTeacher(raw: z.infer<typeof AddSchema>): Promise<{ ok: 
   const input = AddSchema.parse(raw);
   const { userId, schoolId } = await adminContext();
 
-  let teacher = await prisma.user.findUnique({ where: { phone: input.phone } });
+  // Canonical shape ("+237XXXXXXXXX") so the lookup matches seeded/provisioned
+  // rows regardless of how the admin typed the number.
+  const phone = canonicalCmPhone(input.phone);
+  let teacher = await prisma.user.findUnique({ where: { phone } });
   if (!teacher) {
     teacher = await prisma.user.create({
-      data: { id: randomUUID(), phone: input.phone, displayName: input.name },
+      data: { id: randomUUID(), phone, displayName: input.name },
     });
   }
   await prisma.schoolMembership.upsert({

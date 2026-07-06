@@ -13,7 +13,13 @@ const DEMO_PIN = "12345";
 const PHONE = "+237600000000";
 const NAME = "Ministry of Secondary Education";
 const authHeaders = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" };
-const authEmail = (phone) => `p${phone.replace(/\D/g, "")}@edutrack.local`;
+// Keep in sync with normalizeCmPhone/phoneToAuthEmail in lib/auth.ts — local
+// 9-digit numbers get the 237 country code so seeding and login map identically.
+const normalizeCmPhone = (p) => {
+  const d = p.replace(/\D/g, "");
+  return /^237\d{9}$/.test(d) ? d : /^[62]\d{8}$/.test(d) ? `237${d}` : d;
+};
+const authEmail = (phone) => `p${normalizeCmPhone(phone)}@edutrack.local`;
 
 async function provisionAuth(phone, displayName) {
   const email = authEmail(phone);

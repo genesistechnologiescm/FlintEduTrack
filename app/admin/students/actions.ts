@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/adminScope";
-import { studentCodeToAuthEmail } from "@/lib/auth";
+import { studentCodeToAuthEmail, canonicalCmPhone } from "@/lib/auth";
 import { provisionAuthUser, authProvisioningAvailable } from "@/lib/provisionAuth";
 
 // Scoped authorization — see lib/adminScope.ts.
@@ -42,12 +42,15 @@ async function createOne(schoolId: string, input: StudentInput): Promise<string>
     data: { studentId: student.id, schoolId, classGroupId: klass.id, streamType: klass.streamType, status: "ACTIVE" },
   });
 
-  let parent = await prisma.user.findUnique({ where: { phone: input.parentPhone } });
+  // Canonical shape ("+237XXXXXXXXX") so cross-format entries dedupe to one
+  // platform-level parent account and match seeded/provisioned rows.
+  const parentPhone = canonicalCmPhone(input.parentPhone);
+  let parent = await prisma.user.findUnique({ where: { phone: parentPhone } });
   if (!parent) {
     parent = await prisma.user.create({
       data: {
         id: randomUUID(),
-        phone: input.parentPhone,
+        phone: parentPhone,
         displayName: input.parentName || `Parent of ${input.firstName}`,
         contactCapability: input.parentCapability ?? null,
       },

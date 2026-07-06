@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { phoneToAuthEmail, studentCodeToAuthEmail } from "@/lib/auth";
+import { normalizeCmPhone, phoneToAuthEmail, studentCodeToAuthEmail } from "@/lib/auth";
 
 // ── Brute-force protection (security review #4) ─────────────────────────────
 // A 5-digit PIN is ~100k combinations; GoTrue's per-endpoint limits are the
@@ -44,7 +44,13 @@ async function recordAttempt(identifier: string, ip: string | null, kind: string
 }
 
 const Schema = z.object({
-  phone: z.string().min(6).max(20),
+  // Accepts local ("6XX XXX XXX") and full ("+237 6XX XXX XXX") entry; must
+  // contain enough digits to be a phone at all before we hit the auth server.
+  phone: z
+    .string()
+    .min(6)
+    .max(20)
+    .refine((p) => p.replace(/\D/g, "").length >= 6, "Enter a valid phone number"),
   pin: z.string().regex(/^\d{5}$/),
 });
 
@@ -57,7 +63,8 @@ export async function signIn(input: { phone: string; pin: string }): Promise<{ e
   const parsed = Schema.safeParse(input);
   if (!parsed.success) return { error: "Enter your phone number and 5-digit PIN." };
 
-  const identifier = parsed.data.phone.replace(/\D/g, "");
+  // Normalized so "6XX XXX XXX" and "+237 6XX XXX XXX" share one rate-limit bucket.
+  const identifier = normalizeCmPhone(parsed.data.phone);
   const ip = await clientIp();
   if (await isLocked(identifier, ip)) return { error: LOCK_MSG };
 
