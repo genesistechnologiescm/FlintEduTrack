@@ -31,37 +31,35 @@ export function AppShell({
   const pathname = usePathname();
   const { t, locale, setLocale } = useI18n();
   const active = (href: string) => pathname === href;
-  const home = locale === "fr" ? "Accueil" : "Home";
-
   function buildNav(): NavItem[] {
     switch (role) {
       case "parent":
         return [
-          { href: "/parent", label: home, icon: Home },
-          { href: "/parent/messages", label: t("messagesNav"), icon: MessageCircle },
-          { href: "/parent/fees", label: t("feesNav"), icon: Wallet },
-          { href: "/parent/resources", label: t("resourcesNav"), icon: BookOpen },
+          { href: "/parent", label: t("navHome"), icon: Home },
+          { href: "/parent/messages", label: t("navMessages"), icon: MessageCircle },
+          { href: "/parent/fees", label: t("navFees"), icon: Wallet },
+          { href: "/parent/resources", label: t("navResources"), icon: BookOpen },
         ];
       case "student":
         return [
-          { href: "/student", label: home, icon: Home },
-          { href: "/library", label: t("libraryNav"), icon: BookOpen },
-          { href: "/student/tutor", label: t("chariotNav"), icon: Sparkles },
+          { href: "/student", label: t("navHome"), icon: Home },
+          { href: "/library", label: t("navLibrary"), icon: BookOpen },
+          { href: "/student/tutor", label: t("navChariot"), icon: Sparkles },
         ];
       case "teacher":
         return [
-          { href: "/attendance", label: locale === "fr" ? "Aujourd'hui" : "Today", icon: ClipboardCheck },
-          { href: "/grades", label: t("gradesNav"), icon: FileText },
-          { href: "/library", label: t("libraryNav"), icon: BookOpen },
-          { href: "/wellbeing", label: t("wellbeingNav"), icon: Heart },
+          { href: "/attendance", label: t("navToday"), icon: ClipboardCheck },
+          { href: "/grades", label: t("navGrades"), icon: FileText },
+          { href: "/library", label: t("navLibrary"), icon: BookOpen },
+          { href: "/wellbeing", label: t("navWellbeing"), icon: Heart },
         ];
       case "admin": {
         const items: NavItem[] = [
-          { href: "/admin", label: home, icon: LayoutDashboard },
-          { href: "/admin/students", label: locale === "fr" ? "Élèves" : "Students", icon: Users },
+          { href: "/admin", label: t("navHome"), icon: LayoutDashboard },
+          { href: "/admin/students", label: t("navStudents"), icon: Users },
         ];
-        if (scope === "FULL" || scope === "FINANCE") items.push({ href: "/admin/fees", label: t("feesNav"), icon: Wallet });
-        if (scope === "FULL" || scope === "WELFARE") items.push({ href: "/admin/welfare", label: t("welfareCta"), icon: Heart });
+        if (scope === "FULL" || scope === "FINANCE") items.push({ href: "/admin/fees", label: t("navFees"), icon: Wallet });
+        if (scope === "FULL" || scope === "WELFARE") items.push({ href: "/admin/welfare", label: t("navWelfare"), icon: Heart });
         return items;
       }
     }
