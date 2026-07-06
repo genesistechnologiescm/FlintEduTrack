@@ -118,7 +118,7 @@ export function ParentDashboard({ data }: { data: ParentData }) {
 
   return (
     <>
-      <h1 className="font-display text-xl font-semibold">
+      <h1 className="font-display text-2xl font-bold tracking-tight">
             {greet}, {firstName}
           </h1>
           <p className="text-[12.5px] capitalize text-muted">{today}</p>

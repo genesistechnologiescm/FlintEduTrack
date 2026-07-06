@@ -42,7 +42,7 @@ export function QuizTaker({
 
   return (
     <>
-      <h1 className="mb-4 font-display text-xl font-semibold">{title}</h1>
+      <h1 className="mb-4 font-display text-2xl font-bold tracking-tight">{title}</h1>
 
       {done || result ? (
           <div className="et-card p-6 text-center" style={{ background: "var(--et-ok-bg)", borderColor: "transparent" }}>

@@ -8,7 +8,7 @@ export default async function HandoverLayout({ children }: { children: React.Rea
   const ctx = await resolveShellContext();
   if (!ctx) redirect("/login");
   return (
-    <AppShell role={ctx.role} scope={ctx.scope}>
+    <AppShell role={ctx.role} scope={ctx.scope} name={ctx.name}>
       {children}
     </AppShell>
   );

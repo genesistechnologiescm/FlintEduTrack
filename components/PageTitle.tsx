@@ -9,7 +9,7 @@ export function PageTitle({ titleKey, subKey }: { titleKey: MessageKey; subKey?:
   const { t } = useI18n();
   return (
     <div className="mb-4">
-      <h1 className="font-display text-xl font-semibold">{t(titleKey)}</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight">{t(titleKey)}</h1>
       {subKey && <p className="mt-0.5 text-sm text-muted">{t(subKey)}</p>}
     </div>
   );

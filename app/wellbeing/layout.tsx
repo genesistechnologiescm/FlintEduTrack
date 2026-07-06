@@ -8,7 +8,7 @@ export default async function WellbeingLayout({ children }: { children: React.Re
   const ctx = await resolveShellContext();
   if (!ctx) redirect("/login");
   return (
-    <AppShell role={ctx.role} scope={ctx.scope}>
+    <AppShell role={ctx.role} scope={ctx.scope} name={ctx.name}>
       {children}
     </AppShell>
   );

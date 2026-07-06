@@ -65,7 +65,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
 
   return (
     <>
-      <h1 className="font-display text-xl font-semibold">{t("adminTitle")}</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight">{t("adminTitle")}</h1>
           <p className="text-[12.5px] text-muted">{data.schoolName} · {data.studentsEnrolled} {t("studentsWord")}</p>
 
           <div className="et-anim mt-3 flex flex-col gap-3">

@@ -29,7 +29,7 @@ export function StudentDashboard({ data }: { data: StudentData }) {
 
   return (
     <>
-      <h1 className="font-display text-xl font-semibold">{greet}, {first}</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight">{greet}, {first}</h1>
           <p className="text-[12.5px] text-muted">{data.school} · {data.className}</p>
 
           <div className="et-anim mt-3 flex flex-col gap-3">
