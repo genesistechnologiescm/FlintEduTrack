@@ -1,26 +1,134 @@
 @import "tailwindcss";
 
-/* ── Flint · Design Tokens (EduTrack) ────────────────────────── */
+/* ── Flint · EduTrack design tokens ─────────────────────────────
+   Primitive brand tokens + a semantic layer that flips with
+   [data-theme="dark"]. Components use the semantic utilities
+   (bg-surface, text-ink, border-line…) so every screen supports
+   light + dark for free. Light is the default (sunlight, cheap
+   Android); dark is opt-in / follows the device.
+
+   Color system: deep royal blue (#0f5ce8) is the working primary —
+   it holds 4.5:1+ on white so it is safe for text and small UI.
+   The vivid brand blue (#1a6bff) and electric cyan (#00e5ff) live
+   in gradients and glows, where vividness works and contrast
+   rules don't apply. */
 @theme {
+  /* Primitives (brand) */
   --color-flint-black: #0a0a0f;
   --color-flint-blue: #1a6bff;
   --color-flint-cyan: #00e5ff;
   --color-flint-grey: #8a94a6;
   --color-flint-white: #f4f6fa;
-  --color-muted: #4a5160;
-  --color-success: #00c48c;
-  --color-error: #ff4444;
+
+  /* Semantic — resolve to flipping CSS vars declared below */
+  --color-bg: var(--et-bg);
+  --color-surface: var(--et-surface);
+  --color-elevated: var(--et-elevated);
+  --color-ink: var(--et-text);
+  --color-sub: var(--et-sub);
+  --color-muted: var(--et-muted);
+  --color-line: var(--et-line);
+  --color-chip: var(--et-chip);
+  --color-primary: var(--et-primary);
+  --color-cyan: var(--et-cyan);
+  --color-ok: var(--et-ok);
+  --color-warn: var(--et-warn);
+  --color-danger: var(--et-danger);
+  --color-amber: var(--et-amber);
+  --color-ok-bg: var(--et-ok-bg);
+  --color-warn-bg: var(--et-warn-bg);
+  --color-danger-bg: var(--et-danger-bg);
+  --color-blue-bg: var(--et-blue-bg);
+  --color-hero: var(--et-hero);
+  /* Back-compat with pre-rebuild screens */
+  --color-error: var(--et-danger);
+  --color-success: var(--et-ok);
 
   --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   --font-body: var(--font-inter), "Inter", sans-serif;
   --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
 }
 
-/* Mobile-first base — high contrast for sunlight readability on cheap Android */
 :root {
-  --bg: #f4f6fa;
-  --surface: #ffffff;
-  --text: #0a0a0f;
+  --et-bg: #f3f5fb;
+  --et-surface: #ffffff;
+  --et-elevated: #ffffff;
+  --et-text: #0c1220;
+  --et-sub: #3d4a61;
+  --et-muted: #66718a;
+  --et-line: #e4e9f4;
+  --et-chip: #edf1f9;
+  --et-primary: #0f5ce8;
+  --et-cyan: #0087a3;
+  --et-ok: #0a7d57;
+  --et-warn: #a8690b;
+  --et-danger: #c53030;
+  --et-amber: #f5a623;
+  --et-ok-bg: #e2f5ec;
+  --et-warn-bg: #fcf2df;
+  --et-danger-bg: #fdeaea;
+  --et-blue-bg: #e8effe;
+
+  /* Hero: layered gradient + glows (decor painted by .et-hero itself) */
+  --et-hero: #0d47d6;
+  --et-hero-grad: linear-gradient(135deg, #2f6bff 0%, #0a3fd0 58%, #0b2fa6 100%);
+  --et-hero-glow-1: rgba(0, 229, 255, 0.28);
+  --et-hero-glow-2: rgba(122, 165, 255, 0.35);
+  --et-hero-ring: rgba(255, 255, 255, 0.14);
+  --et-hero-sub: rgba(233, 240, 255, 0.92);
+  --et-hero-track: rgba(255, 255, 255, 0.26);
+
+  /* Buttons + avatar */
+  --et-btn-grad: linear-gradient(135deg, #2f6bff, #0f4fd8);
+  --et-avatar-grad: linear-gradient(135deg, #2f6bff, #00b3d4);
+
+  /* Elevation */
+  --et-shadow-sm: 0 1px 2px rgba(12, 25, 60, 0.05), 0 1px 3px rgba(12, 25, 60, 0.05);
+  --et-shadow-md: 0 6px 18px -6px rgba(12, 25, 60, 0.12);
+  --et-shadow-hero: 0 24px 48px -18px rgba(10, 63, 208, 0.4);
+  --et-shadow-btn: 0 8px 18px -8px rgba(15, 92, 232, 0.55);
+
+  /* Faint sky tint at the top of every page */
+  --et-bg-tint: radial-gradient(72% 100% at 50% 0%, rgba(15, 92, 232, 0.06), transparent 72%);
+}
+
+[data-theme="dark"] {
+  --et-bg: #07070d;
+  --et-surface: #10101a;
+  --et-elevated: #171724;
+  --et-text: #f2f5fc;
+  --et-sub: #c3cad9;
+  --et-muted: #8d96ab;
+  --et-line: rgba(255, 255, 255, 0.09);
+  --et-chip: rgba(255, 255, 255, 0.06);
+  --et-primary: #4d8dff;
+  --et-cyan: #00e5ff;
+  --et-ok: #45d6a4;
+  --et-warn: #f0b45f;
+  --et-danger: #ff8f8f;
+  --et-amber: #f5a623;
+  --et-ok-bg: rgba(0, 196, 140, 0.14);
+  --et-warn-bg: rgba(245, 166, 35, 0.14);
+  --et-danger-bg: rgba(255, 110, 110, 0.13);
+  --et-blue-bg: rgba(77, 141, 255, 0.15);
+
+  --et-hero: #0d1430;
+  --et-hero-grad: linear-gradient(140deg, #17224e 0%, #0d1330 56%, #090d20 100%);
+  --et-hero-glow-1: rgba(0, 229, 255, 0.16);
+  --et-hero-glow-2: rgba(77, 141, 255, 0.2);
+  --et-hero-ring: rgba(255, 255, 255, 0.09);
+  --et-hero-sub: rgba(255, 255, 255, 0.68);
+  --et-hero-track: rgba(255, 255, 255, 0.14);
+
+  --et-btn-grad: linear-gradient(135deg, #2e6bff, #1150e0);
+  --et-avatar-grad: linear-gradient(135deg, #2e6bff, #00c2e0);
+
+  --et-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --et-shadow-md: 0 8px 22px -8px rgba(0, 0, 0, 0.5);
+  --et-shadow-hero: 0 24px 48px -18px rgba(0, 0, 0, 0.55);
+  --et-shadow-btn: 0 8px 18px -8px rgba(20, 80, 224, 0.6);
+
+  --et-bg-tint: radial-gradient(72% 100% at 50% 0%, rgba(77, 141, 255, 0.07), transparent 72%);
 }
 
 html {
@@ -29,18 +137,229 @@ html {
 
 body {
   min-height: 100dvh;
-  background: var(--bg);
-  color: var(--text);
+  background-color: var(--et-bg);
+  background-image: var(--et-bg-tint);
+  background-repeat: no-repeat;
+  background-size: 100% 520px;
+  color: var(--et-text);
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.6;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Respect reduced motion (Non-Negotiable Rule 15) */
+h1, h2, h3 {
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+::selection {
+  background: var(--et-primary);
+  color: #fff;
+}
+
+/* Visible-but-tasteful keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--et-primary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Quiet desktop scrollbars */
+@media (pointer: fine) {
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--et-muted) 34%, transparent);
+    border-radius: 99px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--et-muted) 55%, transparent);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* ── Reusable component layer ─────────────────────────────────── */
+.et-card {
+  background: var(--et-surface);
+  border: 1px solid var(--et-line);
+  border-radius: 18px;
+  box-shadow: var(--et-shadow-sm);
+}
+a.et-card {
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+a.et-card:hover {
+  border-color: color-mix(in srgb, var(--et-primary) 28%, var(--et-line));
+  box-shadow: var(--et-shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Hero panel: gradient + cyan/blue glow orbs + a faint Origin ring,
+   all painted here so every hero in the app upgrades with zero
+   markup changes. Pseudo-elements sit above the gradient but below
+   content (negative z + isolation). */
+.et-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--et-hero);
+  background-image: var(--et-hero-grad);
+  border-radius: 22px;
+  box-shadow: var(--et-shadow-hero);
+}
+.et-hero::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  z-index: -1;
+  background:
+    radial-gradient(38% 46% at 86% 4%, var(--et-hero-glow-1), transparent 64%),
+    radial-gradient(46% 54% at -2% 108%, var(--et-hero-glow-2), transparent 62%);
+}
+.et-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 340px;
+  height: 340px;
+  right: -100px;
+  top: -140px;
+  border: 1.5px solid var(--et-hero-ring);
+  border-radius: 50%;
+}
+
+.et-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 14px;
+  background-image: var(--et-btn-grad);
+  box-shadow: var(--et-shadow-btn);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.et-btn:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+.et-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+.et-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
+
+.et-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 99px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.et-input {
+  width: 100%;
+  border: 1px solid var(--et-line);
+  background: var(--et-surface);
+  color: var(--et-text);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.et-input:focus {
+  border-color: var(--et-primary);
+  box-shadow: 0 0 0 3px var(--et-blue-bg);
+}
+.et-input::placeholder {
+  color: var(--et-muted);
+}
+
+.et-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--et-text);
+}
+
+/* Mobile bottom bar: frosted, safe-area aware; active item gets an
+   M3-style tinted indicator pill behind its icon (.et-nav-ico is the
+   wrapper AppShell renders around the icon). */
+.et-nav {
+  display: flex;
+  background: color-mix(in srgb, var(--et-surface) 86%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--et-line);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+.et-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--et-muted);
+  text-decoration: none;
+  padding: 2px;
+  min-height: 48px;
+}
+.et-nav-ico {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 30px;
+  border-radius: 99px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+.et-nav-item[aria-current="page"] {
+  color: var(--et-primary);
+  font-weight: 600;
+}
+.et-nav-item[aria-current="page"] .et-nav-ico {
+  background: var(--et-blue-bg);
+}
+
+/* ── Motion (respect reduced motion) ──────────────────────────── */
+@keyframes et-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes et-pop {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+.et-anim > * { animation: et-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.et-anim > *:nth-child(2) { animation-delay: 0.05s; }
+.et-anim > *:nth-child(3) { animation-delay: 0.1s; }
+.et-anim > *:nth-child(4) { animation-delay: 0.15s; }
+.et-anim > *:nth-child(5) { animation-delay: 0.2s; }
+.et-anim > *:nth-child(6) { animation-delay: 0.25s; }
+.et-pop { animation: et-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }

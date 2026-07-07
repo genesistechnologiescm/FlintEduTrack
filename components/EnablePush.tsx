@@ -75,7 +75,7 @@ export function EnablePush() {
       type="button"
       onClick={enable}
       disabled={state === "working"}
-      className="inline-flex min-h-9 items-center rounded-full border border-flint-blue/30 px-3 font-mono text-xs text-flint-blue transition-colors hover:bg-flint-blue/5 disabled:opacity-60"
+      className="inline-flex min-h-9 items-center rounded-full border border-flint-blue/30 px-3 font-mono text-xs text-primary transition-colors hover:bg-blue-bg disabled:opacity-60"
     >
       {state === "working" ? t("pushEnabling") : state === "denied" ? t("pushDenied") : t("pushEnable")}
     </button>

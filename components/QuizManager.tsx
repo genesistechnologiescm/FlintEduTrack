@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { createQuiz, deleteQuiz } from "@/app/admin/quizzes/actions";
 
 type QuizRow = { id: string; title: string; subject: string; target: string | null; questions: number; attempts: number; avgScore: number | null; due: string | null };
@@ -17,7 +16,7 @@ export type QuizManagerData = {
 
 type Draft = { prompt: string; options: string[]; correctIndex: number };
 const blankQ = (): Draft => ({ prompt: "", options: ["", "", "", ""], correctIndex: 0 });
-const field = "min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base";
+const field = "min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base";
 
 export function QuizManager({ data }: { data: QuizManagerData }) {
   const { t } = useI18n();
@@ -65,23 +64,22 @@ export function QuizManager({ data }: { data: QuizManagerData }) {
   }
 
   return (
-    <main className="mx-auto max-w-[680px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <a href={data.isAdmin ? "/admin" : "/attendance"} className="font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+          <a href={data.isAdmin ? "/admin" : "/attendance"} className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
             ← {data.isAdmin ? t("backDash") : t("backAttendance")}
           </a>
-          <h1 className="mt-1 font-display text-2xl font-bold text-flint-black">{t("quizzesNav")}</h1>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("quizzesNav")}</h1>
           <p className="text-muted">{data.schoolName}</p>
         </div>
-        <LanguageToggle />
       </header>
 
       {noSubjects ? (
-        <p className="rounded-2xl border border-black/10 bg-white px-4 py-6 text-center text-muted">{t("resNoSubjects")}</p>
+        <p className="rounded-2xl border border-line bg-surface px-4 py-6 text-center text-muted">{t("resNoSubjects")}</p>
       ) : (
-        <section className="rounded-2xl border border-black/10 bg-white p-5">
-          <h2 className="mb-3 font-display text-lg font-bold text-flint-black">{t("newQuiz")}</h2>
+        <section className="rounded-2xl border border-line bg-surface p-5">
+          <h2 className="mb-3 font-display text-lg font-bold text-ink">{t("newQuiz")}</h2>
           <form onSubmit={onSubmit} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <select className={field} value={subjectId} onChange={(e) => setSubjectId(e.target.value)}>
@@ -103,7 +101,7 @@ export function QuizManager({ data }: { data: QuizManagerData }) {
             </label>
 
             {questions.map((q, i) => (
-              <div key={i} className="rounded-xl border border-black/10 bg-black/[0.02] p-3">
+              <div key={i} className="rounded-xl border border-line bg-chip p-3">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="font-mono text-[11px] uppercase tracking-widest text-muted">{t("quizQuestion")} {i + 1}</span>
                   {questions.length > 1 && (
@@ -125,7 +123,7 @@ export function QuizManager({ data }: { data: QuizManagerData }) {
                         aria-label={`${t("quizCorrect")} ${oi + 1}`}
                       />
                       <input
-                        className="min-h-10 w-full rounded-lg border border-black/15 bg-white px-3 text-sm"
+                        className="min-h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm"
                         placeholder={`${t("quizOption")} ${oi + 1}`}
                         value={o}
                         onChange={(e) => setOpt(i, oi, e.target.value)}
@@ -138,10 +136,10 @@ export function QuizManager({ data }: { data: QuizManagerData }) {
               </div>
             ))}
 
-            <button type="button" onClick={() => setQuestions((qs) => [...qs, blankQ()])} className="min-h-10 w-full rounded-full border border-flint-blue/30 font-mono text-xs uppercase tracking-widest text-flint-blue">
+            <button type="button" onClick={() => setQuestions((qs) => [...qs, blankQ()])} className="min-h-10 w-full rounded-full border border-flint-blue/30 font-mono text-xs uppercase tracking-widest text-primary">
               + {t("quizAddQuestion")}
             </button>
-            <button type="submit" disabled={busy} className="min-h-11 w-full rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60">
+            <button type="submit" disabled={busy} className="min-h-11 w-full rounded-full bg-primary font-mono text-sm font-medium text-white disabled:opacity-60">
               {busy ? t("adding") : t("quizPublish")}
             </button>
             {err && <p className="text-center text-sm text-error">{err}</p>}
@@ -151,31 +149,31 @@ export function QuizManager({ data }: { data: QuizManagerData }) {
 
       <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">{t("quizPublished")}</h2>
       {data.quizzes.length === 0 ? (
-        <p className="rounded-xl border border-black/10 bg-white px-4 py-5 text-center text-muted">{t("quizNone")}</p>
+        <p className="rounded-xl border border-line bg-surface px-4 py-5 text-center text-muted">{t("quizNone")}</p>
       ) : (
         <ul className="space-y-3">
           {data.quizzes.map((q) => (
-            <li key={q.id} className="rounded-2xl border border-black/10 bg-white p-5">
+            <li key={q.id} className="rounded-2xl border border-line bg-surface p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="font-display font-bold text-flint-black">{q.title}</h3>
+                  <h3 className="font-display font-bold text-ink">{q.title}</h3>
                   <p className="font-mono text-xs text-muted">
                     {q.subject} · {q.target ?? t("resAllClasses")} · {q.questions} {t("quizQs")}
-                    {q.due && <span className="text-flint-blue"> · {t("quizDue")} {q.due}</span>}
+                    {q.due && <span className="text-primary"> · {t("quizDue")} {q.due}</span>}
                   </p>
                 </div>
                 <button type="button" onClick={() => onDelete(q.id)} className="shrink-0 font-mono text-[11px] uppercase text-error hover:underline">
                   {t("resDelete")}
                 </button>
               </div>
-              <div className="mt-2 flex gap-4 border-t border-black/5 pt-2 font-mono text-xs text-muted">
+              <div className="mt-2 flex gap-4 border-t border-line pt-2 font-mono text-xs text-muted">
                 <span>{q.attempts} {t("quizAttemptsWord")}</span>
-                <span>{t("quizAvg")}: <span className="text-flint-black">{q.avgScore === null ? "—" : `${q.avgScore}%`}</span></span>
+                <span>{t("quizAvg")}: <span className="text-ink">{q.avgScore === null ? "—" : `${q.avgScore}%`}</span></span>
               </div>
             </li>
           ))}
         </ul>
       )}
-    </main>
+    </>
   );
 }

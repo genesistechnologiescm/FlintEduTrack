@@ -2,8 +2,6 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { AttendanceMarker } from "@/components/AttendanceMarker";
-import { GateBanner } from "@/components/GateBanner";
-import { HandoverNotice } from "@/components/HandoverNotice";
 import { formatWat, isOnTime, watTodayISO } from "@/lib/gate";
 
 export const dynamic = "force-dynamic";
@@ -27,6 +25,8 @@ export default async function AttendancePage() {
     where: { userId: user.id, status: "active" },
   });
   if (!membership) redirect("/login");
+
+  const me = await prisma.user.findUnique({ where: { id: user.id }, select: { displayName: true } });
 
   // Pick today's period if the timetable has one; otherwise fall back to any slot
   // so the demo always shows something.
@@ -87,19 +87,16 @@ export default async function AttendancePage() {
   }));
 
   return (
-    <>
-      <div className="px-4 pt-4">
-        <GateBanner initial={gate} />
-        <HandoverNotice notes={handoverNotes} />
-      </div>
-      <AttendanceMarker
-        slotId={slot.id}
-        dateISO={todayISO()}
-        className={slot.classGroup.name}
-        subjectName={slot.subject.name}
-        periodLabel={`${slot.startTime}–${slot.endTime}`}
-        students={students}
-      />
-    </>
+    <AttendanceMarker
+      slotId={slot.id}
+      dateISO={todayISO()}
+      className={slot.classGroup.name}
+      subjectName={slot.subject.name}
+      periodLabel={`${slot.startTime}–${slot.endTime}`}
+      students={students}
+      teacherName={me?.displayName ?? "Teacher"}
+      gate={gate}
+      handover={handoverNotes}
+    />
   );
 }

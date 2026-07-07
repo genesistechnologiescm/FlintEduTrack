@@ -5,9 +5,8 @@ import { useI18n } from "@/lib/i18n/LanguageProvider";
 export type MapRow = { region: string; atRisk: number; students: number; hasData: boolean };
 
 // Schematic tile map of Cameroon's 10 regions (grid-map style — deliberately
-// NOT hand-drawn boundaries, which would risk inaccuracy). Tiles are arranged
-// to approximate geography; colour = dropout-risk intensity; grey = no
-// EduTrack schools in that region yet.
+// NOT hand-drawn boundaries, which would risk inaccuracy). Tiles approximate
+// geography; colour = dropout-risk intensity; grey = no EduTrack schools yet.
 const LAYOUT: { region: string; code: string; col: number; row: number }[] = [
   { region: "Far North", code: "FN", col: 2, row: 0 },
   { region: "North", code: "NO", col: 2, row: 1 },
@@ -22,17 +21,16 @@ const LAYOUT: { region: string; code: string; col: number; row: number }[] = [
 ];
 
 function tone(row: MapRow | undefined): { fill: string; text: string } {
-  if (!row || !row.hasData) return { fill: "rgba(0,0,0,0.05)", text: "#8A94A6" };
-  if (row.atRisk >= 3) return { fill: "rgba(255,68,68,0.18)", text: "#B91C1C" };
-  if (row.atRisk >= 1) return { fill: "rgba(245,158,11,0.20)", text: "#92400E" };
-  return { fill: "rgba(0,196,140,0.16)", text: "#047857" };
+  if (!row || !row.hasData) return { fill: "var(--et-chip)", text: "var(--et-muted)" };
+  if (row.atRisk >= 3) return { fill: "var(--et-danger-bg)", text: "var(--et-danger)" };
+  if (row.atRisk >= 1) return { fill: "var(--et-warn-bg)", text: "var(--et-warn)" };
+  return { fill: "var(--et-ok-bg)", text: "var(--et-ok)" };
 }
 
 export function RiskMap({ rows }: { rows: MapRow[] }) {
   const { t } = useI18n();
   const byRegion = new Map(rows.map((r) => [r.region, r]));
-  const SIZE = 74;
-  const GAP = 6;
+  const SIZE = 74, GAP = 6;
   const W = 4 * SIZE + 3 * GAP;
   const H = 5 * SIZE + 4 * GAP;
 
@@ -46,15 +44,13 @@ export function RiskMap({ rows }: { rows: MapRow[] }) {
           const y = tile.row * (SIZE + GAP);
           const body = (
             <g key={tile.region}>
-              <rect x={x} y={y} width={SIZE} height={SIZE} rx={10} fill={fill} stroke="rgba(0,0,0,0.08)" strokeWidth="1" />
-              <text x={x + SIZE / 2} y={y + 26} textAnchor="middle" fontSize="13" fontWeight="700" fill={text} fontFamily="monospace">
-                {tile.code}
-              </text>
-              <text x={x + SIZE / 2} y={y + 44} textAnchor="middle" fontSize="11" fill={text} fontFamily="monospace">
+              <rect x={x} y={y} width={SIZE} height={SIZE} rx={10} style={{ fill, stroke: "var(--et-line)" }} strokeWidth="1" />
+              <text x={x + SIZE / 2} y={y + 26} textAnchor="middle" fontSize="13" fontWeight="700" style={{ fill: text }} fontFamily="monospace">{tile.code}</text>
+              <text x={x + SIZE / 2} y={y + 44} textAnchor="middle" fontSize="11" style={{ fill: text }} fontFamily="monospace">
                 {row?.hasData ? `${row.atRisk} ${t("natAtRiskShort")}` : "—"}
               </text>
               {row?.hasData && (
-                <text x={x + SIZE / 2} y={y + 59} textAnchor="middle" fontSize="9" fill="#8A94A6" fontFamily="monospace">
+                <text x={x + SIZE / 2} y={y + 59} textAnchor="middle" fontSize="9" style={{ fill: "var(--et-muted)" }} fontFamily="monospace">
                   {row.students} {t("studentsWord")}
                 </text>
               )}

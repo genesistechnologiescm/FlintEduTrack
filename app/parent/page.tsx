@@ -15,6 +15,8 @@ export default async function ParentPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  const me = await prisma.user.findUnique({ where: { id: user.id }, select: { displayName: true } });
+
   const links = await prisma.parentLink.findMany({
     where: { parentUserId: user.id, status: "active" },
     include: { student: true },
@@ -102,6 +104,7 @@ export default async function ParentPage() {
   const events = await upcomingEvents([...new Set(links.map((l) => l.schoolId))]);
 
   const data: ParentData = {
+    parentName: me?.displayName ?? "Parent",
     children,
     alerts: notifs.map((n) => ({ type: n.eventType, date: n.serverSentAt.toISOString().slice(0, 10) })),
     announcements: receipts.map((r) => ({

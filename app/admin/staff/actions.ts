@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/adminScope";
-import { phoneToAuthEmail } from "@/lib/auth";
+import { phoneToAuthEmail, canonicalCmPhone } from "@/lib/auth";
 import { provisionAuthUser, authProvisioningAvailable } from "@/lib/provisionAuth";
 
 // Scoped authorization — see lib/adminScope.ts.
@@ -33,20 +33,23 @@ const AddSchema = z.object({
 
 export async function addStaff(raw: z.infer<typeof AddSchema>): Promise<{ ok: boolean; pin?: string; existing?: boolean; error?: string }> {
   const input = AddSchema.parse(raw);
+  // One canonical phone shape ("+237XXXXXXXXX") no matter how the admin typed
+  // it, so the User lookup, the auth email, and seeded rows all agree.
+  const phone = canonicalCmPhone(input.phone);
   const { userId, schoolId } = await adminContext();
 
   let targetUserId: string;
   let pin: string | undefined;
 
-  const existingUser = await prisma.user.findUnique({ where: { phone: input.phone } });
+  const existingUser = await prisma.user.findUnique({ where: { phone } });
   if (existingUser) {
     targetUserId = existingUser.id;
   } else {
     if (!authProvisioningAvailable()) return { ok: false, error: "Staff logins aren't configured on the server" };
     pin = String(randomInt(10000, 99999));
-    const authId = await provisionAuthUser(phoneToAuthEmail(input.phone), pin, { displayName: input.name, phone: input.phone });
+    const authId = await provisionAuthUser(phoneToAuthEmail(phone), pin, { displayName: input.name, phone });
     if (!authId) return { ok: false, error: "Could not create the login, try again" };
-    await prisma.user.create({ data: { id: authId, phone: input.phone, displayName: input.name } });
+    await prisma.user.create({ data: { id: authId, phone, displayName: input.name } });
     targetUserId = authId;
   }
 

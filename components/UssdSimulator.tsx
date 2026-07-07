@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { LanguageToggle } from "./LanguageToggle";
 import { simulateUssd, simulateMissedCall } from "@/app/ussd-demo/actions";
 
-const field = "min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base";
+const field = "min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base";
 
 export function UssdSimulator({ defaultPhone }: { defaultPhone: string }) {
   const { t } = useI18n();
@@ -47,10 +47,10 @@ export function UssdSimulator({ defaultPhone }: { defaultPhone: string }) {
     <main className="mx-auto max-w-[560px] px-4 pb-16 pt-6">
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+          <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
             ← {t("backDash")}
           </a>
-          <h1 className="mt-1 font-display text-2xl font-bold text-flint-black">{t("ussdTitle")}</h1>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("ussdTitle")}</h1>
           <p className="text-sm text-muted">{t("ussdIntro")}</p>
         </div>
         <LanguageToggle />
@@ -66,7 +66,7 @@ export function UssdSimulator({ defaultPhone }: { defaultPhone: string }) {
           type="button"
           onClick={() => dial("")}
           disabled={busy}
-          className="min-h-11 flex-1 rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60"
+          className="min-h-11 flex-1 rounded-full bg-primary font-mono text-sm font-medium text-white disabled:opacity-60"
         >
           {busy ? t("adding") : t("ussdDial")}
         </button>
@@ -74,7 +74,7 @@ export function UssdSimulator({ defaultPhone }: { defaultPhone: string }) {
           type="button"
           onClick={onMissedCall}
           disabled={busy}
-          className="min-h-11 flex-1 rounded-full border border-flint-blue/30 font-mono text-sm text-flint-blue disabled:opacity-60"
+          className="min-h-11 flex-1 rounded-full border border-flint-blue/30 font-mono text-sm text-primary disabled:opacity-60"
         >
           {t("ussdBeep")}
         </button>
@@ -83,7 +83,7 @@ export function UssdSimulator({ defaultPhone }: { defaultPhone: string }) {
       {/* Feature-phone screen */}
       {(screen || beep) && (
         <div className="mx-auto mt-6 max-w-[300px] rounded-[2rem] border-4 border-flint-black/80 bg-flint-black p-4">
-          <div className="rounded-xl bg-[#c8d8c0] p-4 font-mono text-[13px] leading-relaxed text-flint-black">
+          <div className="rounded-xl bg-[#c8d8c0] p-4 font-mono text-[13px] leading-relaxed text-ink">
             <div className="mb-2 text-[10px] uppercase tracking-widest opacity-60">
               {beep ? t("ussdSmsHeader") : "*123#"}
             </div>
@@ -96,7 +96,7 @@ export function UssdSimulator({ defaultPhone }: { defaultPhone: string }) {
                     type="button"
                     disabled={busy}
                     onClick={() => dial(path ? `${path}*${n}` : n)}
-                    className="min-h-10 flex-1 rounded-lg border border-flint-black/30 bg-white/60 font-mono text-sm font-bold disabled:opacity-60"
+                    className="min-h-10 flex-1 rounded-lg border border-flint-black/30 bg-surface/60 font-mono text-sm font-bold disabled:opacity-60"
                   >
                     {n}
                   </button>
@@ -107,7 +107,7 @@ export function UssdSimulator({ defaultPhone }: { defaultPhone: string }) {
         </div>
       )}
 
-      <p className="mt-6 rounded-lg bg-black/[0.03] px-3 py-2 font-mono text-[10px] leading-relaxed text-muted">
+      <p className="mt-6 rounded-lg bg-chip px-3 py-2 font-mono text-[10px] leading-relaxed text-muted">
         {t("ussdActivationNote")}
       </p>
     </main>

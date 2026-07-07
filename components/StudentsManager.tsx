@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
 import { addStudent, bulkAddStudents, enableStudentLogin } from "@/app/admin/students/actions";
 
 export type StudentsData = {
@@ -42,7 +41,7 @@ function LoginCell({ id, loginCode }: { id: string; loginCode: string | null }) 
           router.refresh();
         }
       }}
-      className="font-mono text-[11px] uppercase tracking-widest text-flint-blue hover:underline disabled:opacity-60"
+      className="font-mono text-[11px] uppercase tracking-widest text-primary hover:underline disabled:opacity-60"
     >
       {busy ? t("adding") : t("enableLogin")}
     </button>
@@ -109,26 +108,25 @@ export function StudentsManager({ data }: { data: StudentsData }) {
     }
   }
 
-  const field = "min-h-11 w-full rounded-lg border border-black/15 bg-white px-3 text-base";
+  const field = "min-h-11 w-full rounded-lg border border-line bg-surface px-3 text-base";
 
   return (
-    <main className="mx-auto max-w-[640px] px-4 pb-16 pt-6">
+    <>
       <header className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline">
+          <a href="/admin" className="font-mono text-xs uppercase tracking-widest text-primary hover:underline">
             ← {t("backDash")}
           </a>
-          <h1 className="mt-1 font-display text-2xl font-bold text-flint-black">{t("studentsNav")}</h1>
+          <h1 className="mt-1 font-display text-2xl font-bold text-ink">{t("studentsNav")}</h1>
           <p className="text-muted">
             {data.schoolName} · {data.students.length} {t("enrolled")}
           </p>
         </div>
-        <LanguageToggle />
       </header>
 
       {/* Add one */}
-      <section className="rounded-2xl border border-black/10 bg-white p-5">
-        <h2 className="mb-3 font-display text-lg font-bold text-flint-black">{t("addStudent")}</h2>
+      <section className="rounded-2xl border border-line bg-surface p-5">
+        <h2 className="mb-3 font-display text-lg font-bold text-ink">{t("addStudent")}</h2>
         <form onSubmit={onAdd} className="grid grid-cols-2 gap-3">
           <input className={field} placeholder={t("fldFirst")} value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
           <input className={field} placeholder={t("fldLast")} value={lastName} onChange={(e) => setLastName(e.target.value)} required />
@@ -151,7 +149,7 @@ export function StudentsManager({ data }: { data: StudentsData }) {
           <button
             type="submit"
             disabled={adding || !classGroupId}
-            className="col-span-2 min-h-11 rounded-full bg-flint-blue font-mono text-sm font-medium text-white disabled:opacity-60"
+            className="col-span-2 min-h-11 rounded-full bg-primary font-mono text-sm font-medium text-white disabled:opacity-60"
           >
             {adding ? t("adding") : t("addBtn")}
           </button>
@@ -159,11 +157,11 @@ export function StudentsManager({ data }: { data: StudentsData }) {
       </section>
 
       {/* Bulk CSV */}
-      <section className="mt-4 rounded-2xl border border-black/10 bg-white p-5">
-        <h2 className="mb-1 font-display text-lg font-bold text-flint-black">{t("bulkCsv")}</h2>
+      <section className="mt-4 rounded-2xl border border-line bg-surface p-5">
+        <h2 className="mb-1 font-display text-lg font-bold text-ink">{t("bulkCsv")}</h2>
         <p className="mb-3 font-mono text-[11px] text-muted">{t("csvHint")}</p>
         <textarea
-          className="min-h-28 w-full rounded-lg border border-black/15 bg-white p-3 font-mono text-xs"
+          className="min-h-28 w-full rounded-lg border border-line bg-surface p-3 font-mono text-xs"
           placeholder={"Marie,Tabi,F,Form 5 Science A,+237670000123,Mrs Tabi"}
           value={csv}
           onChange={(e) => setCsv(e.target.value)}
@@ -173,7 +171,7 @@ export function StudentsManager({ data }: { data: StudentsData }) {
             type="button"
             onClick={onImport}
             disabled={importing || !csv.trim()}
-            className="min-h-11 rounded-full border border-flint-blue/30 px-5 font-mono text-sm text-flint-blue disabled:opacity-60"
+            className="min-h-11 rounded-full border border-flint-blue/30 px-5 font-mono text-sm text-primary disabled:opacity-60"
           >
             {importing ? t("importing") : t("importBtn")}
           </button>
@@ -187,8 +185,8 @@ export function StudentsManager({ data }: { data: StudentsData }) {
       </h2>
       <ul className="space-y-1">
         {data.students.map((s) => (
-          <li key={s.id} className="flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white px-4 py-2 text-sm">
-            <span className="min-w-0 truncate text-flint-black">{s.name}</span>
+          <li key={s.id} className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-2 text-sm">
+            <span className="min-w-0 truncate text-ink">{s.name}</span>
             <span className="flex shrink-0 items-center gap-3">
               <LoginCell id={s.id} loginCode={s.loginCode} />
               <span className="font-mono text-xs text-muted">{s.className}</span>
@@ -196,6 +194,6 @@ export function StudentsManager({ data }: { data: StudentsData }) {
           </li>
         ))}
       </ul>
-    </main>
+    </>
   );
 }

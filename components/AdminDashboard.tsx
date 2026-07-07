@@ -1,19 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import {
+  AlertTriangle, ArrowRight, BookOpen, Calendar, CalendarX, CheckCircle2, FilePen, FileText,
+  GraduationCap, Heart, ListChecks, Megaphone, MessageCircle, Phone, Settings,
+  ShieldCheck, Users, Wallet,
+} from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { LanguageToggle } from "./LanguageToggle";
-import { LogoutButton } from "./LogoutButton";
 
-type Period = {
-  id: string;
-  subject: string;
-  className: string;
-  teacher: string;
-  time: string;
-  submitted: boolean;
-  present: number;
-  absent: number;
-};
+type Period = { id: string; subject: string; className: string; teacher: string; time: string; submitted: boolean; present: number; absent: number };
 
 export type AdminData = {
   schoolName: string;
@@ -23,329 +18,189 @@ export type AdminData = {
   absencesToday: number;
   studentsEnrolled: number;
   periods: Period[];
-  alerts: {
-    sent: number;
-    queued: number;
-    costFcfa: number;
-    recent: { phone: string; status: string }[];
-  };
+  alerts: { sent: number; queued: number; costFcfa: number; recent: { phone: string; status: string }[] };
   reach: { smartphone: number; whatsapp: number; smsOnly: number; unknown: number; total: number };
   gate: { name: string; title: string | null; time: string | null; onTime: boolean | null }[];
 };
 
-function StatCard({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "alert" }) {
-  return (
-    <div className="rounded-2xl border border-black/10 bg-white p-4">
-      <div className="font-mono text-xs uppercase tracking-widest text-muted">{label}</div>
-      <div
-        className={`mt-2 font-display text-3xl font-bold tabular-nums ${
-          tone === "alert" ? "text-error" : "text-flint-black"
-        }`}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
+const R = 40;
+const C = 2 * Math.PI * R;
+const heroTone = (r: number) => (r < 75 ? "#ff6b6b" : r < 90 ? "#ffb020" : "#2fe0a5");
 
 export function AdminDashboard({ data }: { data: AdminData }) {
   const { t } = useI18n();
+  const rate = data.attendanceRate ?? 0;
+  const [pct, setPct] = useState(0);
+  const [offset, setOffset] = useState(C);
+
+  useEffect(() => {
+    const reduce = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const target = C * (1 - rate / 100);
+    if (reduce) { setPct(rate); setOffset(target); return; }
+    setPct(0); setOffset(C);
+    const raf1 = requestAnimationFrame(() => setOffset(target));
+    let raf2 = 0; const start = performance.now();
+    const step = (n: number) => { const p = Math.min((n - start) / 900, 1); setPct(Math.round(rate * p)); if (p < 1) raf2 = requestAnimationFrame(step); };
+    raf2 = requestAnimationFrame(step);
+    return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
+  }, [rate]);
+
+  const manage: [string, string, typeof Users][] = [
+    ["/admin/setup", t("setupNav"), Settings],
+    ["/admin/students", t("manageStudents"), Users],
+    ["/admin/teachers", t("manageTeachers"), GraduationCap],
+    ["/grades", t("gradesNav"), FileText],
+    ["/admin/corrections", t("correctionsNav"), FilePen],
+    ["/admin/calendar", t("calendarNav"), Calendar],
+    ["/admin/absences", t("absencesNav"), CalendarX],
+    ["/wellbeing", t("wellbeingNav"), Heart],
+    ["/admin/announcements", t("announcementsNav"), Megaphone],
+    ["/admin/messages", t("messagesNav"), MessageCircle],
+    ["/admin/resources", t("resourcesNav"), BookOpen],
+    ["/admin/quizzes", t("quizzesNav"), ListChecks],
+    ["/admin/fees", t("feesNav"), Wallet],
+    ["/admin/staff", t("staffNav"), ShieldCheck],
+    ["/ussd-demo", t("ussdNav"), Phone],
+  ];
 
   return (
-    <div className="mx-auto max-w-[560px] px-4 pb-16 pt-6">
-      <header className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-flint-black">
-            {t("adminTitle")}
-          </h1>
-          <p className="text-muted">
-            {data.schoolName} · {data.studentsEnrolled} {t("studentsWord")}
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <LanguageToggle />
-          <LogoutButton />
-        </div>
-      </header>
+    <>
+      <h1 className="font-display text-2xl font-bold tracking-tight">{t("adminTitle")}</h1>
+          <p className="text-[12.5px] text-muted">{data.schoolName} · {data.studentsEnrolled} {t("studentsWord")}</p>
 
-      <div className="mb-4 flex flex-wrap gap-x-5 gap-y-2">
-        <a
-          href="/admin/setup"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("setupNav")} →
-        </a>
-        <a
-          href="/admin/students"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("manageStudents")} →
-        </a>
-        <a
-          href="/admin/teachers"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("manageTeachers")} →
-        </a>
-        <a
-          href="/grades"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("gradesNav")} →
-        </a>
-        <a
-          href="/admin/corrections"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("correctionsNav")} →
-        </a>
-        <a
-          href="/admin/calendar"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("calendarNav")} →
-        </a>
-        <a
-          href="/admin/absences"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("absencesNav")} →
-        </a>
-        <a
-          href="/wellbeing"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("wellbeingNav")} →
-        </a>
-        <a
-          href="/ussd-demo"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("ussdNav")} →
-        </a>
-        <a
-          href="/admin/announcements"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("announcementsNav")} →
-        </a>
-        <a
-          href="/admin/messages"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("messagesNav")} →
-        </a>
-        <a
-          href="/admin/resources"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("resourcesNav")} →
-        </a>
-        <a
-          href="/admin/quizzes"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("quizzesNav")} →
-        </a>
-        <a
-          href="/admin/fees"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("feesNav")} →
-        </a>
-        <a
-          href="/admin/staff"
-          className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-flint-blue hover:underline"
-        >
-          {t("staffNav")} →
-        </a>
-      </div>
-
-      {/* Three numbers */}
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard
-          label={t("attendanceToday")}
-          value={data.attendanceRate === null ? "—" : `${data.attendanceRate}%`}
-        />
-        <StatCard
-          label={t("periodsSubmitted")}
-          value={`${data.periodsSubmitted}/${data.periodsScheduled}`}
-        />
-        <StatCard
-          label={t("absencesToday")}
-          value={String(data.absencesToday)}
-          tone={data.absencesToday > 0 ? "alert" : "default"}
-        />
-      </div>
-
-      {/* Dropout-risk radar — the intelligence layer that feeds welfare */}
-      <a
-        href="/admin/risk"
-        className="mt-4 flex items-center justify-between rounded-2xl border border-flint-blue/20 bg-flint-blue/5 px-4 py-3 transition-colors hover:bg-flint-blue/10"
-      >
-        <span className="flex items-center gap-2">
-          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-flint-blue/10">
-            <span className="inline-block size-2 rounded-full bg-flint-cyan" aria-hidden />
-          </span>
-          <span className="font-medium text-flint-black">{t("riskNav")}</span>
-        </span>
-        <span className="font-mono text-xs text-flint-blue">→</span>
-      </a>
-
-      {/* Welfare entry point */}
-      <a
-        href="/admin/welfare"
-        className="mt-3 flex items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 transition-colors hover:bg-black/[0.02]"
-      >
-        <span className="font-medium text-flint-black">{t("welfareCta")}</span>
-        <span className="font-mono text-xs text-flint-blue">→</span>
-      </a>
-
-      {/* Parent alerts today */}
-      <section className="mt-4 rounded-2xl border border-black/10 bg-white p-4">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="font-mono text-xs uppercase tracking-widest text-muted">
-            {t("alertsTitle")}
-          </h2>
-          <span className="rounded-full bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] text-amber-700">
-            {t("alertsMock")}
-          </span>
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-3">
-          <div>
-            <div className="font-display text-2xl font-bold tabular-nums text-flint-black">
-              {data.alerts.sent}
-            </div>
-            <div className="font-mono text-xs text-muted">{t("alertsSent")}</div>
-          </div>
-          <div>
-            <div className="font-display text-2xl font-bold tabular-nums text-flint-black">
-              {data.alerts.queued}
-            </div>
-            <div className="font-mono text-xs text-muted">{t("alertsQueued")}</div>
-          </div>
-          <div>
-            <div className="font-display text-2xl font-bold tabular-nums text-flint-black">
-              {data.alerts.costFcfa}
-            </div>
-            <div className="font-mono text-xs text-muted">{t("alertsCost")} · FCFA</div>
-          </div>
-        </div>
-        {data.alerts.recent.length > 0 && (
-          <ul className="mt-3 space-y-1 border-t border-black/5 pt-3">
-            {data.alerts.recent.map((a, i) => (
-              <li key={i} className="flex items-center justify-between font-mono text-xs">
-                <span className="text-muted">{a.phone}</span>
-                <span className={a.status === "SENT" ? "text-success" : "text-muted"}>
-                  {a.status}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {/* Reach / cost profile — the number that sets the SMS bill */}
-        {data.reach.total > 0 && (
-          <div className="mt-3 border-t border-black/5 pt-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-widest text-muted">{t("reachTitle")}</span>
-              <span className="font-mono text-xs text-flint-black">
-                <span className="font-bold text-error">{data.reach.smsOnly}</span>
-                <span className="text-muted">/{data.reach.total} {t("reachNeedSms")}</span>
-              </span>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]">
-              <span className="rounded-full bg-success/10 px-2 py-0.5 text-success">
-                {data.reach.smartphone} {t("capSmartShort")}
-              </span>
-              <span className="rounded-full bg-flint-blue/10 px-2 py-0.5 text-flint-blue">
-                {data.reach.whatsapp} {t("capWaShort")}
-              </span>
-              <span className="rounded-full bg-error/10 px-2 py-0.5 text-error">
-                {data.reach.smsOnly} {t("capSmsShort")}
-              </span>
-              {data.reach.unknown > 0 && (
-                <span className="rounded-full bg-black/5 px-2 py-0.5 text-muted">
-                  {data.reach.unknown} {t("capUnkShort")}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* Staff on site today (gate check-in) */}
-      {data.gate.length > 0 && (
-        <section className="mt-4 rounded-2xl border border-black/10 bg-white p-4">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="font-mono text-xs uppercase tracking-widest text-muted">{t("gateAdminTitle")}</h2>
-            <span className="font-mono text-xs tabular-nums text-flint-black">
-              {data.gate.filter((g) => g.time).length}/{data.gate.length}
-            </span>
-          </div>
-          <ul className="mt-3 space-y-1.5">
-            {data.gate.map((g, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 text-sm">
-                <span className="min-w-0 truncate text-flint-black">
-                  {g.name}
-                  {g.title && <span className="ml-1.5 font-mono text-[10px] uppercase text-muted">{g.title}</span>}
-                </span>
-                {g.time ? (
-                  <span className={`shrink-0 font-mono text-xs tabular-nums ${g.onTime ? "text-success" : "text-amber-700"}`}>
-                    {g.time} · {g.onTime ? t("gateOnTime") : t("gateLate")}
-                  </span>
-                ) : (
-                  <span className="shrink-0 font-mono text-xs text-muted">{t("gateNotYet")}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* Completion grid */}
-      <h2 className="mb-3 mt-8 font-mono text-xs uppercase tracking-widest text-muted">
-        {t("todaysPeriods")}
-      </h2>
-
-      {data.periods.length === 0 ? (
-        <p className="rounded-xl border border-black/10 bg-white px-4 py-6 text-center text-muted">
-          {t("noPeriods")}
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {data.periods.map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-black/10 bg-white px-4 py-3"
-            >
-              <div className="min-w-0">
-                <div className="truncate font-medium text-flint-black">
-                  {p.subject} · {p.className}
+          <div className="et-anim mt-3 flex flex-col gap-3">
+            {/* School-pulse hero */}
+            <section className="et-hero et-pop p-5 text-white">
+              <div className="flex items-center justify-between">
+                <div className="font-display text-[15px] font-semibold">{data.schoolName}</div>
+                <div className="text-[11.5px]" style={{ color: "var(--et-hero-sub)" }}>{t("attendanceToday")}</div>
+              </div>
+              <div className="mt-3 flex items-center gap-4">
+                <div className="relative" style={{ width: 96, height: 96, flex: "none" }}>
+                  <svg width="96" height="96" viewBox="0 0 96 96">
+                    <circle cx="48" cy="48" r={R} fill="none" strokeWidth="9" style={{ stroke: "var(--et-hero-track)" }} />
+                    <circle cx="48" cy="48" r={R} fill="none" strokeWidth="9" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={offset} transform="rotate(-90 48 48)" style={{ stroke: heroTone(rate), transition: "stroke-dashoffset .9s cubic-bezier(.16,1,.3,1)" }} />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center font-display text-2xl font-bold" style={{ color: heroTone(rate) }}>
+                    {data.attendanceRate === null ? "—" : `${pct}%`}
+                  </div>
                 </div>
-                <div className="truncate font-mono text-xs text-muted">
-                  {p.time} · {p.teacher}
+                <div className="flex-1">
+                  <div className="text-[11.5px]" style={{ color: "var(--et-hero-sub)" }}>{t("absencesToday")}</div>
+                  <div className="font-display text-2xl font-bold" style={{ color: data.absencesToday > 0 ? "#ff6b6b" : "#fff" }}>{data.absencesToday}</div>
+                  <div className="mt-2 text-[11.5px]" style={{ color: "var(--et-hero-sub)" }}>
+                    {t("periodsSubmitted")} <span className="font-semibold text-white">{data.periodsSubmitted}/{data.periodsScheduled}</span>
+                  </div>
                 </div>
               </div>
+            </section>
 
-              {p.submitted ? (
-                <div className="flex shrink-0 items-center gap-2">
-                  <span className="font-mono text-xs text-muted">
-                    {p.present}/{p.present + p.absent}
-                  </span>
-                  <span className="rounded-full bg-success/15 px-3 py-1 font-mono text-xs text-success">
-                    {t("submitted")}
-                  </span>
+            {/* Dropout-risk radar */}
+            <a href="/admin/risk" className="et-card flex items-center gap-3 p-4" style={{ background: "var(--et-danger-bg)", borderColor: "transparent" }}>
+              <AlertTriangle size={20} className="shrink-0" style={{ color: "var(--et-danger)" }} aria-hidden="true" />
+              <span className="flex-1 font-medium">{t("riskNav")}</span>
+              <ArrowRight size={16} style={{ color: "var(--et-danger)" }} aria-hidden="true" />
+            </a>
+
+            {/* Welfare */}
+            <a href="/admin/welfare" className="et-card flex items-center gap-3 p-4">
+              <Heart size={20} className="shrink-0 text-primary" aria-hidden="true" />
+              <span className="flex-1 font-medium">{t("welfareCta")}</span>
+              <ArrowRight size={16} className="text-primary" aria-hidden="true" />
+            </a>
+
+            {/* Parent alerts today */}
+            <section className="et-card p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-xs font-semibold text-muted">{t("alertsTitle")}</h2>
+                <span className="rounded-full px-2 py-0.5 text-[10px]" style={{ background: "var(--et-warn-bg)", color: "var(--et-warn)" }}>{t("alertsMock")}</span>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-3">
+                {[[data.alerts.sent, t("alertsSent")], [data.alerts.queued, t("alertsQueued")], [data.alerts.costFcfa, `${t("alertsCost")} · FCFA`]].map(([v, l], i) => (
+                  <div key={i}>
+                    <div className="font-display text-2xl font-bold tabular-nums">{v}</div>
+                    <div className="font-mono text-xs text-muted">{l}</div>
+                  </div>
+                ))}
+              </div>
+              {data.reach.total > 0 && (
+                <div className="mt-3 border-t border-line pt-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] uppercase tracking-widest text-muted">{t("reachTitle")}</span>
+                    <span className="font-mono text-xs"><b style={{ color: "var(--et-danger)" }}>{data.reach.smsOnly}</b><span className="text-muted">/{data.reach.total} {t("reachNeedSms")}</span></span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]">
+                    <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-ok-bg)", color: "var(--et-ok)" }}>{data.reach.smartphone} {t("capSmartShort")}</span>
+                    <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-blue-bg)", color: "var(--et-primary)" }}>{data.reach.whatsapp} {t("capWaShort")}</span>
+                    <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-danger-bg)", color: "var(--et-danger)" }}>{data.reach.smsOnly} {t("capSmsShort")}</span>
+                    {data.reach.unknown > 0 && <span className="rounded-full bg-chip px-2 py-0.5 text-muted">{data.reach.unknown} {t("capUnkShort")}</span>}
+                  </div>
                 </div>
-              ) : (
-                <span className="shrink-0 rounded-full bg-error/10 px-3 py-1 font-mono text-xs text-error">
-                  {t("pending")}
-                </span>
               )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+            </section>
+
+            {/* Staff on site */}
+            {data.gate.length > 0 && (
+              <section className="et-card p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-xs font-semibold text-muted">{t("gateAdminTitle")}</h2>
+                  <span className="font-mono text-xs tabular-nums">{data.gate.filter((g) => g.time).length}/{data.gate.length}</span>
+                </div>
+                <ul className="mt-3 space-y-1.5">
+                  {data.gate.map((g, i) => (
+                    <li key={i} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="min-w-0 truncate">{g.name}{g.title && <span className="ml-1.5 font-mono text-[10px] uppercase text-muted">{g.title}</span>}</span>
+                      {g.time ? (
+                        <span className="shrink-0 font-mono text-xs tabular-nums" style={{ color: g.onTime ? "var(--et-ok)" : "var(--et-warn)" }}>{g.time} · {g.onTime ? t("gateOnTime") : t("gateLate")}</span>
+                      ) : (
+                        <span className="shrink-0 font-mono text-xs text-muted">{t("gateNotYet")}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {/* Today's periods */}
+            <section className="et-card p-4">
+              <h2 className="mb-2 text-xs font-semibold text-muted">{t("todaysPeriods")}</h2>
+              {data.periods.length === 0 ? (
+                <p className="py-4 text-center text-muted">{t("noPeriods")}</p>
+              ) : (
+                <ul className="space-y-2">
+                  {data.periods.map((p) => (
+                    <li key={p.id} className="flex items-center justify-between gap-3 rounded-xl border border-line px-3 py-2.5">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">{p.subject} · {p.className}</div>
+                        <div className="truncate font-mono text-xs text-muted">{p.time} · {p.teacher}</div>
+                      </div>
+                      {p.submitted ? (
+                        <span className="flex shrink-0 items-center gap-2">
+                          <span className="font-mono text-xs text-muted">{p.present}/{p.present + p.absent}</span>
+                          <span className="et-pill" style={{ background: "var(--et-ok-bg)", color: "var(--et-ok)" }}><CheckCircle2 size={13} /> {t("submitted")}</span>
+                        </span>
+                      ) : (
+                        <span className="et-pill shrink-0" style={{ background: "var(--et-danger-bg)", color: "var(--et-danger)" }}>{t("pending")}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {/* Manage */}
+            <section className="et-card p-4">
+              <h2 className="mb-3 text-xs font-semibold text-muted">{t("setupNav")}</h2>
+              <div className="grid grid-cols-3 gap-2.5">
+                {manage.map(([href, label, Icon]) => (
+                  <a key={href + label} href={href} className="flex flex-col items-center gap-1.5 rounded-xl border border-line p-3 text-center text-[11px] font-medium">
+                    <span className="grid size-9 place-items-center rounded-lg bg-blue-bg"><Icon size={18} className="text-primary" aria-hidden="true" /></span>
+                    <span className="leading-tight">{label}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          </div>
+    </>
   );
 }

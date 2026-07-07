@@ -62,7 +62,7 @@ export function SyncBanner() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center font-mono text-xs text-flint-black"
+      className="fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center font-mono text-xs text-ink"
     >
       <span>
         {count} {t("pendingSync")} · {t("notNotified")}

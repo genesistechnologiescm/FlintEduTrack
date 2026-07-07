@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { WifiOff } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 
 type Lesson = { id: string; title: string; type: "LINK" | "NOTE"; url: string | null; body: string | null };
@@ -42,25 +43,23 @@ export function OfflineLessons({ lessons, studentName }: { lessons: Group[]; stu
   }
 
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-flint-blue/20 bg-flint-blue/5 px-4 py-3">
-      <div className="min-w-0">
-        <div className="font-medium text-flint-black">{t("offlineSaveTitle")}</div>
-        <div className="font-mono text-[11px] text-muted">
-          {savedAt ? `${count} · ${t("offlineSavedOn")} ${savedAt.slice(0, 10)}` : t("offlineHint")}
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl p-4" style={{ background: "var(--et-blue-bg)" }}>
+      <div className="flex min-w-0 items-center gap-2.5">
+        <WifiOff size={18} className="shrink-0 text-primary" aria-hidden="true" />
+        <div className="min-w-0">
+          <div className="font-medium">{t("offlineSaveTitle")}</div>
+          <div className="font-mono text-[11px] text-muted">
+            {savedAt ? `${count} · ${t("offlineSavedOn")} ${savedAt.slice(0, 10)}` : t("offlineHint")}
+          </div>
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {savedAt && (
-          <a href="/offline-lessons" className="font-mono text-[11px] uppercase tracking-widest text-flint-blue hover:underline">
+          <a href="/offline-lessons" className="font-mono text-[11px] uppercase tracking-widest text-primary hover:underline">
             {t("offlineOpen")}
           </a>
         )}
-        <button
-          type="button"
-          onClick={save}
-          disabled={busy}
-          className="min-h-10 rounded-full bg-flint-blue px-4 font-mono text-xs uppercase tracking-widest text-white disabled:opacity-60"
-        >
+        <button type="button" onClick={save} disabled={busy} className="et-btn px-4 py-2 text-xs">
           {busy ? t("adding") : savedAt ? t("offlineUpdate") : t("offlineSaveBtn")}
         </button>
       </div>

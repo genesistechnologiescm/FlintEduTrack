@@ -9,7 +9,7 @@ export function LogoutButton() {
     <button
       type="button"
       onClick={() => signOut()}
-      className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-muted hover:text-flint-black"
+      className="inline-flex min-h-11 items-center font-mono text-xs uppercase tracking-widest text-muted hover:text-ink"
     >
       {t("logout")}
     </button>
