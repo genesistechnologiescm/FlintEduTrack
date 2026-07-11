@@ -20,7 +20,7 @@ export type AdminData = {
   studentsEnrolled: number;
   periods: Period[];
   alerts: { sent: number; queued: number; costFcfa: number; recent: { phone: string; status: string }[] };
-  reach: { smartphone: number; whatsapp: number; smsOnly: number; unknown: number; total: number };
+  reach: { smartphone: number; whatsapp: number; smsOnly: number; voice: number; unknown: number; total: number };
   gate: { name: string; title: string | null; time: string | null; onTime: boolean | null }[];
   feesMonth: { collected: number; payments: number } | null;
 };
@@ -144,12 +144,13 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                 <div className="mt-3 border-t border-line pt-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[10px] uppercase tracking-widest text-muted">{t("reachTitle")}</span>
-                    <span className="font-mono text-xs"><b style={{ color: "var(--et-danger)" }}>{data.reach.smsOnly}</b><span className="text-muted">/{data.reach.total} {t("reachNeedSms")}</span></span>
+                    <span className="font-mono text-xs"><b style={{ color: "var(--et-danger)" }}>{data.reach.smsOnly + data.reach.voice}</b><span className="text-muted">/{data.reach.total} {t("reachNeedSms")}</span></span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]">
                     <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-ok-bg)", color: "var(--et-ok)" }}>{data.reach.smartphone} {t("capSmartShort")}</span>
                     <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-blue-bg)", color: "var(--et-primary)" }}>{data.reach.whatsapp} {t("capWaShort")}</span>
                     <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-danger-bg)", color: "var(--et-danger)" }}>{data.reach.smsOnly} {t("capSmsShort")}</span>
+                    {data.reach.voice > 0 && <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-warn-bg)", color: "var(--et-warn)" }}>{data.reach.voice} {t("capVoiceShort")}</span>}
                     {data.reach.unknown > 0 && <span className="rounded-full bg-chip px-2 py-0.5 text-muted">{data.reach.unknown} {t("capUnkShort")}</span>}
                   </div>
                 </div>

@@ -59,14 +59,18 @@ enum ChannelType {
   PUSH
   WHATSAPP
   SMS
+  VOICE
 }
 
 // Declared at enrolment: what can this parent's phone do? Drives the router's
-// cost profile — smartphone parents are free (push), SMS-only parents cost money.
+// cost profile — smartphone parents are free (push), SMS-only parents cost money,
+// and VOICE_ONLY parents (can't read SMS) get a text-to-speech call in their
+// preferred language.
 enum ContactCapability {
   SMARTPHONE
   WHATSAPP
   SMS_ONLY
+  VOICE_ONLY
 }
 
 enum ChannelStatus {

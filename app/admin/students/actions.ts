@@ -24,7 +24,7 @@ const StudentSchema = z.object({
   parentName: z.string().trim().max(80).optional(),
   // Contact-capability capture (Phase-1 spec): what can the parent's phone do?
   // This single answer sets the school's SMS bill — free push vs paid SMS.
-  parentCapability: z.enum(["SMARTPHONE", "WHATSAPP", "SMS_ONLY"]).optional(),
+  parentCapability: z.enum(["SMARTPHONE", "WHATSAPP", "SMS_ONLY", "VOICE_ONLY"]).optional(),
 });
 type StudentInput = z.infer<typeof StudentSchema>;
 

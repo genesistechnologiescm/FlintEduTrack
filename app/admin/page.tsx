@@ -136,11 +136,12 @@ export default async function AdminPage() {
     select: { parent: { select: { id: true, contactCapability: true } } },
     distinct: ["parentUserId"],
   });
-  const reach = { smartphone: 0, whatsapp: 0, smsOnly: 0, unknown: 0, total: parentLinks.length };
+  const reach = { smartphone: 0, whatsapp: 0, smsOnly: 0, voice: 0, unknown: 0, total: parentLinks.length };
   for (const l of parentLinks) {
     if (l.parent.contactCapability === "SMARTPHONE") reach.smartphone++;
     else if (l.parent.contactCapability === "WHATSAPP") reach.whatsapp++;
     else if (l.parent.contactCapability === "SMS_ONLY") reach.smsOnly++;
+    else if (l.parent.contactCapability === "VOICE_ONLY") reach.voice++;
     else reach.unknown++;
   }
 
