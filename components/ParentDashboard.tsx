@@ -44,9 +44,9 @@ const STR = {
     qaMsg: "Message", qaFees: "Pay fees", qaReport: "Report card",
     grades: "Grades", overall: "Overall", viewReport: "View report card",
     supTitle: "may need support", supBody: "The school has been told and is following up. You can message the teachers.",
-    supCta: "Message the school", okTitle: "Doing great", okBody: "Keep it up — attendance and grades are strong.",
+    supCta: "Message the school", okTitle: "Doing great", okBody: "Keep it up. Attendance and grades are strong.",
     events: "Upcoming events", announcements: "From the school", alerts: "Recent alerts",
-    absenceAlert: "Absence alert", noAlerts: "No alerts — all good", noChildren: "No children linked yet.",
+    absenceAlert: "Absence alert", noAlerts: "No alerts. All good", noChildren: "No children linked yet.",
     navHome: "Home", navMsg: "Messages", navFees: "Fees", navLessons: "Lessons",
   },
   fr: {
@@ -58,9 +58,9 @@ const STR = {
     qaMsg: "Écrire", qaFees: "Payer", qaReport: "Bulletin",
     grades: "Notes", overall: "Moyenne", viewReport: "Voir le bulletin",
     supTitle: "a besoin de soutien", supBody: "L’école est informée et assure le suivi. Vous pouvez écrire aux enseignants.",
-    supCta: "Contacter l’école", okTitle: "Très bien", okBody: "Continuez — présence et notes solides.",
+    supCta: "Contacter l’école", okTitle: "Très bien", okBody: "Continuez. Présence et notes solides.",
     events: "Événements à venir", announcements: "De l’école", alerts: "Alertes récentes",
-    absenceAlert: "Alerte d’absence", noAlerts: "Aucune alerte — tout va bien", noChildren: "Aucun enfant associé.",
+    absenceAlert: "Alerte d’absence", noAlerts: "Aucune alerte. Tout va bien", noChildren: "Aucun enfant associé.",
     navHome: "Accueil", navMsg: "Messages", navFees: "Frais", navLessons: "Leçons",
   },
 };

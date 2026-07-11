@@ -1,4 +1,4 @@
-export const metadata = { title: "EduTrack — Offline lessons · Leçons hors ligne" };
+export const metadata = { title: "EduTrack · Offline lessons · Leçons hors ligne" };
 
 // Deliberately minimal: the content is rendered by /offline-lessons.js (plain
 // JS, no framework — a native <script> tag, NOT next/script, so it still runs
