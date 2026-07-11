@@ -42,7 +42,11 @@ export default async function AdminPage() {
   const dayStart = new Date(`${dateISO}T00:00:00.000Z`);
   const dayEnd = new Date(`${dateISO}T23:59:59.999Z`);
 
-  const [slots, sessions, studentsEnrolled, notifs] = await Promise.all([
+  // Fees stat is money data — only FULL/FINANCE admins see it (mirrors /admin/fees).
+  const canSeeFees = membership.adminScope === "FULL" || membership.adminScope === "FINANCE";
+  const monthStart = new Date(`${dateISO.slice(0, 7)}-01T00:00:00.000Z`);
+
+  const [slots, sessions, studentsEnrolled, notifs, feeAgg] = await Promise.all([
     prisma.timetableSlot.findMany({
       where: { schoolId: school.id, dayOfWeek: jsDay },
       include: { subject: true, classGroup: true, teacher: true },
@@ -57,6 +61,13 @@ export default async function AdminPage() {
       where: { serverSentAt: { gte: dayStart, lte: dayEnd } },
       orderBy: { serverSentAt: "desc" },
     }),
+    canSeeFees
+      ? prisma.payment.aggregate({
+          _sum: { amount: true },
+          _count: true,
+          where: { schoolId: school.id, createdAt: { gte: monthStart } },
+        })
+      : Promise.resolve(null),
   ]);
 
   const sessionBySlot = new Map(sessions.map((s) => [s.timetableSlotId, s]));
@@ -152,6 +163,7 @@ export default async function AdminPage() {
     },
     reach,
     gate,
+    feesMonth: feeAgg ? { collected: feeAgg._sum.amount ?? 0, payments: feeAgg._count } : null,
   };
 
   return <AdminDashboard data={data} />;

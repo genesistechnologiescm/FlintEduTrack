@@ -7,6 +7,7 @@ import {
   ShieldCheck, Users, Wallet,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
+import { formatFcfa } from "@/lib/fees";
 
 type Period = { id: string; subject: string; className: string; teacher: string; time: string; submitted: boolean; present: number; absent: number };
 
@@ -21,6 +22,7 @@ export type AdminData = {
   alerts: { sent: number; queued: number; costFcfa: number; recent: { phone: string; status: string }[] };
   reach: { smartphone: number; whatsapp: number; smsOnly: number; unknown: number; total: number };
   gate: { name: string; title: string | null; time: string | null; onTime: boolean | null }[];
+  feesMonth: { collected: number; payments: number } | null;
 };
 
 const R = 40;
@@ -94,6 +96,21 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                 </div>
               </div>
             </section>
+
+            {/* Fees collected this month — the Phase-1 "three numbers" money stat */}
+            {data.feesMonth && (
+              <a href="/admin/fees" className="et-card flex items-center gap-3 p-4">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-bg">
+                  <Wallet size={19} className="text-primary" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-semibold text-muted">{t("feesMonthTitle")}</span>
+                  <span className="block truncate font-display text-xl font-bold tabular-nums">{formatFcfa(data.feesMonth.collected)}</span>
+                  <span className="block font-mono text-[11px] text-muted">{data.feesMonth.payments} {t("feesMonthPayments")}</span>
+                </span>
+                <ArrowRight size={16} className="shrink-0 text-primary" aria-hidden="true" />
+              </a>
+            )}
 
             {/* Dropout-risk radar */}
             <a href="/admin/risk" className="et-card flex items-center gap-3 p-4" style={{ background: "var(--et-danger-bg)", borderColor: "transparent" }}>

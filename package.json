@@ -17,6 +17,7 @@
     "db:seed:messages": "node --env-file=.env --env-file=.env.local prisma/seed-messages.js",
     "db:seed:resources": "node --env-file=.env --env-file=.env.local prisma/seed-resources.js",
     "db:seed:fees": "node --env-file=.env --env-file=.env.local prisma/seed-fees.js",
+    "db:seed:fees-month": "node --env-file=.env --env-file=.env.local prisma/seed-fees-month.js",
     "db:seed:student": "node --env-file=.env --env-file=.env.local prisma/seed-student-login.js",
     "db:seed:staff": "node --env-file=.env --env-file=.env.local prisma/seed-staff.js",
     "db:seed:risk": "node --env-file=.env --env-file=.env.local prisma/seed-risk.js",
