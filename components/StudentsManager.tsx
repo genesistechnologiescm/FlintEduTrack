@@ -77,7 +77,7 @@ export function StudentsManager({ data }: { data: StudentsData }) {
         classGroupId,
         parentPhone,
         parentName: parentName || undefined,
-        parentCapability: (parentCapability || undefined) as "SMARTPHONE" | "WHATSAPP" | "SMS_ONLY" | undefined,
+        parentCapability: (parentCapability || undefined) as "SMARTPHONE" | "WHATSAPP" | "SMS_ONLY" | "VOICE_ONLY" | undefined,
       });
       setFirstName("");
       setLastName("");
@@ -145,6 +145,7 @@ export function StudentsManager({ data }: { data: StudentsData }) {
             <option value="SMARTPHONE">{t("capSmart")}</option>
             <option value="WHATSAPP">{t("capWhatsapp")}</option>
             <option value="SMS_ONLY">{t("capSms")}</option>
+            <option value="VOICE_ONLY">{t("capVoice")}</option>
           </select>
           <button
             type="submit"

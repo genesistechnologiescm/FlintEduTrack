@@ -23,7 +23,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EduTrack — Flint Technologies",
+  title: "EduTrack · Flint Technologies",
   description: "National school management platform for Cameroon.",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg" },

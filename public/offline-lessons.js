@@ -12,14 +12,14 @@
       title: "My offline lessons",
       savedOn: "Saved",
       empty: "No lessons saved on this device yet. Open EduTrack while online and tap “Save lessons for offline”.",
-      linkNeedsNet: "Link — open when you have internet",
+      linkNeedsNet: "Link: open when you have internet",
       back: "← Dashboard",
     },
     fr: {
       title: "Mes leçons hors ligne",
       savedOn: "Enregistré",
       empty: "Aucune leçon enregistrée sur cet appareil. Ouvrez EduTrack en ligne et touchez « Enregistrer les leçons hors ligne ».",
-      linkNeedsNet: "Lien — à ouvrir avec Internet",
+      linkNeedsNet: "Lien : à ouvrir avec Internet",
       back: "← Tableau de bord",
     },
   };

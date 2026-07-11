@@ -7,6 +7,7 @@ import {
   ShieldCheck, Users, Wallet,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
+import { formatFcfa } from "@/lib/fees";
 
 type Period = { id: string; subject: string; className: string; teacher: string; time: string; submitted: boolean; present: number; absent: number };
 
@@ -19,8 +20,9 @@ export type AdminData = {
   studentsEnrolled: number;
   periods: Period[];
   alerts: { sent: number; queued: number; costFcfa: number; recent: { phone: string; status: string }[] };
-  reach: { smartphone: number; whatsapp: number; smsOnly: number; unknown: number; total: number };
+  reach: { smartphone: number; whatsapp: number; smsOnly: number; voice: number; unknown: number; total: number };
   gate: { name: string; title: string | null; time: string | null; onTime: boolean | null }[];
+  feesMonth: { collected: number; payments: number } | null;
 };
 
 const R = 40;
@@ -95,6 +97,21 @@ export function AdminDashboard({ data }: { data: AdminData }) {
               </div>
             </section>
 
+            {/* Fees collected this month — the Phase-1 "three numbers" money stat */}
+            {data.feesMonth && (
+              <a href="/admin/fees" className="et-card flex items-center gap-3 p-4">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue-bg">
+                  <Wallet size={19} className="text-primary" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-xs font-semibold text-muted">{t("feesMonthTitle")}</span>
+                  <span className="block truncate font-display text-xl font-bold tabular-nums">{formatFcfa(data.feesMonth.collected)}</span>
+                  <span className="block font-mono text-[11px] text-muted">{data.feesMonth.payments} {t("feesMonthPayments")}</span>
+                </span>
+                <ArrowRight size={16} className="shrink-0 text-primary" aria-hidden="true" />
+              </a>
+            )}
+
             {/* Dropout-risk radar */}
             <a href="/admin/risk" className="et-card flex items-center gap-3 p-4" style={{ background: "var(--et-danger-bg)", borderColor: "transparent" }}>
               <AlertTriangle size={20} className="shrink-0" style={{ color: "var(--et-danger)" }} aria-hidden="true" />
@@ -127,12 +144,13 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                 <div className="mt-3 border-t border-line pt-3">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[10px] uppercase tracking-widest text-muted">{t("reachTitle")}</span>
-                    <span className="font-mono text-xs"><b style={{ color: "var(--et-danger)" }}>{data.reach.smsOnly}</b><span className="text-muted">/{data.reach.total} {t("reachNeedSms")}</span></span>
+                    <span className="font-mono text-xs"><b style={{ color: "var(--et-danger)" }}>{data.reach.smsOnly + data.reach.voice}</b><span className="text-muted">/{data.reach.total} {t("reachNeedSms")}</span></span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]">
                     <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-ok-bg)", color: "var(--et-ok)" }}>{data.reach.smartphone} {t("capSmartShort")}</span>
                     <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-blue-bg)", color: "var(--et-primary)" }}>{data.reach.whatsapp} {t("capWaShort")}</span>
                     <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-danger-bg)", color: "var(--et-danger)" }}>{data.reach.smsOnly} {t("capSmsShort")}</span>
+                    {data.reach.voice > 0 && <span className="rounded-full px-2 py-0.5" style={{ background: "var(--et-warn-bg)", color: "var(--et-warn)" }}>{data.reach.voice} {t("capVoiceShort")}</span>}
                     {data.reach.unknown > 0 && <span className="rounded-full bg-chip px-2 py-0.5 text-muted">{data.reach.unknown} {t("capUnkShort")}</span>}
                   </div>
                 </div>

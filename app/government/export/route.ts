@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   let suppressed = 0;
   const esc = (c: string | number) => `"${String(c).replace(/"/g, '""')}"`;
   const lines: string[] = [
-    [esc("EduTrack — National Attendance Report")].join(","),
+    [esc("EduTrack National Attendance Report")].join(","),
     [esc("Generated"), esc(new Date().toISOString().slice(0, 10))].join(","),
     [esc("Period"), esc(`${from} to ${to}`)].join(","),
     [esc(`Privacy: figures for groups smaller than ${K} are suppressed (k-anonymity)`)].join(","),
