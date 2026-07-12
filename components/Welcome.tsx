@@ -72,6 +72,13 @@ export function Welcome() {
             >
               {t("natCta")} <ArrowRight size={16} aria-hidden="true" />
             </a>
+            <a
+              href="/noticeboard"
+              className="inline-flex items-center gap-1.5 rounded-xl border px-6 py-3 text-sm font-medium text-white"
+              style={{ borderColor: "rgba(255,255,255,.22)" }}
+            >
+              {t("nbTitle")} <ArrowRight size={16} aria-hidden="true" />
+            </a>
           </div>
         </section>
 

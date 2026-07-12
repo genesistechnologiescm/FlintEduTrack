@@ -696,6 +696,17 @@ model GradeCorrection {
 enum AnnouncementAudience {
   SCHOOL
   CLASS
+  NATIONAL
+}
+
+// National notices carry a review workflow: ministry posts start
+// PENDING_REVIEW and a Flint admin approves before the country sees them
+// (school/class posts stay immediately PUBLISHED — the school is trusted on
+// its own board).
+enum AnnouncementStatus {
+  PENDING_REVIEW
+  PUBLISHED
+  REJECTED
 }
 
 // A broadcast from school staff to parents (whole school or one class).
@@ -703,19 +714,24 @@ enum AnnouncementAudience {
 // Notification Router's free web-push channel.
 model Announcement {
   id           String                @id @default(uuid())
-  schoolId     String
+  schoolId     String? // null for NATIONAL notices (country-wide, no tenant)
   authorUserId String
   audience     AnnouncementAudience  @default(SCHOOL)
+  status       AnnouncementStatus    @default(PUBLISHED)
   classGroupId String?
   title        String
   body         String
+  reviewedBy   String? // Flint admin who approved/rejected a NATIONAL notice
+  reviewedAt   DateTime?
+  deleteReason String? // traceability: removals must say why
   createdAt    DateTime              @default(now())
   deletedAt    DateTime?
-  school       School                @relation(fields: [schoolId], references: [id])
+  school       School?               @relation(fields: [schoolId], references: [id])
   author       User                  @relation("AuthoredAnnouncements", fields: [authorUserId], references: [id])
   classGroup   ClassGroup?           @relation(fields: [classGroupId], references: [id])
   receipts     AnnouncementReceipt[]
   @@index([schoolId, createdAt])
+  @@index([audience, status, createdAt])
 }
 
 model AnnouncementReceipt {
