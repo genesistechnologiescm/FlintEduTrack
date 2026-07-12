@@ -87,28 +87,32 @@ export async function signIn(input: { phone: string; pin: string }): Promise<{ e
     data: { user },
   } = await supabase.auth.getUser();
 
-  let dest = "/admin";
+  // Land the user on THEIR home. Priority: the person's school job first — a
+  // school admin who also helps curate the national library is still, first, a
+  // school admin (the old order let isFlintAdmin hijack the principal's login
+  // to /national). Platform flags only route people with no school role, and
+  // the fallback is /parent, which renders a friendly empty state instead of
+  // bouncing back to /login the way /admin's authz gate would.
+  let dest = "/parent";
   if (user) {
-    const me = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { isGovernment: true, isFlintAdmin: true },
-    });
-    if (me?.isGovernment) {
-      dest = "/government";
-    } else if (me?.isFlintAdmin) {
-      dest = "/national";
-    } else {
-      const membership = await prisma.schoolMembership.findFirst({
-        where: { userId: user.id, status: "active" },
-      });
-      if (membership?.role === "TEACHER") {
-        dest = "/attendance";
-      } else if (!membership) {
-        const link = await prisma.parentLink.findFirst({
-          where: { parentUserId: user.id, status: "active" },
-        });
-        if (link) dest = "/parent";
-      }
+    try {
+      const [me, membership] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: user.id },
+          select: { isGovernment: true, isFlintAdmin: true },
+        }),
+        prisma.schoolMembership.findFirst({
+          where: { userId: user.id, status: "active" },
+          orderBy: { role: "asc" }, // ADMIN sorts before TEACHER on dual memberships
+        }),
+      ]);
+      if (me?.isGovernment) dest = "/government";
+      else if (membership?.role === "ADMIN") dest = "/admin";
+      else if (membership?.role === "TEACHER") dest = "/attendance";
+      else if (me?.isFlintAdmin) dest = "/national";
+    } catch {
+      // DB blip mid-login: keep the safe fallback rather than a 500. The
+      // session is already set, so the user can navigate from /parent.
     }
   }
   redirect(dest);
