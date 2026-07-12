@@ -18,7 +18,7 @@ export type StudentData = {
   overall: number | null;
   lessons: { subject: string; items: Lesson[] }[];
   quizzes: { id: string; title: string; subject: string; questions: number; score: number | null; due: string | null; closed: boolean }[];
-  events: { title: string; startDate: string; endDate: string | null; note: string | null }[];
+  events: { title: string; startDate: string; endDate: string | null; note: string | null; national: boolean }[];
 };
 
 export function StudentDashboard({ data }: { data: StudentData }) {
@@ -123,7 +123,15 @@ export function StudentDashboard({ data }: { data: StudentData }) {
                 <ul className="space-y-1.5">
                   {data.events.map((e, i) => (
                     <li key={i} className="flex items-start justify-between gap-3 text-sm">
-                      <span className="min-w-0">{e.title}{e.note && <span className="text-muted"> · {e.note}</span>}</span>
+                      <span className="min-w-0">
+                        {e.title}
+                        {e.national && (
+                          <span className="ml-1.5 rounded-full px-1.5 py-0.5 align-middle text-[9px] font-semibold uppercase tracking-wide" style={{ background: "var(--et-blue-bg)", color: "var(--et-primary)" }}>
+                            {t("natTag")}
+                          </span>
+                        )}
+                        {e.note && <span className="text-muted"> · {e.note}</span>}
+                      </span>
                       <span className="shrink-0 font-mono text-xs tabular-nums text-primary">{e.startDate.slice(5)}{e.endDate ? ` → ${e.endDate.slice(5)}` : ""}</span>
                     </li>
                   ))}
