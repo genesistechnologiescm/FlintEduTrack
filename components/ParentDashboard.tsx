@@ -31,7 +31,7 @@ export type ParentData = {
   children: Child[];
   alerts: { type: string; date: string }[];
   announcements: { title: string; body: string; date: string }[];
-  events: { school: string; title: string; startDate: string; endDate: string | null; note: string | null }[];
+  events: { school: string; title: string; startDate: string; endDate: string | null; note: string | null; national: boolean }[];
 };
 
 const STR = {
@@ -45,7 +45,7 @@ const STR = {
     grades: "Grades", overall: "Overall", viewReport: "View report card",
     supTitle: "may need support", supBody: "The school has been told and is following up. You can message the teachers.",
     supCta: "Message the school", okTitle: "Doing great", okBody: "Keep it up. Attendance and grades are strong.",
-    events: "Upcoming events", announcements: "From the school", alerts: "Recent alerts",
+    events: "Upcoming events", announcements: "From the school", alerts: "Recent alerts", natTag: "National",
     absenceAlert: "Absence alert", noAlerts: "No alerts. All good", noChildren: "No children linked yet.",
     navHome: "Home", navMsg: "Messages", navFees: "Fees", navLessons: "Lessons",
   },
@@ -59,7 +59,7 @@ const STR = {
     grades: "Notes", overall: "Moyenne", viewReport: "Voir le bulletin",
     supTitle: "a besoin de soutien", supBody: "L’école est informée et assure le suivi. Vous pouvez écrire aux enseignants.",
     supCta: "Contacter l’école", okTitle: "Très bien", okBody: "Continuez. Présence et notes solides.",
-    events: "Événements à venir", announcements: "De l’école", alerts: "Alertes récentes",
+    events: "Événements à venir", announcements: "De l’école", alerts: "Alertes récentes", natTag: "National",
     absenceAlert: "Alerte d’absence", noAlerts: "Aucune alerte. Tout va bien", noChildren: "Aucun enfant associé.",
     navHome: "Accueil", navMsg: "Messages", navFees: "Frais", navLessons: "Leçons",
   },
@@ -331,7 +331,14 @@ export function ParentDashboard({ data }: { data: ParentData }) {
                   </div>
                   {data.events.slice(0, 3).map((e, i) => (
                     <div key={i} className="flex items-start justify-between gap-3 py-1.5 text-[13px]">
-                      <span>{e.title}</span>
+                      <span>
+                        {e.title}
+                        {e.national && (
+                          <span className="ml-1.5 rounded-full px-1.5 py-0.5 align-middle text-[9px] font-semibold uppercase tracking-wide" style={{ background: "var(--et-blue-bg)", color: "var(--et-primary)" }}>
+                            {t.natTag}
+                          </span>
+                        )}
+                      </span>
                       <span className="shrink-0 font-mono text-xs text-primary">
                         {e.startDate.slice(5)}
                         {e.endDate ? `→${e.endDate.slice(5)}` : ""}

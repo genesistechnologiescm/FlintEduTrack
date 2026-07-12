@@ -99,7 +99,7 @@ export default async function StudentPage() {
     overall: avgOf(subjects.map((s) => s.avg)),
     lessons: [...bySubject.values()],
     quizzes,
-    events: events.map((e) => ({ title: e.title, startDate: e.startDate, endDate: e.endDate, note: e.note })),
+    events: events.map((e) => ({ title: e.title, startDate: e.startDate, endDate: e.endDate, note: e.note, national: e.national })),
   };
 
   return <StudentDashboard data={data} />;

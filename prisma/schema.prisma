@@ -655,6 +655,23 @@ model CalendarEvent {
   @@index([schoolId, startDate])
 }
 
+// National exam calendar — government-managed country-wide dates (GCE, BEPC,
+// results releases, registration deadlines). No schoolId: every school, parent
+// and student sees these alongside their school events. Managed from
+// /government/calendar (isGovernment users); exam dates are public information,
+// so RLS allows public read (rls-national-events.sql).
+model NationalEvent {
+  id        String    @id @default(uuid())
+  title     String
+  startDate DateTime  @db.Date
+  endDate   DateTime? @db.Date
+  note      String?
+  createdBy String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  @@index([startDate])
+}
+
 // Grade-correction workflow — once a grade is recorded, changing it requires an
 // admin-approved correction (tamper-evident grading; Phase 2 spec). One PENDING
 // request per grade at a time (enforced in code).
