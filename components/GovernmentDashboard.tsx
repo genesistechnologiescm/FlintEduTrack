@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { ArrowRight, Calendar, Download, Megaphone } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { AppHeader } from "./AppHeader";
 
@@ -89,6 +89,20 @@ export function GovernmentDashboard({ data }: { data: GovernmentData }) {
             </a>
             <p className="mt-2 font-mono text-[10px] leading-relaxed text-muted">{t("govKNote")}</p>
           </section>
+
+          {/* National exam calendar management */}
+          <a href="/government/calendar" className="et-card flex items-center gap-3 p-4">
+            <Calendar size={20} className="shrink-0 text-primary" aria-hidden="true" />
+            <span className="flex-1 font-medium">{t("govCalNav")}</span>
+            <ArrowRight size={16} className="shrink-0 text-primary" aria-hidden="true" />
+          </a>
+
+          {/* National noticeboard management */}
+          <a href="/government/noticeboard" className="et-card flex items-center gap-3 p-4">
+            <Megaphone size={20} className="shrink-0 text-primary" aria-hidden="true" />
+            <span className="flex-1 font-medium">{t("nbTitle")}</span>
+            <ArrowRight size={16} className="shrink-0 text-primary" aria-hidden="true" />
+          </a>
 
           {/* Regional breakdown */}
           <section>
