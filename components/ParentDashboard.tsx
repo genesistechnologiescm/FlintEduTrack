@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import type { SubjectGrade } from "@/lib/grades";
+import { EnablePush } from "./EnablePush";
 
 type Child = {
   studentId: string;
@@ -366,8 +367,11 @@ export function ParentDashboard({ data }: { data: ParentData }) {
 
               {/* Alerts */}
               <div className="et-card p-4">
-                <div className="mb-2 flex items-center gap-2 text-xs font-semibold">
-                  <Bell size={16} className="text-primary" aria-hidden="true" /> {t.alerts}
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2 text-xs font-semibold">
+                    <Bell size={16} className="text-primary" aria-hidden="true" /> {t.alerts}
+                  </span>
+                  <EnablePush />
                 </div>
                 {data.alerts.length === 0 ? (
                   <p className="text-[13px] text-ok">{t.noAlerts}</p>

@@ -4,13 +4,13 @@
 // (Africa's Talking SMS/Voice, WhatsApp Business API) — nothing else changes,
 // exactly the Chariot pattern (mock/free now, swap the provider later).
 
-export type PaidChannel = "SMS" | "WHATSAPP" | "VOICE";
+type PaidChannel = "SMS" | "WHATSAPP" | "VOICE";
 
 // Realistic per-message economics (FCFA): WhatsApp conversations are an order
 // of magnitude cheaper than SMS; a text-to-speech voice call costs the most,
 // but it is the only channel that reaches a parent who cannot read. The router
 // always picks the cheapest channel that can actually reach this parent.
-export const CHANNEL_COST: Record<PaidChannel, number> = { SMS: 5, WHATSAPP: 1, VOICE: 25 };
+const CHANNEL_COST: Record<PaidChannel, number> = { SMS: 5, WHATSAPP: 1, VOICE: 25 };
 
 // Channel policy, given what we know about the parent:
 //  - WhatsApp-capable  → WhatsApp (cheap)

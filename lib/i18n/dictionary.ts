@@ -2,7 +2,6 @@
 // Lightweight typed dictionary. Swap for next-intl later if we need ICU/plurals.
 
 export type Locale = "en" | "fr";
-export const LOCALES: Locale[] = ["en", "fr"];
 export const DEFAULT_LOCALE: Locale = "en";
 
 export const dict = {

@@ -7,7 +7,7 @@
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 
-export type ScopeNeed = "FINANCE" | "WELFARE";
+type ScopeNeed = "FINANCE" | "WELFARE";
 
 export async function requireAdmin(need?: ScopeNeed): Promise<{ userId: string; schoolId: string; scope: "FULL" | ScopeNeed }> {
   const supabase = await createClient();
@@ -25,14 +25,4 @@ export async function requireAdmin(need?: ScopeNeed): Promise<{ userId: string; 
     throw new Error("Outside your admin scope");
   }
   return { userId: user.id, schoolId: m.schoolId, scope: scope as "FULL" | ScopeNeed };
-}
-
-// Page-side variant: returns null instead of throwing, so pages can redirect.
-export async function adminWithScope(need?: ScopeNeed): Promise<{ userId: string; schoolId: string } | null> {
-  try {
-    const ctx = await requireAdmin(need);
-    return { userId: ctx.userId, schoolId: ctx.schoolId };
-  } catch {
-    return null;
-  }
 }
