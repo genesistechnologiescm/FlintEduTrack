@@ -20,6 +20,7 @@
     "db:seed:fees-month": "node --env-file=.env --env-file=.env.local prisma/seed-fees-month.js",
     "db:seed:voice": "node --env-file=.env --env-file=.env.local prisma/seed-voice.js",
     "db:seed:national-exams": "node --env-file=.env --env-file=.env.local prisma/seed-national-exams.js",
+    "db:seed:owner": "node --env-file=.env --env-file=.env.local prisma/seed-owner.js",
     "db:seed:noticeboard": "node --env-file=.env --env-file=.env.local prisma/seed-noticeboard.js",
     "db:provision": "node --env-file=.env.production.local prisma/provision-instance.js",
     "db:bootstrap": "node --env-file=.env.production.local prisma/bootstrap-production.js",

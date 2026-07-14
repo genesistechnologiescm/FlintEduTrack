@@ -109,7 +109,7 @@ export async function signIn(input: { phone: string; pin: string }): Promise<{ e
       if (me?.isGovernment) dest = "/government";
       else if (membership?.role === "ADMIN") dest = "/admin";
       else if (membership?.role === "TEACHER") dest = "/attendance";
-      else if (me?.isFlintAdmin) dest = "/national";
+      else if (me?.isFlintAdmin) dest = "/flint";
     } catch {
       // DB blip mid-login: keep the safe fallback rather than a 500. The
       // session is already set, so the user can navigate from /parent.

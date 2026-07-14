@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Building2, Check, Plus } from "lucide-react";
+import { BarChart3, BookOpen, Building2, Check, LogOut, Megaphone, Plus } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { OriginMark } from "./OriginMark";
 import { ThemeToggle } from "./ThemeToggle";
 import { registerSchool } from "@/app/flint/actions";
+import { signOut } from "@/app/login/actions";
 
 type SchoolRow = {
   id: string;
@@ -27,7 +28,7 @@ const REGIONS = [
 
 const STR = {
   en: {
-    owner: "Flint · School registry", back: "Back to dashboard",
+    owner: "Flint · Owner", signOut: "Sign out", oversight: "National oversight", curateTool: "Library curation", notices: "Noticeboard",
     title: "School registry", intro: "Register a school and its first administrator. They sign in with the phone + PIN you set here, then build their own classes, teachers and students.",
     add: "Register a school", schoolName: "School name", region: "Region", town: "Town (optional)",
     crisis: "Crisis-affected zone (NW / SW)", test: "Test school — kept out of the national dashboard & exports",
@@ -39,7 +40,7 @@ const STR = {
     created: "School created. The administrator can sign in now.",
   },
   fr: {
-    owner: "Flint · Registre des écoles", back: "Retour au tableau de bord",
+    owner: "Flint · Propriétaire", signOut: "Déconnexion", oversight: "Vue nationale", curateTool: "Curation bibliothèque", notices: "Tableau d'affichage",
     title: "Registre des écoles", intro: "Enregistrez une école et son premier administrateur. Il se connecte avec le téléphone + PIN que vous définissez ici, puis crée ses classes, enseignants et élèves.",
     add: "Enregistrer une école", schoolName: "Nom de l'école", region: "Région", town: "Ville (optionnel)",
     crisis: "Zone de crise (NO / SO)", test: "École test — exclue du tableau de bord national et des exports",
@@ -114,10 +115,7 @@ export function SchoolRegistry({ data }: { data: RegistryData }) {
       <div className="mx-auto max-w-[720px] px-4 pb-16">
         {/* Top bar */}
         <div className="flex items-center gap-2 py-5">
-          <a href="/admin" aria-label={t.back} className="grid size-9 place-items-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink">
-            <ArrowLeft size={18} aria-hidden="true" />
-          </a>
-          <span className="text-ink"><OriginMark size={20} /></span>
+          <span className="text-ink"><OriginMark size={22} /></span>
           <span className="font-mono text-xs uppercase tracking-widest text-primary">{t.owner}</span>
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
@@ -127,11 +125,30 @@ export function SchoolRegistry({ data }: { data: RegistryData }) {
                   className={`px-2.5 py-1.5 ${locale === l ? "bg-primary text-white" : "text-muted"}`}>{l.toUpperCase()}</button>
               ))}
             </div>
+            <button type="button" onClick={() => signOut()} aria-label={t.signOut} className="grid size-9 place-items-center rounded-full text-muted transition-colors hover:bg-line hover:text-ink">
+              <LogOut size={17} aria-hidden="true" />
+            </button>
           </div>
         </div>
 
         <h1 className="font-display text-2xl font-bold tracking-tight">{t.title}</h1>
         <p className="mb-4 mt-1 max-w-[560px] text-sm text-muted">{t.intro}</p>
+
+        {/* Owner tools — platform powers, not any single school */}
+        <div className="mb-5 flex flex-wrap gap-2">
+          {[
+            { href: "/government", label: t.oversight, icon: BarChart3 },
+            { href: "/curate", label: t.curateTool, icon: BookOpen },
+            { href: "/noticeboard", label: t.notices, icon: Megaphone },
+          ].map((tool) => {
+            const Icon = tool.icon;
+            return (
+              <a key={tool.href} href={tool.href} className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-2 text-[13px] font-medium transition-colors hover:border-primary/30 hover:bg-chip">
+                <Icon size={15} className="text-primary" aria-hidden="true" /> {tool.label}
+              </a>
+            );
+          })}
+        </div>
 
         {/* Register form */}
         <section className="et-card p-5">

@@ -25,7 +25,6 @@ export default async function AdminPage() {
     where: { userId: user.id, role: "ADMIN", status: "active" },
   });
   if (!membership) redirect("/login");
-  const me = await prisma.user.findUnique({ where: { id: user.id }, select: { isFlintAdmin: true } });
 
   const school = await prisma.school.findUnique({ where: { id: membership.schoolId } });
   if (!school) {
@@ -166,7 +165,6 @@ export default async function AdminPage() {
     reach,
     gate,
     feesMonth: feeAgg ? { collected: feeAgg._sum.amount ?? 0, payments: feeAgg._count } : null,
-    isFlintAdmin: me?.isFlintAdmin ?? false,
   };
 
   return <AdminDashboard data={data} />;

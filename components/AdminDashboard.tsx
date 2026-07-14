@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle, ArrowRight, BookOpen, Building2, Calendar, CalendarX, CheckCircle2, FilePen, FileText,
+  AlertTriangle, ArrowRight, BookOpen, Calendar, CalendarX, CheckCircle2, FilePen, FileText,
   GraduationCap, Heart, ListChecks, Megaphone, MessageCircle, Phone, Settings,
   ShieldCheck, Users, Wallet,
 } from "lucide-react";
@@ -23,7 +23,6 @@ export type AdminData = {
   reach: { smartphone: number; whatsapp: number; smsOnly: number; voice: number; unknown: number; total: number };
   gate: { name: string; title: string | null; time: string | null; onTime: boolean | null }[];
   feesMonth: { collected: number; payments: number } | null;
-  isFlintAdmin: boolean;
 };
 
 const R = 40;
@@ -97,15 +96,6 @@ export function AdminDashboard({ data }: { data: AdminData }) {
                 </div>
               </div>
             </section>
-
-            {/* Flint owner — register schools (platform admin only) */}
-            {data.isFlintAdmin && (
-              <a href="/flint" className="et-card flex items-center gap-3 p-4" style={{ background: "var(--et-blue-bg)", borderColor: "transparent" }}>
-                <Building2 size={20} className="shrink-0 text-primary" aria-hidden="true" />
-                <span className="flex-1 font-medium">{t("flintOwnerNav")}</span>
-                <ArrowRight size={16} className="text-primary" aria-hidden="true" />
-              </a>
-            )}
 
             {/* Fees collected this month — the Phase-1 "three numbers" money stat */}
             {data.feesMonth && (
