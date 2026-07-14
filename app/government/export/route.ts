@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       ON sess."schoolId" = s.id
      AND sess.date >= ${from}::date AND sess.date <= ${to}::date
     LEFT JOIN "AttendanceRecord" r ON r."sessionId" = sess.id
-    WHERE s."deletedAt" IS NULL
+    WHERE s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY s.id
     ORDER BY s.region, s.name
   `;

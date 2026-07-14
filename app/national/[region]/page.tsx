@@ -21,7 +21,7 @@ export default async function RegionPage({ params }: { params: Promise<{ region:
            count(e.id)::int AS students
     FROM "School" s
     LEFT JOIN "Enrollment" e ON e."schoolId" = s.id AND e.status = 'ACTIVE'
-    WHERE s.region = ${region} AND s."deletedAt" IS NULL
+    WHERE s.region = ${region} AND s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY s.id
   `;
   if (schoolsRaw.length === 0) notFound();
@@ -33,7 +33,7 @@ export default async function RegionPage({ params }: { params: Promise<{ region:
     FROM "AttendanceSession" sess
     JOIN "AttendanceRecord" r ON r."sessionId" = sess.id
     JOIN "School" s ON s.id = sess."schoolId"
-    WHERE s.region = ${region}
+    WHERE s.region = ${region} AND s."isTest" = false
     GROUP BY sess."schoolId"
   `;
   const attById = new Map(attRaw.map((a) => [a.id, a]));

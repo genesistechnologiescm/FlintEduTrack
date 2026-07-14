@@ -19,7 +19,7 @@ export default async function NationalPage() {
     FROM "School" s
     LEFT JOIN "AttendanceSession" sess ON sess."schoolId" = s.id
     LEFT JOIN "AttendanceRecord" r ON r."sessionId" = sess.id
-    WHERE s."deletedAt" IS NULL
+    WHERE s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY s.region
   `;
 
@@ -27,14 +27,14 @@ export default async function NationalPage() {
     SELECT s.region AS region, count(e.id)::int AS students
     FROM "School" s
     LEFT JOIN "Enrollment" e ON e."schoolId" = s.id AND e.status = 'ACTIVE'
-    WHERE s."deletedAt" IS NULL
+    WHERE s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY s.region
   `;
   const studentsByRegion = new Map(studentsRaw.map((r) => [r.region, r.students]));
 
   // Dropout-risk aggregate. We compute each student's risk from their attendance,
   // then expose ONLY the counts per region — no individual ever leaves this layer.
-  const schools = await prisma.school.findMany({ where: { deletedAt: null }, select: { id: true, region: true, isCrisisZone: true } });
+  const schools = await prisma.school.findMany({ where: { deletedAt: null, isTest: false }, select: { id: true, region: true, isCrisisZone: true } });
   const schoolMeta = new Map(schools.map((s) => [s.id, { region: s.region, crisis: s.isCrisisZone }]));
   const marks = await prisma.attendanceRecord.findMany({
     select: { studentId: true, status: true, session: { select: { date: true, schoolId: true } } },
@@ -69,7 +69,7 @@ export default async function NationalPage() {
     FROM "AttendanceSession" sess
     JOIN "AttendanceRecord" r ON r."sessionId" = sess.id
     JOIN "School" s ON s.id = sess."schoolId"
-    WHERE sess.date >= (CURRENT_DATE - INTERVAL '30 days') AND s."deletedAt" IS NULL
+    WHERE sess.date >= (CURRENT_DATE - INTERVAL '30 days') AND s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY 1, 2
     ORDER BY 1
   `;

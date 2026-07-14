@@ -28,14 +28,14 @@ export default async function GovernmentPage() {
     FROM "School" s
     LEFT JOIN "AttendanceSession" sess ON sess."schoolId" = s.id
     LEFT JOIN "AttendanceRecord" r ON r."sessionId" = sess.id
-    WHERE s."deletedAt" IS NULL
+    WHERE s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY s.region
   `;
   const studentsRaw = await prisma.$queryRaw<{ region: string; students: number }[]>`
     SELECT s.region AS region, count(e.id)::int AS students
     FROM "School" s
     LEFT JOIN "Enrollment" e ON e."schoolId" = s.id AND e.status = 'ACTIVE'
-    WHERE s."deletedAt" IS NULL
+    WHERE s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY s.region
   `;
   const schoolsRaw = await prisma.$queryRaw<SchoolAgg[]>`
@@ -47,7 +47,7 @@ export default async function GovernmentPage() {
     LEFT JOIN "Enrollment" e ON e."schoolId" = s.id AND e.status = 'ACTIVE'
     LEFT JOIN "AttendanceSession" sess ON sess."schoolId" = s.id
     LEFT JOIN "AttendanceRecord" r ON r."sessionId" = sess.id
-    WHERE s."deletedAt" IS NULL
+    WHERE s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY s.id, s.name, s.region, s."isCrisisZone"
     ORDER BY s.region, s.name
   `;

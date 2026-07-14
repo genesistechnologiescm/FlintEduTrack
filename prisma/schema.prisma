@@ -150,6 +150,7 @@ model School {
   contactPhone String?
   logoUrl      String?
   isCrisisZone Boolean            @default(false)
+  isTest       Boolean            @default(false) // sandbox school: excluded from national stats + exports
   status       String             @default("active")
   createdAt    DateTime           @default(now())
   deletedAt    DateTime?
