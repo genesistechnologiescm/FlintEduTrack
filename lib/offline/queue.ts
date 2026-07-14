@@ -7,6 +7,7 @@ export type PendingWrite = {
   dateISO: string;
   absentStudentIds: string[];
   queuedAt: number;
+  attempts?: number; // online sync failures — a permanently-rejected write is dropped after a few
 };
 
 const DB_NAME = "edutrack";
@@ -66,6 +67,19 @@ export async function getAllPending(): Promise<PendingWrite[]> {
   if (!hasIDB()) return [];
   const s = await store("readonly");
   return promisify(s.getAll() as IDBRequest<PendingWrite[]>);
+}
+
+// Records an online sync failure for a write and returns its new attempt count.
+// Used to distinguish "waiting for the network" (leave it) from "the server
+// keeps rejecting this" (drop it after a few tries so the banner can't stick).
+export async function markFailed(id: string): Promise<number> {
+  if (!hasIDB()) return 0;
+  const s = await store("readwrite");
+  const item = await promisify(s.get(id) as IDBRequest<PendingWrite | undefined>);
+  if (!item) return 0;
+  item.attempts = (item.attempts ?? 0) + 1;
+  await promisify(s.put(item));
+  return item.attempts;
 }
 
 export async function removePending(id: string): Promise<void> {
