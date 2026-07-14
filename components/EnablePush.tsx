@@ -64,7 +64,7 @@ export function EnablePush() {
   if (state === "unsupported") return null;
   if (state === "on") {
     return (
-      <span className="inline-flex min-h-9 items-center rounded-full bg-success/10 px-3 font-mono text-xs text-success">
+      <span className="inline-flex min-h-8 items-center rounded-full bg-ok-bg px-2.5 font-mono text-[11px] text-ok">
         {t("pushOn")}
       </span>
     );
@@ -75,7 +75,7 @@ export function EnablePush() {
       type="button"
       onClick={enable}
       disabled={state === "working"}
-      className="inline-flex min-h-9 items-center rounded-full border border-flint-blue/30 px-3 font-mono text-xs text-primary transition-colors hover:bg-blue-bg disabled:opacity-60"
+      className="inline-flex min-h-8 items-center rounded-full border border-primary/30 px-2.5 font-mono text-[11px] font-medium text-primary transition-colors hover:bg-blue-bg disabled:opacity-60"
     >
       {state === "working" ? t("pushEnabling") : state === "denied" ? t("pushDenied") : t("pushEnable")}
     </button>

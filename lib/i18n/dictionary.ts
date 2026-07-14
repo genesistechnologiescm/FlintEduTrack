@@ -2,7 +2,6 @@
 // Lightweight typed dictionary. Swap for next-intl later if we need ICU/plurals.
 
 export type Locale = "en" | "fr";
-export const LOCALES: Locale[] = ["en", "fr"];
 export const DEFAULT_LOCALE: Locale = "en";
 
 export const dict = {
@@ -412,6 +411,7 @@ export const dict = {
     roleStudent: "Student",
     feesMonthTitle: "Fees collected this month",
     feesMonthPayments: "payments",
+    flintOwnerNav: "Register a school",
     natTag: "National",
     govCalNav: "National exam calendar",
     govCalIntro: "Official national dates (exams, results releases, registration deadlines). Every school, parent and student sees these on their calendar.",
@@ -891,6 +891,7 @@ export const dict = {
     roleStudent: "Élève",
     feesMonthTitle: "Frais collectés ce mois-ci",
     feesMonthPayments: "paiements",
+    flintOwnerNav: "Enregistrer une école",
     natTag: "National",
     govCalNav: "Calendrier national des examens",
     govCalIntro: "Dates officielles nationales (examens, publications des résultats, délais d'inscription). Chaque école, parent et élève les voit sur son calendrier.",

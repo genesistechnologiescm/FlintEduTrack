@@ -10,6 +10,3 @@ export function wellbeingWeekStartISO(now = new Date()): string {
   wat.setUTCDate(wat.getUTCDate() - sinceMonday);
   return wat.toISOString().slice(0, 10);
 }
-
-export type WellbeingLevelT = "ENGAGED" | "NEUTRAL" | "NEEDS_ATTENTION";
-export const WELLBEING_LEVELS: WellbeingLevelT[] = ["ENGAGED", "NEUTRAL", "NEEDS_ATTENTION"];

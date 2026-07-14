@@ -2,10 +2,10 @@
 // day starts at 07:30 — arrivals at or before that are "on time". Kept pure and
 // client-safe so both the action and the UIs share one definition.
 
-export const SCHOOL_START = { hour: 7, minute: 30 } as const;
+const SCHOOL_START = { hour: 7, minute: 30 } as const;
 const WAT_OFFSET_HOURS = 1;
 
-export function watTimeParts(d: Date): { hour: number; minute: number } {
+function watTimeParts(d: Date): { hour: number; minute: number } {
   return { hour: (d.getUTCHours() + WAT_OFFSET_HOURS) % 24, minute: d.getUTCMinutes() };
 }
 
