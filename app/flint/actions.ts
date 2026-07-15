@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
-import { provisionAuthUser } from "@/lib/provisionAuth";
+import { provisionAuthUser, authProvisioningAvailable } from "@/lib/provisionAuth";
 import { canonicalCmPhone, normalizeCmPhone, phoneToAuthEmail } from "@/lib/auth";
 
 // Owner-only: the Flint platform admin registers a school + its first FULL
@@ -42,6 +42,12 @@ export async function registerSchool(raw: z.infer<typeof Schema>): Promise<{ ok:
   if (!/^237\d{9}$/.test(normalizeCmPhone(input.adminPhone))) return { ok: false, error: "phone" };
   const phone = canonicalCmPhone(input.adminPhone);
 
+  // Preflight: creating the admin login needs the service-role key. If the
+  // host is missing it (e.g. not set in Vercel), say so plainly instead of
+  // creating a headless school and blaming the network.
+  const existing = await prisma.user.findUnique({ where: { phone }, select: { id: true } });
+  if (!existing && !authProvisioningAvailable()) return { ok: false, error: "not_configured" };
+
   const school = await prisma.school.create({
     data: {
       name: input.schoolName,
@@ -52,9 +58,11 @@ export async function registerSchool(raw: z.infer<typeof Schema>): Promise<{ ok:
     },
   });
 
-  // Reuse an existing user with this phone, else provision a fresh auth login.
-  let admin = await prisma.user.findUnique({ where: { phone } });
-  if (!admin) {
+  // Reuse the existing user with this phone, else provision a fresh auth login.
+  let adminId: string;
+  if (existing) {
+    adminId = existing.id;
+  } else {
     const id = await provisionAuthUser(phoneToAuthEmail(phone), input.adminPin, {
       displayName: input.adminName,
       phone,
@@ -63,11 +71,12 @@ export async function registerSchool(raw: z.infer<typeof Schema>): Promise<{ ok:
       await prisma.school.delete({ where: { id: school.id } }); // no headless school
       return { ok: false, error: "provision" };
     }
-    admin = await prisma.user.create({ data: { id, phone, displayName: input.adminName, preferredLang: "EN" } });
+    await prisma.user.create({ data: { id, phone, displayName: input.adminName, preferredLang: "EN" } });
+    adminId = id;
   }
 
   await prisma.schoolMembership.create({
-    data: { userId: admin.id, schoolId: school.id, role: "ADMIN", adminScope: "FULL", title: "Principal" },
+    data: { userId: adminId, schoolId: school.id, role: "ADMIN", adminScope: "FULL", title: "Principal" },
   });
 
   await writeAudit({

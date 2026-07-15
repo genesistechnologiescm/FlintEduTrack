@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   countPending,
   getAllPending,
+  markFailed,
   onQueueChange,
   removePending,
 } from "@/lib/offline/queue";
@@ -36,7 +37,14 @@ export function SyncBanner() {
           });
           await removePending(w.id);
         } catch {
-          // still offline / failing — keep it queued for the next attempt
+          // A write that keeps failing WHILE ONLINE is being rejected by the
+          // server (stale slot, or queued by a different login) — not waiting on
+          // the network. Count the failure and drop it after a few tries so the
+          // banner can't stick forever. Offline failures are left untouched.
+          if (typeof navigator !== "undefined" && navigator.onLine) {
+            const attempts = await markFailed(w.id).catch(() => 0);
+            if (attempts >= 4) await removePending(w.id);
+          }
         }
       }
     } finally {
