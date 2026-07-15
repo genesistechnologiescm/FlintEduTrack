@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
-import { provisionAuthUser, authProvisioningAvailable } from "@/lib/provisionAuth";
+import { provisionAuthUserResult, authProvisioningAvailable } from "@/lib/provisionAuth";
 import { canonicalCmPhone, normalizeCmPhone, phoneToAuthEmail } from "@/lib/auth";
 
 // Owner-only: the Flint platform admin registers a school + its first FULL
@@ -63,16 +63,20 @@ export async function registerSchool(raw: z.infer<typeof Schema>): Promise<{ ok:
   if (existing) {
     adminId = existing.id;
   } else {
-    const id = await provisionAuthUser(phoneToAuthEmail(phone), input.adminPin, {
+    const r = await provisionAuthUserResult(phoneToAuthEmail(phone), input.adminPin, {
       displayName: input.adminName,
       phone,
     });
-    if (!id) {
+    if (!r.ok) {
       await prisma.school.delete({ where: { id: school.id } }); // no headless school
-      return { ok: false, error: "provision" };
+      const error =
+        r.status === 401 || r.status === 403 ? "bad_key" // service key missing/anon/invalid
+        : r.status === 409 || r.status === 422 ? "phone" // email already exists
+        : "provision";
+      return { ok: false, error };
     }
-    await prisma.user.create({ data: { id, phone, displayName: input.adminName, preferredLang: "EN" } });
-    adminId = id;
+    await prisma.user.create({ data: { id: r.id, phone, displayName: input.adminName, preferredLang: "EN" } });
+    adminId = r.id;
   }
 
   await prisma.schoolMembership.create({
