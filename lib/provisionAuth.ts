@@ -50,3 +50,38 @@ export async function provisionAuthUser(
   const r = await provisionAuthUserResult(email, password, metadata);
   return r.ok ? r.id : null;
 }
+
+// Looks up an existing auth user's id by email (used when provisioning says
+// "email exists": the login was minted before, we re-align to it).
+export async function findAuthUserIdByEmail(email: string): Promise<string | null> {
+  if (!SUPABASE_URL || !SERVICE_KEY) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?per_page=2000`, {
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { users?: { id: string; email?: string }[] };
+    return data.users?.find((u) => u.email === email)?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Resets an existing auth user's password (admin API).
+export async function setAuthPassword(id: string, password: string): Promise<boolean> {
+  if (!SUPABASE_URL || !SERVICE_KEY) return false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${id}`, {
+      method: "PUT",
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}

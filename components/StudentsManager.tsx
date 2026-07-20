@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { addStudent, bulkAddStudents, enableStudentLogin } from "@/app/admin/students/actions";
+import { addStudent, bulkAddStudents, enableStudentLogin, enableParentLogin } from "@/app/admin/students/actions";
 
+type ParentInfo = { id: string; phone: string; provisioned: boolean };
 export type StudentsData = {
   schoolName: string;
   classes: { id: string; name: string }[];
-  students: { id: string; name: string; className: string; loginCode: string | null }[];
+  students: { id: string; name: string; className: string; loginCode: string | null; parent: ParentInfo | null }[];
 };
 
 function LoginCell({ id, loginCode }: { id: string; loginCode: string | null }) {
@@ -44,6 +45,45 @@ function LoginCell({ id, loginCode }: { id: string; loginCode: string | null }) 
       className="font-mono text-[11px] uppercase tracking-widest text-primary hover:underline disabled:opacity-60"
     >
       {busy ? t("adding") : t("enableLogin")}
+    </button>
+  );
+}
+
+// Parent line under each student: the guardian's phone plus a login control.
+// Enabling mints a PIN and shows it ONCE — the admin hands it to the parent
+// (the button then reads "reset", which issues a fresh PIN).
+function ParentLoginCell({ parent }: { parent: ParentInfo }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [pin, setPin] = useState<string | null>(null);
+  const [err, setErr] = useState(false);
+
+  if (pin) {
+    return <span className="font-mono text-[11px] text-success">{t("studentPinWord")} {pin}</span>;
+  }
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        setErr(false);
+        try {
+          const res = await enableParentLogin(parent.id);
+          if (res.ok && res.pin) {
+            setPin(res.pin);
+            router.refresh();
+          } else setErr(true);
+        } catch {
+          setErr(true);
+        } finally {
+          setBusy(false);
+        }
+      }}
+      className="font-mono text-[11px] uppercase tracking-widest text-primary hover:underline disabled:opacity-60"
+    >
+      {busy ? t("adding") : err ? t("parentLoginRetry") : parent.provisioned ? t("parentLoginReset") : t("parentLoginEnable")}
     </button>
   );
 }
@@ -187,7 +227,16 @@ export function StudentsManager({ data }: { data: StudentsData }) {
       <ul className="space-y-1">
         {data.students.map((s) => (
           <li key={s.id} className="flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-2 text-sm">
-            <span className="min-w-0 truncate text-ink">{s.name}</span>
+            <span className="min-w-0">
+              <span className="block truncate text-ink">{s.name}</span>
+              {s.parent && (
+                <span className="mt-0.5 flex items-center gap-2 font-mono text-[11px] text-muted">
+                  {s.parent.phone.replace("+237", "")}
+                  {s.parent.provisioned && <span className="text-success">✓</span>}
+                  <ParentLoginCell parent={s.parent} />
+                </span>
+              )}
+            </span>
             <span className="flex shrink-0 items-center gap-3">
               <LoginCell id={s.id} loginCode={s.loginCode} />
               <span className="font-mono text-xs text-muted">{s.className}</span>

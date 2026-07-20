@@ -7,8 +7,14 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/adminScope";
-import { studentCodeToAuthEmail, canonicalCmPhone } from "@/lib/auth";
-import { provisionAuthUser, authProvisioningAvailable } from "@/lib/provisionAuth";
+import { studentCodeToAuthEmail, phoneToAuthEmail, canonicalCmPhone } from "@/lib/auth";
+import {
+  provisionAuthUser,
+  provisionAuthUserResult,
+  findAuthUserIdByEmail,
+  setAuthPassword,
+  authProvisioningAvailable,
+} from "@/lib/provisionAuth";
 
 // Scoped authorization — see lib/adminScope.ts.
 async function adminContext() {
@@ -167,4 +173,83 @@ export async function enableStudentLogin(studentId: string): Promise<{ ok: boole
   });
   revalidatePath("/admin/students");
   return { ok: true, code, pin };
+}
+
+// ── Parent logins ────────────────────────────────────────────────────────────
+// Parents created at enrolment are records only (no auth). Enabling a login
+// mints a phone+PIN auth account. GoTrue assigns the auth id, and the app's
+// invariant is User.id === auth.users.id — so when they differ we re-key the
+// parent's User row (and every referencing row) to the auth id in ONE
+// transaction. All 15 FK-constrained columns plus the two loose ones
+// (NotificationLog, ResourceView) move together: history follows the parent.
+async function rekeyUserId(oldId: string, newId: string, phone: string): Promise<void> {
+  const tempPhone = `${phone}#rekey`;
+  await prisma.$transaction([
+    prisma.$executeRaw`INSERT INTO "User" (id, phone, "displayName", "preferredLang", "contactCapability", "authProvisionedAt", "isFlintAdmin", "isGovernment", status, "createdAt", "deletedAt")
+      SELECT ${newId}, ${tempPhone}, "displayName", "preferredLang", "contactCapability", "authProvisionedAt", "isFlintAdmin", "isGovernment", status, "createdAt", "deletedAt" FROM "User" WHERE id = ${oldId}`,
+    prisma.$executeRaw`UPDATE "SchoolMembership" SET "userId" = ${newId} WHERE "userId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "AuthDevice" SET "userId" = ${newId} WHERE "userId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "ParentLink" SET "parentUserId" = ${newId} WHERE "parentUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "ParentChannel" SET "parentUserId" = ${newId} WHERE "parentUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "TimetableSlot" SET "teacherUserId" = ${newId} WHERE "teacherUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "HandoverNote" SET "authorUserId" = ${newId} WHERE "authorUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "GateCheckIn" SET "userId" = ${newId} WHERE "userId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "GradeCorrection" SET "requestedBy" = ${newId} WHERE "requestedBy" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "Announcement" SET "authorUserId" = ${newId} WHERE "authorUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "AnnouncementReceipt" SET "parentUserId" = ${newId} WHERE "parentUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "MessageThread" SET "parentUserId" = ${newId} WHERE "parentUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "MessageThread" SET "staffUserId" = ${newId} WHERE "staffUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "Message" SET "senderUserId" = ${newId} WHERE "senderUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "LessonResource" SET "createdBy" = ${newId} WHERE "createdBy" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "Payment" SET "paidByUserId" = ${newId} WHERE "paidByUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "NotificationLog" SET "parentUserId" = ${newId} WHERE "parentUserId" = ${oldId}`,
+    prisma.$executeRaw`UPDATE "ResourceView" SET "userId" = ${newId} WHERE "userId" = ${oldId}`,
+    prisma.$executeRaw`DELETE FROM "User" WHERE id = ${oldId}`,
+    prisma.$executeRaw`UPDATE "User" SET phone = ${phone} WHERE id = ${newId}`,
+  ]);
+}
+
+// Mints (or resets) a parent's phone+PIN login and returns the PIN once.
+// Authz: the caller must be an admin of a school this parent has an active
+// link in — the same boundary the roster page shows.
+export async function enableParentLogin(parentUserId: string): Promise<{ ok: boolean; pin?: string; error?: string }> {
+  const { userId, schoolId } = await adminContext();
+  const link = await prisma.parentLink.findFirst({
+    where: { parentUserId, schoolId, status: "active" },
+    include: { parent: true },
+  });
+  if (!link) return { ok: false, error: "Not a parent of your school" };
+  if (!authProvisioningAvailable()) return { ok: false, error: "Login provisioning is not configured on this server" };
+
+  const parent = link.parent;
+  const pin = String(randomInt(10000, 99999));
+  const email = phoneToAuthEmail(parent.phone);
+
+  let authId: string | null = null;
+  const res = await provisionAuthUserResult(email, pin, { displayName: parent.displayName, phone: parent.phone });
+  if (res.ok) {
+    authId = res.id;
+  } else if (res.status === 401 || res.status === 403) {
+    return { ok: false, error: "The server's service key is invalid" };
+  } else {
+    // Most likely "email exists": a login was minted before — re-align + reset PIN.
+    authId = await findAuthUserIdByEmail(email);
+    if (!authId || !(await setAuthPassword(authId, pin))) {
+      return { ok: false, error: "Could not create the login, try again" };
+    }
+  }
+
+  if (authId !== parent.id) await rekeyUserId(parent.id, authId, parent.phone);
+  await prisma.user.update({ where: { id: authId }, data: { authProvisionedAt: new Date() } });
+
+  await writeAudit({
+    schoolId,
+    actorUserId: userId,
+    action: "parent.login_enabled",
+    entityType: "User",
+    entityId: authId,
+    after: { phone: parent.phone },
+  });
+  revalidatePath("/admin/students");
+  return { ok: true, pin };
 }
