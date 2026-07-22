@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { formatFcfa } from "@/lib/fees";
-import { addFeeItem, deleteFeeItem, sendOverdueReminders } from "@/app/admin/fees/actions";
+import { addFeeItem, deleteFeeItem, sendOverdueReminders, recordPayment } from "@/app/admin/fees/actions";
 
 type FeeRow = { id: string; label: string; amount: number; target: string | null; applicable: number };
 type PaymentRow = { id: string; student: string; amount: number; reference: string; method: string; date: string };
 type OverdueRow = { studentId: string; name: string; className: string; overdueAmount: number; daysOverdue: number };
+type StudentRow = { id: string; name: string; className: string; balance: number };
 export type AdminFeesData = {
   schoolName: string;
   termLabel: string | null;
@@ -16,6 +17,7 @@ export type AdminFeesData = {
   collected: number;
   overdue: OverdueRow[];
   classes: { id: string; name: string }[];
+  students: StudentRow[];
   fees: FeeRow[];
   payments: PaymentRow[];
 };
@@ -44,6 +46,17 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
   const [err, setErr] = useState<string | null>(null);
   const [remindBusy, setRemindBusy] = useState(false);
   const [remindMsg, setRemindMsg] = useState<string | null>(null);
+
+  // Record-a-payment (office desk)
+  const [payStudentId, setPayStudentId] = useState("");
+  const [payAmount, setPayAmount] = useState("");
+  const [payMethod, setPayMethod] = useState<"CASH" | "MOMO">("CASH");
+  const [payRef, setPayRef] = useState("");
+  const [payNote, setPayNote] = useState("");
+  const [payBusy, setPayBusy] = useState(false);
+  const [payErr, setPayErr] = useState<string | null>(null);
+  const [payDone, setPayDone] = useState<{ paymentId: string; newBalance: number } | null>(null);
+  const selectedStudent = data.students.find((s) => s.id === payStudentId) ?? null;
 
   const outstanding = Math.max(0, data.billed - data.collected);
   const rate = data.billed > 0 ? Math.round((data.collected / data.billed) * 100) : 0;
@@ -74,6 +87,33 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
   async function onDelete(id: string) {
     await deleteFeeItem(id);
     router.refresh();
+  }
+
+  async function onRecord(e: React.FormEvent) {
+    e.preventDefault();
+    setPayBusy(true);
+    setPayErr(null);
+    setPayDone(null);
+    try {
+      const res = await recordPayment({
+        studentId: payStudentId,
+        amount: Number(payAmount),
+        method: payMethod,
+        reference: payRef || undefined,
+        note: payNote || undefined,
+      });
+      if (res.ok && res.paymentId) {
+        setPayDone({ paymentId: res.paymentId, newBalance: res.newBalance ?? 0 });
+        setPayAmount("");
+        setPayRef("");
+        setPayNote("");
+        router.refresh();
+      } else setPayErr(res.error ?? "error");
+    } catch {
+      setPayErr("error");
+    } finally {
+      setPayBusy(false);
+    }
   }
 
   return (
@@ -177,6 +217,103 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      {/* Record a payment taken at the office — the bursar's daily action. */}
+      <section className="mt-4 rounded-2xl border border-line bg-surface p-5">
+        <h2 className="font-display text-lg font-bold text-ink">{t("recordPayment")}</h2>
+        <p className="mb-3 mt-0.5 text-sm text-muted">{t("recordPayHint")}</p>
+        {data.students.length === 0 ? (
+          <p className="py-2 text-sm text-muted">{t("noPayments")}</p>
+        ) : (
+          <form onSubmit={onRecord} className="space-y-3">
+            <label className="block">
+              <span className="mb-1 block font-mono text-xs uppercase tracking-widest text-muted">{t("payPickStudent")}</span>
+              <select
+                className={field}
+                value={payStudentId}
+                onChange={(e) => {
+                  setPayStudentId(e.target.value);
+                  setPayDone(null);
+                  setPayErr(null);
+                }}
+                required
+              >
+                <option value="">—</option>
+                {data.students.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} · {s.className}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {selectedStudent && (
+              <div className="flex items-center justify-between rounded-lg bg-chip px-3 py-2 text-sm">
+                <span className="font-mono text-xs uppercase tracking-widest text-muted">{t("feeBalance")}</span>
+                <span className="flex items-center gap-3">
+                  <span className={`font-mono font-bold tabular-nums ${selectedStudent.balance > 0 ? "text-error" : "text-success"}`}>
+                    {formatFcfa(selectedStudent.balance)}
+                  </span>
+                  {selectedStudent.balance > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setPayAmount(String(selectedStudent.balance))}
+                      className="font-mono text-[11px] uppercase tracking-widest text-primary hover:underline"
+                    >
+                      {t("payFullBalance")}
+                    </button>
+                  )}
+                </span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1 block font-mono text-xs uppercase tracking-widest text-muted">{t("feeAmount")}</span>
+                <input
+                  className={field}
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1 block font-mono text-xs uppercase tracking-widest text-muted">{t("payMethod")}</span>
+                <select className={field} value={payMethod} onChange={(e) => setPayMethod(e.target.value as "CASH" | "MOMO")}>
+                  <option value="CASH">{t("payMethodCash")}</option>
+                  <option value="MOMO">{t("payMethodMomo")}</option>
+                </select>
+              </label>
+            </div>
+
+            <input className={field} placeholder={t("payReference")} value={payRef} onChange={(e) => setPayRef(e.target.value)} maxLength={40} />
+            <input className={field} placeholder={t("payNote")} value={payNote} onChange={(e) => setPayNote(e.target.value)} maxLength={200} />
+
+            <button
+              type="submit"
+              disabled={payBusy || !payStudentId}
+              className="min-h-11 w-full rounded-full bg-primary font-mono text-sm font-medium text-white disabled:opacity-60"
+            >
+              {payBusy ? t("adding") : t("payRecordBtn")}
+            </button>
+            {payErr && <p className="text-center text-sm text-error">{payErr}</p>}
+            {payDone && (
+              <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm">
+                <span className="font-medium text-success">{t("payRecorded")}.</span>{" "}
+                <span className="text-ink">
+                  {t("payBalanceNow")}: <span className="font-mono tabular-nums">{formatFcfa(payDone.newBalance)}</span>
+                </span>{" "}
+                <a href={`/receipt/${payDone.paymentId}`} className="font-mono text-[11px] uppercase tracking-widest text-primary hover:underline">
+                  {t("receiptWord")}
+                </a>
+              </div>
+            )}
+          </form>
         )}
       </section>
 

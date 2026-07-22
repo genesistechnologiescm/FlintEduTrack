@@ -20,12 +20,18 @@ export default async function FeesPage() {
   if (!membership) redirect("/login");
   const schoolId = membership.schoolId;
 
-  const [classes, year, enrollments, payments, paidAgg] = await Promise.all([
+  const [classes, year, enrollments, payments, paidAgg, paidByStudentAgg] = await Promise.all([
     prisma.classGroup.findMany({ where: { schoolId, deletedAt: null }, orderBy: [{ formLevel: "asc" }, { name: "asc" }] }),
     prisma.academicYear.findFirst({ where: { schoolId, isCurrent: true } }),
-    prisma.enrollment.findMany({ where: { schoolId, status: "ACTIVE" }, select: { classGroupId: true } }),
+    prisma.enrollment.findMany({
+      where: { schoolId, status: "ACTIVE" },
+      include: { student: { select: { id: true, firstName: true, lastName: true } }, classGroup: { select: { name: true } } },
+      orderBy: { enrolledAt: "desc" },
+      take: 1000,
+    }),
     prisma.payment.findMany({ where: { schoolId }, orderBy: { createdAt: "desc" }, take: 10, include: { student: true } }),
     prisma.payment.aggregate({ where: { schoolId }, _sum: { amount: true } }),
+    prisma.payment.groupBy({ by: ["studentId"], where: { schoolId }, _sum: { amount: true } }),
   ]);
 
   const term = year ? await prisma.term.findFirst({ where: { academicYearId: year.id }, orderBy: { order: "asc" } }) : null;
@@ -49,6 +55,22 @@ export default async function FeesPage() {
   });
   const collected = paidAgg._sum.amount ?? 0;
 
+  // What each student owes now = fees billed to their class (or whole-school)
+  // this term, minus everything they've paid — so the bursar sees the balance
+  // the moment they pick a name.
+  const billedByClass = new Map<string, number>();
+  for (const c of classes) {
+    const forClass = fees.reduce((sum, f) => (!f.classGroupId || f.classGroupId === c.id ? sum + f.amount : sum), 0);
+    billedByClass.set(c.id, forClass);
+  }
+  const paidByStudent = new Map(paidByStudentAgg.map((p) => [p.studentId, p._sum.amount ?? 0]));
+  const students = enrollments.map((e) => ({
+    id: e.student.id,
+    name: `${e.student.lastName} ${e.student.firstName}`.trim(),
+    className: e.classGroup.name,
+    balance: Math.max(0, (billedByClass.get(e.classGroupId) ?? 0) - (paidByStudent.get(e.student.id) ?? 0)),
+  }));
+
   const overdue = await computeOverdue(schoolId);
 
   const data: AdminFeesData = {
@@ -58,6 +80,7 @@ export default async function FeesPage() {
     collected,
     overdue,
     classes: classes.map((c) => ({ id: c.id, name: c.name })),
+    students,
     fees: feeRows,
     payments: payments.map((p) => ({
       id: p.id,
