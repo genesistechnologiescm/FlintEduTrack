@@ -20,7 +20,7 @@ export default async function FeesPage() {
   if (!membership) redirect("/login");
   const schoolId = membership.schoolId;
 
-  const [classes, year, enrollments, payments, paidAgg, paidByStudentAgg] = await Promise.all([
+  const [classes, year, enrollments, payments, paidAgg, paidByStudentAgg, waivedAgg] = await Promise.all([
     prisma.classGroup.findMany({ where: { schoolId, deletedAt: null }, orderBy: [{ formLevel: "asc" }, { name: "asc" }] }),
     prisma.academicYear.findFirst({ where: { schoolId, isCurrent: true } }),
     prisma.enrollment.findMany({
@@ -30,8 +30,11 @@ export default async function FeesPage() {
       take: 1000,
     }),
     prisma.payment.findMany({ where: { schoolId }, orderBy: { createdAt: "desc" }, take: 10, include: { student: true } }),
-    prisma.payment.aggregate({ where: { schoolId }, _sum: { amount: true } }),
+    // "Collected" is CASH only — a waiver forgives fees, it is not money received.
+    prisma.payment.aggregate({ where: { schoolId, method: { not: "WAIVER" } }, _sum: { amount: true } }),
+    // Per-student balance includes waivers (a waiver reduces what they owe).
     prisma.payment.groupBy({ by: ["studentId"], where: { schoolId }, _sum: { amount: true } }),
+    prisma.payment.aggregate({ where: { schoolId, method: "WAIVER" }, _sum: { amount: true } }),
   ]);
 
   const term = year ? await prisma.term.findFirst({ where: { academicYearId: year.id }, orderBy: { order: "asc" } }) : null;
@@ -54,6 +57,7 @@ export default async function FeesPage() {
     return { id: f.id, label: f.label, amount: f.amount, target: f.classGroup?.name ?? null, applicable };
   });
   const collected = paidAgg._sum.amount ?? 0;
+  const waived = waivedAgg._sum.amount ?? 0;
 
   // What each student owes now = fees billed to their class (or whole-school)
   // this term, minus everything they've paid — so the bursar sees the balance
@@ -78,6 +82,7 @@ export default async function FeesPage() {
     termLabel: term?.label ?? null,
     billed,
     collected,
+    waived,
     overdue,
     classes: classes.map((c) => ({ id: c.id, name: c.name })),
     students,

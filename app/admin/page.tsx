@@ -65,7 +65,8 @@ export default async function AdminPage() {
       ? prisma.payment.aggregate({
           _sum: { amount: true },
           _count: true,
-          where: { schoolId: school.id, createdAt: { gte: monthStart } },
+          // Cash collected this month — waivers forgive fees, they aren't income.
+          where: { schoolId: school.id, createdAt: { gte: monthStart }, method: { not: "WAIVER" } },
         })
       : Promise.resolve(null),
   ]);

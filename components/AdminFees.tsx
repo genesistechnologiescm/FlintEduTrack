@@ -15,6 +15,7 @@ export type AdminFeesData = {
   termLabel: string | null;
   billed: number;
   collected: number;
+  waived: number;
   overdue: OverdueRow[];
   classes: { id: string; name: string }[];
   students: StudentRow[];
@@ -50,7 +51,7 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
   // Record-a-payment (office desk)
   const [payStudentId, setPayStudentId] = useState("");
   const [payAmount, setPayAmount] = useState("");
-  const [payMethod, setPayMethod] = useState<"CASH" | "MOMO">("CASH");
+  const [payMethod, setPayMethod] = useState<"CASH" | "MOMO" | "WAIVER">("CASH");
   const [payRef, setPayRef] = useState("");
   const [payNote, setPayNote] = useState("");
   const [payBusy, setPayBusy] = useState(false);
@@ -58,8 +59,12 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
   const [payDone, setPayDone] = useState<{ paymentId: string; newBalance: number } | null>(null);
   const selectedStudent = data.students.find((s) => s.id === payStudentId) ?? null;
 
-  const outstanding = Math.max(0, data.billed - data.collected);
-  const rate = data.billed > 0 ? Math.round((data.collected / data.billed) * 100) : 0;
+  // Waivers reduce what's owed but aren't cash. Outstanding subtracts both; the
+  // collection rate measures cash against fees that were actually expected to be
+  // paid (billed minus what the school chose to forgive), so waivers don't drag it.
+  const outstanding = Math.max(0, data.billed - data.collected - data.waived);
+  const expected = Math.max(0, data.billed - data.waived);
+  const rate = expected > 0 ? Math.round((data.collected / expected) * 100) : 0;
 
   async function onAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -134,6 +139,7 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
       <div className="grid grid-cols-2 gap-3">
         <Stat label={t("feeBilled")} value={formatFcfa(data.billed)} />
         <Stat label={t("feeCollected")} value={formatFcfa(data.collected)} tone="ok" />
+        {data.waived > 0 && <Stat label={t("feeWaived")} value={formatFcfa(data.waived)} />}
         <Stat label={t("feeOutstanding")} value={formatFcfa(outstanding)} tone={outstanding > 0 ? "alert" : undefined} />
         <Stat label={t("feeRate")} value={`${rate}%`} />
       </div>
@@ -284,22 +290,32 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
               </label>
               <label className="block">
                 <span className="mb-1 block font-mono text-xs uppercase tracking-widest text-muted">{t("payMethod")}</span>
-                <select className={field} value={payMethod} onChange={(e) => setPayMethod(e.target.value as "CASH" | "MOMO")}>
+                <select className={field} value={payMethod} onChange={(e) => setPayMethod(e.target.value as "CASH" | "MOMO" | "WAIVER")}>
                   <option value="CASH">{t("payMethodCash")}</option>
                   <option value="MOMO">{t("payMethodMomo")}</option>
+                  <option value="WAIVER">{t("payMethodWaiver")}</option>
                 </select>
               </label>
             </div>
 
-            <input className={field} placeholder={t("payReference")} value={payRef} onChange={(e) => setPayRef(e.target.value)} maxLength={40} />
-            <input className={field} placeholder={t("payNote")} value={payNote} onChange={(e) => setPayNote(e.target.value)} maxLength={200} />
+            {payMethod !== "WAIVER" && (
+              <input className={field} placeholder={t("payReference")} value={payRef} onChange={(e) => setPayRef(e.target.value)} maxLength={40} />
+            )}
+            <input
+              className={field}
+              placeholder={payMethod === "WAIVER" ? `${t("payReason")} *` : t("payNote")}
+              value={payNote}
+              onChange={(e) => setPayNote(e.target.value)}
+              maxLength={200}
+              required={payMethod === "WAIVER"}
+            />
 
             <button
               type="submit"
               disabled={payBusy || !payStudentId}
               className="min-h-11 w-full rounded-full bg-primary font-mono text-sm font-medium text-white disabled:opacity-60"
             >
-              {payBusy ? t("adding") : t("payRecordBtn")}
+              {payBusy ? t("adding") : payMethod === "WAIVER" ? t("grantWaiverBtn") : t("payRecordBtn")}
             </button>
             {payErr && <p className="text-center text-sm text-error">{payErr}</p>}
             {payDone && (
@@ -326,18 +342,30 @@ export function AdminFees({ data }: { data: AdminFeesData }) {
           <p className="py-3 text-center text-muted">{t("noPayments")}</p>
         ) : (
           <ul className="space-y-2">
-            {data.payments.map((p) => (
-              <li key={p.id} className="flex items-center justify-between gap-3 text-sm">
-                <span className="min-w-0 truncate text-ink">{p.student}</span>
-                <span className="flex shrink-0 items-center gap-3">
-                  <span className="font-mono text-[10px] text-muted">{p.reference}</span>
-                  <span className="font-mono tabular-nums text-success">{formatFcfa(p.amount)}</span>
-                  <a href={`/receipt/${p.id}`} className="font-mono text-[10px] uppercase tracking-widest text-primary hover:underline">
-                    {t("receiptWord")}
-                  </a>
-                </span>
-              </li>
-            ))}
+            {data.payments.map((p) => {
+              const isWaiver = p.method === "WAIVER";
+              return (
+                <li key={p.id} className="flex items-center justify-between gap-3 text-sm">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate text-ink">{p.student}</span>
+                    {isWaiver && (
+                      <span className="shrink-0 rounded-full bg-chip px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted">
+                        {t("feeWaived")}
+                      </span>
+                    )}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-3">
+                    <span className="font-mono text-[10px] text-muted">{p.reference}</span>
+                    <span className={`font-mono tabular-nums ${isWaiver ? "text-muted" : "text-success"}`}>
+                      {isWaiver ? "−" : ""}{formatFcfa(p.amount)}
+                    </span>
+                    <a href={`/receipt/${p.id}`} className="font-mono text-[10px] uppercase tracking-widest text-primary hover:underline">
+                      {t("receiptWord")}
+                    </a>
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
