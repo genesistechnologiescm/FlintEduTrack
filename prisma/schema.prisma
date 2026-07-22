@@ -118,6 +118,7 @@ model User {
   displayName   String
   preferredLang Lang               @default(EN)
   contactCapability ContactCapability?
+  authProvisionedAt DateTime? // set when a phone+PIN auth login was minted for this user (parents start without one)
   isFlintAdmin  Boolean            @default(false)
   isGovernment  Boolean            @default(false) // ministry account — read-only aggregate layer
   status        String             @default("active")

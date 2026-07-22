@@ -36,7 +36,7 @@ const STR = {
     create: "Create school", creating: "Creating…",
     existing: "Schools", none: "No schools yet.", students: "students", staff: "staff",
     testTag: "TEST", crisisTag: "crisis", live: "live",
-    errPhone: "Enter a valid Cameroon phone number.", errProvision: "Couldn't create the admin login — that phone may already be in use. Try a different one.", errConfig: "This server isn't set up to create logins yet: the SUPABASE_SERVICE_ROLE_KEY is missing from the hosting environment. Add it in Vercel and redeploy.", errGeneric: "Something went wrong. Please try again.",
+    errPhone: "Enter a valid Cameroon phone number.", errProvision: "Couldn't create the admin login — that phone may already be in use. Try a different one.", errConfig: "This server isn't set up to create logins yet: the SUPABASE_SERVICE_ROLE_KEY is missing from the hosting environment. Add it in Vercel and redeploy.", errBadKey: "The server's login key was rejected — it's likely the anon key instead of the service_role secret. Fix SUPABASE_SERVICE_ROLE_KEY in Vercel and redeploy.", errGeneric: "Something went wrong. Please try again.",
     created: "School created. The administrator can sign in now.",
   },
   fr: {
@@ -48,7 +48,7 @@ const STR = {
     create: "Créer l'école", creating: "Création…",
     existing: "Écoles", none: "Aucune école pour l'instant.", students: "élèves", staff: "personnel",
     testTag: "TEST", crisisTag: "crise", live: "réelle",
-    errPhone: "Entrez un numéro camerounais valide.", errProvision: "Impossible de créer le compte administrateur — ce téléphone est peut-être déjà utilisé. Essayez-en un autre.", errConfig: "Ce serveur ne peut pas encore créer de comptes : la clé SUPABASE_SERVICE_ROLE_KEY manque dans l'hébergement. Ajoutez-la dans Vercel et redéployez.", errGeneric: "Une erreur s'est produite. Réessayez.",
+    errPhone: "Entrez un numéro camerounais valide.", errProvision: "Impossible de créer le compte administrateur — ce téléphone est peut-être déjà utilisé. Essayez-en un autre.", errConfig: "Ce serveur ne peut pas encore créer de comptes : la clé SUPABASE_SERVICE_ROLE_KEY manque dans l'hébergement. Ajoutez-la dans Vercel et redéployez.", errBadKey: "La clé du serveur a été rejetée — c'est probablement la clé anon au lieu du secret service_role. Corrigez SUPABASE_SERVICE_ROLE_KEY dans Vercel et redéployez.", errGeneric: "Une erreur s'est produite. Réessayez.",
     created: "École créée. L'administrateur peut se connecter.",
   },
 };
@@ -101,7 +101,7 @@ export function SchoolRegistry({ data }: { data: RegistryData }) {
         setOkMsg(true);
         router.refresh();
       } else {
-        setErr(res.error === "phone" ? t.errPhone : res.error === "not_configured" ? t.errConfig : res.error === "provision" ? t.errProvision : t.errGeneric);
+        setErr(res.error === "phone" ? t.errPhone : res.error === "not_configured" ? t.errConfig : res.error === "bad_key" ? t.errBadKey : res.error === "provision" ? t.errProvision : t.errGeneric);
       }
     } catch {
       setErr(t.errGeneric);
