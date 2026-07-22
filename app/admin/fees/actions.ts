@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
@@ -8,6 +9,7 @@ import { writeAudit } from "@/lib/audit";
 import { requireAdmin } from "@/lib/adminScope";
 import { ensureCurrentYear } from "@/lib/academicYear";
 import { computeOverdue } from "@/lib/overdue";
+import { getStudentBalance } from "@/lib/feeBalance";
 import { pickPaidChannel, deliver } from "@/lib/notifications/router";
 import { sendWebPush } from "@/lib/notifications/sendWebPush";
 
@@ -134,6 +136,61 @@ export async function sendOverdueReminders(): Promise<{ ok: boolean; reminded: n
   });
   revalidatePath("/admin/fees");
   return { ok: true, reminded, costFcfa };
+}
+
+const RecordSchema = z.object({
+  studentId: z.string().uuid(),
+  amount: z.coerce.number().int().min(1).max(100_000_000),
+  method: z.enum(["CASH", "MOMO"]),
+  reference: z.string().trim().max(40).optional(),
+  note: z.string().trim().max(200).optional(),
+});
+
+// Bursar records a payment taken at the office (cash counted, or a MoMo
+// transaction the parent completed in person). Distinct from the parent's own
+// in-app MoMo payment: here paidByUserId is the STAFF member who received it.
+// A missing reference is auto-issued so every payment is traceable to a receipt.
+export async function recordPayment(
+  raw: z.infer<typeof RecordSchema>,
+): Promise<{ ok: boolean; paymentId?: string; reference?: string; newBalance?: number; error?: string }> {
+  const input = RecordSchema.parse(raw);
+  const { userId, schoolId } = await adminContext();
+
+  // Only against a student actively enrolled in THIS school.
+  const enrollment = await prisma.enrollment.findFirst({
+    where: { studentId: input.studentId, schoolId, status: "ACTIVE" },
+  });
+  if (!enrollment) return { ok: false, error: "That student is not enrolled in your school" };
+
+  const reference =
+    input.reference && input.reference.length > 0
+      ? input.reference
+      : `${input.method}-${randomBytes(4).toString("hex").toUpperCase()}`;
+
+  const payment = await prisma.payment.create({
+    data: {
+      schoolId,
+      studentId: input.studentId,
+      amount: input.amount,
+      method: input.method,
+      reference,
+      paidByUserId: userId,
+      note: input.note || "Recorded at office",
+    },
+  });
+  await writeAudit({
+    schoolId,
+    actorUserId: userId,
+    action: "payment.recorded_office",
+    entityType: "Payment",
+    entityId: payment.id,
+    after: { studentId: input.studentId, amount: input.amount, method: input.method, reference },
+  });
+
+  const { balance } = await getStudentBalance(input.studentId);
+  revalidatePath("/admin/fees");
+  revalidatePath("/parent/fees");
+  return { ok: true, paymentId: payment.id, reference, newBalance: balance };
 }
 
 export async function deleteFeeItem(id: string): Promise<{ ok: boolean }> {
