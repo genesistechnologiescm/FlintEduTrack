@@ -32,16 +32,21 @@ export async function computePerformance(
   for (const d of days) dayCount.set(d.schoolId, (dayCount.get(d.schoolId) ?? 0) + 1);
   const SCHOOL_DAYS = 12;
 
-  // Fees: billed (fee items × applicable students) vs collected, per school.
-  const [fees, enrollments, paySums] = await Promise.all([
+  // Fees: cash collected vs fees actually expected (billed minus waived), per
+  // school. A waiver forgives fees, so it is neither cash collected nor expected
+  // — excluding it both ways keeps a school that grants waivers from being scored
+  // as if those students simply never paid.
+  const [fees, enrollments, paySums, waiveSums] = await Promise.all([
     prisma.feeItem.findMany({ where: { schoolId: { in: schoolIds }, deletedAt: null } }),
     prisma.enrollment.findMany({
       where: { schoolId: { in: schoolIds }, status: "ACTIVE" },
       select: { schoolId: true, classGroupId: true },
     }),
-    prisma.payment.groupBy({ by: ["schoolId"], where: { schoolId: { in: schoolIds } }, _sum: { amount: true } }),
+    prisma.payment.groupBy({ by: ["schoolId"], where: { schoolId: { in: schoolIds }, method: { not: "WAIVER" } }, _sum: { amount: true } }),
+    prisma.payment.groupBy({ by: ["schoolId"], where: { schoolId: { in: schoolIds }, method: "WAIVER" }, _sum: { amount: true } }),
   ]);
   const paidBySchool = new Map(paySums.map((p) => [p.schoolId, p._sum.amount ?? 0]));
+  const waivedBySchool = new Map(waiveSums.map((p) => [p.schoolId, p._sum.amount ?? 0]));
   const billedBySchool = new Map<string, number>();
   for (const f of fees) {
     const applicable = enrollments.filter(
@@ -57,7 +62,8 @@ export async function computePerformance(
       ? Math.min(100, Math.round(((dayCount.get(s.schoolId) ?? 0) / SCHOOL_DAYS) * 100))
       : null;
     const billed = billedBySchool.get(s.schoolId) ?? 0;
-    const fees = billed > 0 ? Math.min(100, Math.round(((paidBySchool.get(s.schoolId) ?? 0) / billed) * 100)) : null;
+    const expected = Math.max(0, billed - (waivedBySchool.get(s.schoolId) ?? 0));
+    const fees = expected > 0 ? Math.min(100, Math.round(((paidBySchool.get(s.schoolId) ?? 0) / expected) * 100)) : null;
     const riskFree = s.students > 0 ? Math.round(((s.students - s.atRisk) / s.students) * 100) : null;
 
     const parts: [number | null, number][] = [

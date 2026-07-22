@@ -831,6 +831,7 @@ model ResourceView {
 enum PaymentMethod {
   MOMO
   CASH
+  WAIVER // scholarship/hardship — reduces what a student owes, but is NOT cash collected
 }
 
 model FeeItem {

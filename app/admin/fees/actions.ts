@@ -141,20 +141,27 @@ export async function sendOverdueReminders(): Promise<{ ok: boolean; reminded: n
 const RecordSchema = z.object({
   studentId: z.string().uuid(),
   amount: z.coerce.number().int().min(1).max(100_000_000),
-  method: z.enum(["CASH", "MOMO"]),
+  method: z.enum(["CASH", "MOMO", "WAIVER"]),
   reference: z.string().trim().max(40).optional(),
   note: z.string().trim().max(200).optional(),
 });
 
 // Bursar records a payment taken at the office (cash counted, or a MoMo
-// transaction the parent completed in person). Distinct from the parent's own
-// in-app MoMo payment: here paidByUserId is the STAFF member who received it.
-// A missing reference is auto-issued so every payment is traceable to a receipt.
+// transaction the parent completed in person), OR grants a WAIVER — a
+// scholarship/hardship break that reduces what the student owes without any
+// cash changing hands. Waivers are excluded from "collected" but still lower
+// the balance and overdue. paidByUserId is the STAFF member either way.
+// A missing reference is auto-issued so every entry is traceable to a receipt.
 export async function recordPayment(
   raw: z.infer<typeof RecordSchema>,
 ): Promise<{ ok: boolean; paymentId?: string; reference?: string; newBalance?: number; error?: string }> {
   const input = RecordSchema.parse(raw);
   const { userId, schoolId } = await adminContext();
+
+  // A waiver forgives money — it must carry a reason for the audit trail.
+  if (input.method === "WAIVER" && !input.note) {
+    return { ok: false, error: "A waiver needs a reason" };
+  }
 
   // Only against a student actively enrolled in THIS school.
   const enrollment = await prisma.enrollment.findFirst({
@@ -181,7 +188,7 @@ export async function recordPayment(
   await writeAudit({
     schoolId,
     actorUserId: userId,
-    action: "payment.recorded_office",
+    action: input.method === "WAIVER" ? "fee.waiver_granted" : "payment.recorded_office",
     entityType: "Payment",
     entityId: payment.id,
     after: { studentId: input.studentId, amount: input.amount, method: input.method, reference },
