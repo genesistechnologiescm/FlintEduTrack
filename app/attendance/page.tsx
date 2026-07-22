@@ -28,25 +28,68 @@ export default async function AttendancePage() {
 
   const me = await prisma.user.findUnique({ where: { id: user.id }, select: { displayName: true } });
 
-  // Pick today's period if the timetable has one; otherwise fall back to any slot
-  // so the demo always shows something.
+  // Which period is this teacher marking? Scoped to their OWN school and their
+  // OWN slots — a slot from another school would leak that school's roster and
+  // then be rejected by submitAttendance's authz anyway. Admins have no teaching
+  // slots of their own, so they fall back to any period in their school.
   const jsDay = new Date().getDay(); // 0=Sun..6=Sat ; our scheme is Mon=1..Sat=6
+  const mine = { schoolId: membership.schoolId, teacherUserId: user.id };
+  const include = { subject: true, classGroup: true } as const;
+  const nowHHMM = formatWat(new Date()).slice(0, 5); // WAT — the school's wall clock
+
   const slot =
+    // The period running now (or the next one still to come today).
     (jsDay >= 1 && jsDay <= 6
-      ? await prisma.timetableSlot.findFirst({
-          where: { dayOfWeek: jsDay },
-          include: { subject: true, classGroup: true },
-        })
+      ? ((await prisma.timetableSlot.findFirst({
+          where: { ...mine, dayOfWeek: jsDay, startTime: { lte: nowHHMM }, endTime: { gte: nowHHMM } },
+          include,
+        })) ??
+        (await prisma.timetableSlot.findFirst({
+          where: { ...mine, dayOfWeek: jsDay, startTime: { gte: nowHHMM } },
+          orderBy: { startTime: "asc" },
+          include,
+        })) ??
+        // Earlier today — still markable (a teacher catching up after the lesson).
+        (await prisma.timetableSlot.findFirst({
+          where: { ...mine, dayOfWeek: jsDay },
+          orderBy: { startTime: "desc" },
+          include,
+        })))
       : null) ??
+    // Off-timetable day, or an admin standing in: any period of THIS school.
     (await prisma.timetableSlot.findFirst({
-      include: { subject: true, classGroup: true },
+      where: { ...mine, dayOfWeek: jsDay },
+      include,
+    })) ??
+    (await prisma.timetableSlot.findFirst({
+      where: { teacherUserId: user.id, schoolId: membership.schoolId },
+      orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+      include,
+    })) ??
+    (await prisma.timetableSlot.findFirst({
+      where: { schoolId: membership.schoolId },
+      orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
+      include,
     }));
 
   if (!slot) {
+    // A brand-new school has no timetable yet. Say so plainly and point the
+    // admin at the screen that fixes it, instead of a developer's seed note.
+    const isAdmin = membership.role === "ADMIN";
     return (
-      <main className="grid min-h-dvh place-items-center px-6 text-center">
-        <p className="text-muted">No timetable found. Run the seed script first.</p>
-      </main>
+      <div className="et-card mx-auto mt-10 max-w-md p-8 text-center">
+        <h1 className="text-xl font-semibold text-ink">No timetable yet</h1>
+        <p className="mt-3 text-sm text-sub">
+          {isAdmin
+            ? "Attendance is marked against a timetable period. Build the school timetable to start marking registers."
+            : "Attendance is marked against a timetable period. Ask your school administrator to add your teaching periods."}
+        </p>
+        {isAdmin && (
+          <a href="/admin/timetable" className="et-btn mt-6 inline-flex">
+            Build the timetable
+          </a>
+        )}
+      </div>
     );
   }
 

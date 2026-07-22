@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle, ArrowRight, BookOpen, Calendar, CalendarX, CheckCircle2, FilePen, FileText,
+  AlertTriangle, ArrowRight, BookOpen, Calendar, CalendarClock, CalendarX, CheckCircle2, FilePen, FileText,
   GraduationCap, Heart, ListChecks, Megaphone, MessageCircle, Phone, Settings,
   ShieldCheck, Users, Wallet,
 } from "lucide-react";
@@ -51,6 +51,7 @@ export function AdminDashboard({ data }: { data: AdminData }) {
     ["/admin/setup", t("setupNav"), Settings],
     ["/admin/students", t("manageStudents"), Users],
     ["/admin/teachers", t("manageTeachers"), GraduationCap],
+    ["/admin/timetable", t("timetableNav"), CalendarClock],
     ["/grades", t("gradesNav"), FileText],
     ["/admin/corrections", t("correctionsNav"), FilePen],
     ["/admin/calendar", t("calendarNav"), Calendar],
