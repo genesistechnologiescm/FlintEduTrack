@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { addStudent, bulkAddStudents, enableStudentLogin, enableParentLogin } from "@/app/admin/students/actions";
@@ -164,13 +165,25 @@ export function StudentsManager({ data }: { data: StudentsData }) {
         </div>
       </header>
 
+      {/* A student can only be enrolled into a class. A brand-new school has
+          none yet, so guide the admin to setup instead of showing dead controls. */}
+      {data.classes.length === 0 ? (
+        <section className="rounded-2xl border border-primary/30 bg-primary/5 p-5">
+          <h2 className="font-display text-lg font-bold text-ink">{t("noClassesTitle")}</h2>
+          <p className="mt-2 max-w-prose text-sm text-sub">{t("noClassesBody")}</p>
+          <a href="/admin/setup" className="et-btn mt-4 inline-flex min-h-11 items-center">
+            {t("noClassesCta")}
+          </a>
+        </section>
+      ) : (
+      <>
       {/* Add one */}
       <section className="rounded-2xl border border-line bg-surface p-5">
         <h2 className="mb-3 font-display text-lg font-bold text-ink">{t("addStudent")}</h2>
         <form onSubmit={onAdd} className="grid grid-cols-2 gap-3">
           <input className={field} placeholder={t("fldFirst")} value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
           <input className={field} placeholder={t("fldLast")} value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-          <select className={field} value={classGroupId} onChange={(e) => setClassGroupId(e.target.value)} required>
+          <select className={field} value={classGroupId} onChange={(e) => setClassGroupId(e.target.value)} required aria-label={t("classGroupLabel")}>
             {data.classes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -197,10 +210,29 @@ export function StudentsManager({ data }: { data: StudentsData }) {
         </form>
       </section>
 
-      {/* Bulk CSV */}
+      {/* Bulk CSV — accepts either a chosen .csv file or pasted rows. */}
       <section className="mt-4 rounded-2xl border border-line bg-surface p-5">
         <h2 className="mb-1 font-display text-lg font-bold text-ink">{t("bulkCsv")}</h2>
         <p className="mb-3 font-mono text-[11px] text-muted">{t("csvHint")}</p>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-primary/30 px-5 font-mono text-sm text-primary hover:bg-primary/5">
+            <Upload className="h-4 w-4" />
+            {t("csvChoose")}
+            <input
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setCsv(await file.text());
+                setMsg(null);
+                e.target.value = ""; // allow re-picking the same file
+              }}
+            />
+          </label>
+          <span className="font-mono text-[11px] text-muted">{t("csvOr")}</span>
+        </div>
         <textarea
           className="min-h-28 w-full rounded-lg border border-line bg-surface p-3 font-mono text-xs"
           placeholder={"Marie,Tabi,F,Form 5 Science A,+237670000123,Mrs Tabi"}
@@ -219,6 +251,8 @@ export function StudentsManager({ data }: { data: StudentsData }) {
           {msg && <span className="font-mono text-xs text-muted">{msg}</span>}
         </div>
       </section>
+      </>
+      )}
 
       {/* Roster */}
       <h2 className="mb-2 mt-8 font-mono text-xs uppercase tracking-widest text-muted">
