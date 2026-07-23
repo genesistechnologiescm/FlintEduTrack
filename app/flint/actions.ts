@@ -66,6 +66,7 @@ export async function registerSchool(raw: z.infer<typeof Schema>): Promise<{ ok:
     const r = await provisionAuthUserResult(phoneToAuthEmail(phone), input.adminPin, {
       displayName: input.adminName,
       phone,
+      must_change_pin: true,
     });
     if (!r.ok) {
       await prisma.school.delete({ where: { id: school.id } }); // no headless school

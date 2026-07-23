@@ -159,6 +159,7 @@ export async function enableStudentLogin(studentId: string): Promise<{ ok: boole
   const authId = await provisionAuthUser(studentCodeToAuthEmail(code), pin, {
     displayName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
     role: "student",
+    must_change_pin: true,
   });
   if (!authId) return { ok: false, error: "Could not create the login, try again" };
 
@@ -226,7 +227,7 @@ export async function enableParentLogin(parentUserId: string): Promise<{ ok: boo
   const email = phoneToAuthEmail(parent.phone);
 
   let authId: string | null = null;
-  const res = await provisionAuthUserResult(email, pin, { displayName: parent.displayName, phone: parent.phone });
+  const res = await provisionAuthUserResult(email, pin, { displayName: parent.displayName, phone: parent.phone, must_change_pin: true });
   if (res.ok) {
     authId = res.id;
   } else if (res.status === 401 || res.status === 403) {

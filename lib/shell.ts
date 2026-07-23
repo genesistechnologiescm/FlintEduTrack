@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoMode } from "@/lib/demoMode";
 import type { ShellRole, AdminScope } from "@/components/AppShell";
 
 export type ShellContext = { role: ShellRole; scope: AdminScope | null; name: string };
@@ -15,6 +17,14 @@ export async function resolveShellContext(): Promise<ShellContext | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
+
+  // A user still on the temporary PIN their school issued can't reach any
+  // real screen until they set their own. Enforced here because every
+  // authenticated layout resolves through this one function. Relaxed on the
+  // demo instance (EDUTRACK_DEMO_MODE) so judges aren't interrupted.
+  if (user.user_metadata?.must_change_pin === true && !isDemoMode()) {
+    redirect("/set-pin");
+  }
 
   const [staff, me] = await Promise.all([
     prisma.schoolMembership.findFirst({

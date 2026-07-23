@@ -67,8 +67,12 @@ export async function findAuthUserIdByEmail(email: string): Promise<string | nul
   }
 }
 
-// Resets an existing auth user's password (admin API).
-export async function setAuthPassword(id: string, password: string): Promise<boolean> {
+// Sets an auth user's password via the admin API — which, unlike the
+// user-facing supabase.auth.updateUser(), BYPASSES GoTrue's min-length policy
+// (our PINs are 5 digits; the default minimum is 6). `mustChangePin` marks
+// whether the new PIN is a temporary one an admin handed over (true, the
+// default for a reset) or the user's own private PIN (false).
+export async function setAuthPassword(id: string, password: string, mustChangePin = true): Promise<boolean> {
   if (!SUPABASE_URL || !SERVICE_KEY) return false;
   try {
     const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${id}`, {
@@ -78,7 +82,7 @@ export async function setAuthPassword(id: string, password: string): Promise<boo
         Authorization: `Bearer ${SERVICE_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password, user_metadata: { must_change_pin: mustChangePin } }),
     });
     return res.ok;
   } catch {
