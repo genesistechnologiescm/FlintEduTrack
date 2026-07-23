@@ -508,6 +508,23 @@ model AuditLog {
   @@index([entityType, entityId])
 }
 
+// Records a data-processing consent — the school's at registration (the
+// controller's lawful basis) and a guardian's acknowledgement of the privacy
+// notice. Standalone table (like AuditLog) so the record survives even if the
+// referenced school/user is later erased. policyVersion pins WHICH notice was
+// agreed to, so a later revision can prompt for fresh consent.
+model Consent {
+  id              String   @id @default(uuid())
+  scope           String // "SCHOOL" | "GUARDIAN"
+  schoolId        String?
+  userId          String? // the guardian, for GUARDIAN scope
+  policyVersion   String
+  grantedByUserId String
+  grantedAt       DateTime @default(now())
+  @@index([scope, schoolId])
+  @@index([userId])
+}
+
 model ConflictLog {
   id             String    @id @default(uuid())
   entityType     String

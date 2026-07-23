@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
+import { isDemoMode } from "@/lib/demoMode";
 import { normalizeCmPhone, phoneToAuthEmail, studentCodeToAuthEmail } from "@/lib/auth";
 
 // ── Brute-force protection (security review #4) ─────────────────────────────
@@ -86,6 +87,9 @@ export async function signIn(input: { phone: string; pin: string }): Promise<{ e
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // Still on the admin-issued temporary PIN → set your own before anything else.
+  if (user?.user_metadata?.must_change_pin === true && !isDemoMode()) redirect("/set-pin");
 
   // Land the user on THEIR home. Priority: the person's school job first — a
   // school admin who also helps curate the national library is still, first, a

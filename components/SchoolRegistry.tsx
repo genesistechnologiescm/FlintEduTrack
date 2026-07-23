@@ -38,6 +38,8 @@ const STR = {
     testTag: "TEST", crisisTag: "crisis", live: "live",
     errPhone: "Enter a valid Cameroon phone number.", errProvision: "Couldn't create the admin login — that phone may already be in use. Try a different one.", errConfig: "This server isn't set up to create logins yet: the SUPABASE_SERVICE_ROLE_KEY is missing from the hosting environment. Add it in Vercel and redeploy.", errBadKey: "The server's login key was rejected — it's likely the anon key instead of the service_role secret. Fix SUPABASE_SERVICE_ROLE_KEY in Vercel and redeploy.", errGeneric: "Something went wrong. Please try again.",
     created: "School created. The administrator can sign in now.",
+    agree: "This school agrees to the EduTrack",
+    agreeLink: "Data Processing terms",
   },
   fr: {
     owner: "Flint · Propriétaire", signOut: "Déconnexion", oversight: "Vue nationale", curateTool: "Curation bibliothèque", notices: "Tableau d'affichage",
@@ -50,6 +52,8 @@ const STR = {
     testTag: "TEST", crisisTag: "crise", live: "réelle",
     errPhone: "Entrez un numéro camerounais valide.", errProvision: "Impossible de créer le compte administrateur — ce téléphone est peut-être déjà utilisé. Essayez-en un autre.", errConfig: "Ce serveur ne peut pas encore créer de comptes : la clé SUPABASE_SERVICE_ROLE_KEY manque dans l'hébergement. Ajoutez-la dans Vercel et redéployez.", errBadKey: "La clé du serveur a été rejetée — c'est probablement la clé anon au lieu du secret service_role. Corrigez SUPABASE_SERVICE_ROLE_KEY dans Vercel et redéployez.", errGeneric: "Une erreur s'est produite. Réessayez.",
     created: "École créée. L'administrateur peut se connecter.",
+    agree: "Cette école accepte les",
+    agreeLink: "conditions de traitement des données",
   },
 };
 
@@ -71,12 +75,14 @@ export function SchoolRegistry({ data }: { data: RegistryData }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState(false);
+  const [agree, setAgree] = useState(false);
 
   const valid =
     name.trim().length >= 2 &&
     adminName.trim().length >= 2 &&
     adminPhone.replace(/\D/g, "").length >= 6 &&
-    /^\d{5}$/.test(adminPin);
+    /^\d{5}$/.test(adminPin) &&
+    agree;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -94,10 +100,11 @@ export function SchoolRegistry({ data }: { data: RegistryData }) {
         adminName,
         adminPhone,
         adminPin,
+        agreeToTerms: true,
       });
       if (res.ok) {
         setName(""); setTown(""); setCrisis(false); setIsTest(true);
-        setAdminName(""); setAdminPhone(""); setAdminPin("");
+        setAdminName(""); setAdminPhone(""); setAdminPin(""); setAgree(false);
         setOkMsg(true);
         router.refresh();
       } else {
@@ -201,6 +208,17 @@ export function SchoolRegistry({ data }: { data: RegistryData }) {
                 </div>
               </div>
             </div>
+
+            <label className="flex items-start gap-2 text-sm text-sub">
+              <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 size-4 accent-[var(--et-primary)]" />
+              <span>
+                {t.agree}{" "}
+                <a href="/privacy" target="_blank" rel="noopener" className="text-primary hover:underline">
+                  {t.agreeLink}
+                </a>
+                .
+              </span>
+            </label>
 
             {err && <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{err}</p>}
             {okMsg && <p className="flex items-center gap-1.5 rounded-lg bg-ok-bg px-3 py-2 text-sm text-ok"><Check size={15} /> {t.created}</p>}

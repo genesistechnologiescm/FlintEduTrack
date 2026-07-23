@@ -47,7 +47,7 @@ export async function addStaff(raw: z.infer<typeof AddSchema>): Promise<{ ok: bo
   } else {
     if (!authProvisioningAvailable()) return { ok: false, error: "Staff logins aren't configured on the server" };
     pin = String(randomInt(10000, 99999));
-    const authId = await provisionAuthUser(phoneToAuthEmail(phone), pin, { displayName: input.name, phone });
+    const authId = await provisionAuthUser(phoneToAuthEmail(phone), pin, { displayName: input.name, phone, must_change_pin: true });
     if (!authId) return { ok: false, error: "Could not create the login, try again" };
     await prisma.user.create({ data: { id: authId, phone, displayName: input.name } });
     targetUserId = authId;

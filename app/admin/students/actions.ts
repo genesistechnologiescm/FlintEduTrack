@@ -13,6 +13,7 @@ import {
   provisionAuthUserResult,
   findAuthUserIdByEmail,
   setAuthPassword,
+  deleteAuthUser,
   authProvisioningAvailable,
 } from "@/lib/provisionAuth";
 
@@ -159,6 +160,7 @@ export async function enableStudentLogin(studentId: string): Promise<{ ok: boole
   const authId = await provisionAuthUser(studentCodeToAuthEmail(code), pin, {
     displayName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
     role: "student",
+    must_change_pin: true,
   });
   if (!authId) return { ok: false, error: "Could not create the login, try again" };
 
@@ -226,7 +228,7 @@ export async function enableParentLogin(parentUserId: string): Promise<{ ok: boo
   const email = phoneToAuthEmail(parent.phone);
 
   let authId: string | null = null;
-  const res = await provisionAuthUserResult(email, pin, { displayName: parent.displayName, phone: parent.phone });
+  const res = await provisionAuthUserResult(email, pin, { displayName: parent.displayName, phone: parent.phone, must_change_pin: true });
   if (res.ok) {
     authId = res.id;
   } else if (res.status === 401 || res.status === 403) {
@@ -252,4 +254,51 @@ export async function enableParentLogin(parentUserId: string): Promise<{ ok: boo
   });
   revalidatePath("/admin/students");
   return { ok: true, pin };
+}
+
+// ── Right to erasure ─────────────────────────────────────────────────────────
+// Permanently and irreversibly removes a student's identifying data on request.
+// We do NOT hard-delete the row (that would cascade across ~13 restrict-FK
+// tables and risk the database's integrity); instead we destroy every
+// identifier — name, date of birth, gender, photo, their login, their guardian
+// links, and their notification history — leaving only de-identified attendance
+// and grade counts so the school's historical totals stay intact. FULL admins
+// only; the erasure is audited with the reason given.
+export async function eraseStudent(
+  studentId: string,
+  reason: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const { userId, schoolId } = await requireAdmin(); // FULL only
+  if (!reason || reason.trim().length < 3) return { ok: false, error: "A reason is required" };
+
+  const enrollment = await prisma.enrollment.findFirst({ where: { studentId, schoolId } });
+  if (!enrollment) return { ok: false, error: "That student is not in your school" };
+
+  const account = await prisma.studentAccount.findUnique({ where: { studentId }, select: { id: true } });
+
+  // Destroy the login first (external), then scrub the database in one tx.
+  if (account) await deleteAuthUser(account.id);
+
+  await prisma.$transaction([
+    prisma.parentLink.deleteMany({ where: { studentId } }),
+    prisma.notificationLog.deleteMany({ where: { studentId } }),
+    prisma.studentAccount.deleteMany({ where: { studentId } }),
+    // Drop the anonymised shell off active class registers and rosters.
+    prisma.enrollment.updateMany({ where: { studentId, status: "ACTIVE" }, data: { status: "ARCHIVED" } }),
+    prisma.student.update({
+      where: { id: studentId },
+      data: { firstName: "Erased", lastName: "Student", dob: null, gender: null, photoUrl: null, deletedAt: new Date() },
+    }),
+  ]);
+
+  await writeAudit({
+    schoolId,
+    actorUserId: userId,
+    action: "student.data_erased",
+    entityType: "Student",
+    entityId: studentId,
+    reason: reason.trim(),
+  });
+  revalidatePath("/admin/students");
+  return { ok: true };
 }
