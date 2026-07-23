@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ParentDashboard, type ParentData } from "@/components/ParentDashboard";
 import { avgOf, groupBySubject } from "@/lib/grades";
 import { upcomingEvents } from "@/lib/calendarFeed";
+import { CURRENT_POLICY_VERSION } from "@/lib/privacyPolicy";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,13 @@ export default async function ParentPage() {
   if (!user) redirect("/login");
 
   const me = await prisma.user.findUnique({ where: { id: user.id }, select: { displayName: true } });
+
+  // Has this guardian acknowledged the current privacy notice? If not, the
+  // dashboard shows a one-time consent bar.
+  const consent = await prisma.consent.findFirst({
+    where: { scope: "GUARDIAN", userId: user.id, policyVersion: CURRENT_POLICY_VERSION },
+    select: { id: true },
+  });
 
   const links = await prisma.parentLink.findMany({
     where: { parentUserId: user.id, status: "active" },
@@ -105,6 +113,7 @@ export default async function ParentPage() {
 
   const data: ParentData = {
     parentName: me?.displayName ?? "Parent",
+    needsConsent: !consent,
     children,
     alerts: notifs.map((n) => ({ type: n.eventType, date: n.serverSentAt.toISOString().slice(0, 10) })),
     announcements: receipts.map((r) => ({

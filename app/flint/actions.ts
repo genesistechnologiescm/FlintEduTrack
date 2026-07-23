@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { writeAudit } from "@/lib/audit";
 import { provisionAuthUserResult, authProvisioningAvailable } from "@/lib/provisionAuth";
 import { canonicalCmPhone, normalizeCmPhone, phoneToAuthEmail } from "@/lib/auth";
+import { CURRENT_POLICY_VERSION } from "@/lib/privacyPolicy";
 
 // Owner-only: the Flint platform admin registers a school + its first FULL
 // admin. This is the ONE screen that mints a school (there is no self-signup),
@@ -31,6 +32,8 @@ const Schema = z.object({
   adminName: z.string().trim().min(2).max(80),
   adminPhone: z.string().trim().min(6).max(20),
   adminPin: z.string().regex(/^\d{5}$/),
+  // The school (data controller) must agree to the data-processing terms.
+  agreeToTerms: z.literal(true),
 });
 
 export async function registerSchool(raw: z.infer<typeof Schema>): Promise<{ ok: boolean; error?: string }> {
@@ -82,6 +85,16 @@ export async function registerSchool(raw: z.infer<typeof Schema>): Promise<{ ok:
 
   await prisma.schoolMembership.create({
     data: { userId: adminId, schoolId: school.id, role: "ADMIN", adminScope: "FULL", title: "Principal" },
+  });
+
+  // The controller's lawful-basis record: the school agreed to the data terms.
+  await prisma.consent.create({
+    data: {
+      scope: "SCHOOL",
+      schoolId: school.id,
+      policyVersion: CURRENT_POLICY_VERSION,
+      grantedByUserId: userId,
+    },
   });
 
   await writeAudit({

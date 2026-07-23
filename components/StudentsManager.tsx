@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
-import { addStudent, bulkAddStudents, enableStudentLogin, enableParentLogin } from "@/app/admin/students/actions";
+import { addStudent, bulkAddStudents, enableStudentLogin, enableParentLogin, eraseStudent } from "@/app/admin/students/actions";
 
 type ParentInfo = { id: string; phone: string; provisioned: boolean };
 export type StudentsData = {
@@ -86,6 +86,62 @@ function ParentLoginCell({ parent }: { parent: ParentInfo }) {
     >
       {busy ? t("adding") : err ? t("parentLoginRetry") : parent.provisioned ? t("parentLoginReset") : t("parentLoginEnable")}
     </button>
+  );
+}
+
+// Data subject rights per student: download everything held about them, or
+// permanently erase their identifying data (a reason is required and audited).
+function DataRightsCell({ studentId }: { studentId: string }) {
+  const { t } = useI18n();
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  if (confirming) {
+    return (
+      <span className="mt-1 flex flex-wrap items-center gap-2">
+        <input
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder={t("eraseReason")}
+          maxLength={200}
+          className="min-w-0 flex-1 rounded border border-line bg-surface px-2 py-1 text-[11px]"
+        />
+        <button
+          type="button"
+          disabled={busy || reason.trim().length < 3}
+          onClick={async () => {
+            setBusy(true);
+            setErr(null);
+            const res = await eraseStudent(studentId, reason);
+            if (res.ok) router.refresh();
+            else {
+              setErr(res.error ?? "error");
+              setBusy(false);
+            }
+          }}
+          className="rounded bg-danger px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-white disabled:opacity-50"
+        >
+          {busy ? t("adding") : t("eraseConfirm")}
+        </button>
+        <button type="button" onClick={() => { setConfirming(false); setErr(null); }} className="font-mono text-[10px] uppercase tracking-widest text-muted hover:text-ink">
+          {t("dataCancel")}
+        </button>
+        {err && <span className="w-full text-[11px] text-danger">{err}</span>}
+      </span>
+    );
+  }
+  return (
+    <span className="mt-1 flex items-center gap-3 font-mono text-[10px] uppercase tracking-widest">
+      <a href={`/admin/students/${studentId}/export`} className="text-primary hover:underline">
+        {t("dataExport")}
+      </a>
+      <button type="button" onClick={() => setConfirming(true)} className="text-danger/70 hover:text-danger hover:underline">
+        {t("dataErase")}
+      </button>
+    </span>
   );
 }
 
@@ -270,6 +326,7 @@ export function StudentsManager({ data }: { data: StudentsData }) {
                   <ParentLoginCell parent={s.parent} />
                 </span>
               )}
+              <DataRightsCell studentId={s.id} />
             </span>
             <span className="flex shrink-0 items-center gap-3">
               <LoginCell id={s.id} loginCode={s.loginCode} />

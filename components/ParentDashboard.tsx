@@ -14,6 +14,39 @@ import {
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import type { SubjectGrade } from "@/lib/grades";
 import { EnablePush } from "./EnablePush";
+import { recordGuardianConsent } from "@/app/parent/consent";
+
+// One-time privacy acknowledgement. A guardian confirms they've seen how their
+// child's data is used; the click is recorded as their consent.
+function ConsentBar({ t }: { t: { consentBody: string; consentLink: string; consentOk: string; consentSaving: string } }) {
+  const [busy, setBusy] = useState(false);
+  const [gone, setGone] = useState(false);
+  if (gone) return null;
+  return (
+    <div className="mb-4 flex flex-col gap-2 rounded-xl border border-primary/25 bg-blue-bg px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sub">
+        {t.consentBody}{" "}
+        <a href="/privacy" target="_blank" rel="noopener" className="font-medium text-primary hover:underline">
+          {t.consentLink}
+        </a>
+        .
+      </p>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          const res = await recordGuardianConsent();
+          if (res.ok) setGone(true);
+          else setBusy(false);
+        }}
+        className="et-btn shrink-0 px-4 py-2 text-[13px] disabled:opacity-60"
+      >
+        {busy ? t.consentSaving : t.consentOk}
+      </button>
+    </div>
+  );
+}
 
 type Child = {
   studentId: string;
@@ -29,6 +62,7 @@ type Child = {
 
 export type ParentData = {
   parentName: string;
+  needsConsent?: boolean;
   children: Child[];
   alerts: { type: string; date: string }[];
   announcements: { title: string; body: string; date: string }[];
@@ -49,6 +83,8 @@ const STR = {
     events: "Upcoming events", announcements: "From the school", alerts: "Recent alerts", natTag: "National",
     absenceAlert: "Absence alert", noAlerts: "No alerts. All good", noChildren: "No children linked yet.",
     navHome: "Home", navMsg: "Messages", navFees: "Fees", navLessons: "Lessons",
+    consentBody: "We use your child's data only to support their schooling. See how in our",
+    consentLink: "Privacy notice", consentOk: "I understand", consentSaving: "Saving…",
   },
   fr: {
     morning: "Bonjour", afternoon: "Bon après-midi", evening: "Bonsoir",
@@ -63,6 +99,8 @@ const STR = {
     events: "Événements à venir", announcements: "De l’école", alerts: "Alertes récentes", natTag: "National",
     absenceAlert: "Alerte d’absence", noAlerts: "Aucune alerte. Tout va bien", noChildren: "Aucun enfant associé.",
     navHome: "Accueil", navMsg: "Messages", navFees: "Frais", navLessons: "Leçons",
+    consentBody: "Nous utilisons les données de votre enfant uniquement pour sa scolarité. Voyez comment dans notre",
+    consentLink: "Note de confidentialité", consentOk: "J'ai compris", consentSaving: "Enregistrement…",
   },
 };
 
@@ -119,6 +157,7 @@ export function ParentDashboard({ data }: { data: ParentData }) {
 
   return (
     <>
+      {data.needsConsent && <ConsentBar t={t} />}
       <h1 className="font-display text-2xl font-bold tracking-tight">
             {greet}, {firstName}
           </h1>

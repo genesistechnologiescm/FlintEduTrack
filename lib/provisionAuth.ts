@@ -51,6 +51,22 @@ export async function provisionAuthUser(
   return r.ok ? r.id : null;
 }
 
+// Permanently deletes an auth (login) user by id. Used for the right-to-erasure
+// flow so an erased person can no longer sign in. Best-effort: returns false on
+// any failure so the caller can proceed with the rest of the erasure.
+export async function deleteAuthUser(id: string): Promise<boolean> {
+  if (!SUPABASE_URL || !SERVICE_KEY) return false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${id}`, {
+      method: "DELETE",
+      headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 // Looks up an existing auth user's id by email (used when provisioning says
 // "email exists": the login was minted before, we re-align to it).
 export async function findAuthUserIdByEmail(email: string): Promise<string | null> {

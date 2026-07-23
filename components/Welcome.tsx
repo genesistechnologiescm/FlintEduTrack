@@ -96,8 +96,11 @@ export function Welcome() {
         </section>
 
         {/* Footer */}
-        <footer className="mt-4 border-t border-line py-8 text-center font-mono text-xs uppercase tracking-widest text-muted">
-          {t("landingFooter")}
+        <footer className="mt-4 flex flex-col items-center gap-2 border-t border-line py-8 text-center font-mono text-xs uppercase tracking-widest text-muted">
+          <span>{t("landingFooter")}</span>
+          <a href="/privacy" className="text-primary hover:underline">
+            {t("privacyLink")}
+          </a>
         </footer>
       </div>
     </main>
