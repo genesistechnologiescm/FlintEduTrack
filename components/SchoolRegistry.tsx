@@ -30,7 +30,7 @@ const STR = {
   en: {
     owner: "Flint · Owner", signOut: "Sign out", oversight: "National oversight", curateTool: "Library curation", notices: "Noticeboard",
     title: "School registry", intro: "Register a school and its first administrator. They sign in with the phone + PIN you set here, then build their own classes, teachers and students.",
-    add: "Register a school", schoolName: "School name", region: "Region", town: "Town (optional)",
+    add: "Register a school", schoolName: "School name", region: "Region", regionPlaceholder: "Select a region", town: "Town (optional)",
     crisis: "Crisis-affected zone (NW / SW)", test: "Test school — kept out of the national dashboard & exports",
     adminHead: "First administrator", adminName: "Full name", adminPhone: "Phone number", adminPin: "5-digit PIN they'll use",
     create: "Create school", creating: "Creating…",
@@ -44,7 +44,7 @@ const STR = {
   fr: {
     owner: "Flint · Propriétaire", signOut: "Déconnexion", oversight: "Vue nationale", curateTool: "Curation bibliothèque", notices: "Tableau d'affichage",
     title: "Registre des écoles", intro: "Enregistrez une école et son premier administrateur. Il se connecte avec le téléphone + PIN que vous définissez ici, puis crée ses classes, enseignants et élèves.",
-    add: "Enregistrer une école", schoolName: "Nom de l'école", region: "Région", town: "Ville (optionnel)",
+    add: "Enregistrer une école", schoolName: "Nom de l'école", region: "Région", regionPlaceholder: "Choisir une région", town: "Ville (optionnel)",
     crisis: "Zone de crise (NO / SO)", test: "École test — exclue du tableau de bord national et des exports",
     adminHead: "Premier administrateur", adminName: "Nom complet", adminPhone: "Numéro de téléphone", adminPin: "PIN à 5 chiffres",
     create: "Créer l'école", creating: "Création…",
@@ -65,7 +65,7 @@ export function SchoolRegistry({ data }: { data: RegistryData }) {
   const router = useRouter();
 
   const [name, setName] = useState("");
-  const [region, setRegion] = useState(REGIONS[0]);
+  const [region, setRegion] = useState("");
   const [town, setTown] = useState("");
   const [crisis, setCrisis] = useState(false);
   const [isTest, setIsTest] = useState(true);
@@ -82,6 +82,7 @@ export function SchoolRegistry({ data }: { data: RegistryData }) {
     adminName.trim().length >= 2 &&
     adminPhone.replace(/\D/g, "").length >= 6 &&
     /^\d{5}$/.test(adminPin) &&
+    region !== "" &&
     agree;
 
   async function onSubmit(e: React.FormEvent) {
@@ -170,7 +171,8 @@ export function SchoolRegistry({ data }: { data: RegistryData }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="et-label" htmlFor="sr-region">{t.region}</label>
-                <select id="sr-region" className={field} value={region} onChange={(e) => setRegion(e.target.value)}>
+                <select id="sr-region" className={field} value={region} onChange={(e) => setRegion(e.target.value)} required>
+                  <option value="" disabled>{t.regionPlaceholder}</option>
                   {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
