@@ -152,7 +152,7 @@ export function StudentsManager({ data }: { data: StudentsData }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState("");
-  const [classGroupId, setClassGroupId] = useState(data.classes[0]?.id ?? "");
+  const [classGroupId, setClassGroupId] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [parentName, setParentName] = useState("");
   const [parentCapability, setParentCapability] = useState("");
@@ -240,6 +240,9 @@ export function StudentsManager({ data }: { data: StudentsData }) {
           <input className={field} placeholder={t("fldFirst")} value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
           <input className={field} placeholder={t("fldLast")} value={lastName} onChange={(e) => setLastName(e.target.value)} required />
           <select className={field} value={classGroupId} onChange={(e) => setClassGroupId(e.target.value)} required aria-label={t("classGroupLabel")}>
+            <option value="" disabled>
+              {t("selectClass")}
+            </option>
             {data.classes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
