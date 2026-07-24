@@ -100,7 +100,7 @@ function CommunityArt({ title }: { title: string }) {
   );
 
   return (
-    <svg viewBox="0 0 340 250" role="img" aria-label={title} className="mx-auto w-full max-w-[300px]">
+    <svg viewBox="0 0 340 250" role="img" aria-label={title} className="mx-auto w-full max-w-[420px]">
       <defs>
         <radialGradient id="ca-glow" cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stopColor="#f0dcb2" stopOpacity="1" />
@@ -190,8 +190,9 @@ export function Welcome() {
               </div>
             </div>
 
-            {/* Right: the heart of it — a whole community holding one child */}
-            <div className="w-full max-w-[360px] shrink-0 lg:w-[360px]">
+            {/* Right: the heart of it — a whole community holding one child.
+                Full-width row on mobile; a fixed 360px column on desktop. */}
+            <div className="w-full shrink-0 lg:w-[360px] lg:max-w-[360px]">
               <div
                 className="et-pop overflow-hidden rounded-2xl p-5 text-center"
                 style={{ background: "linear-gradient(180deg,#faf7f1 0%,#efe9de 100%)", boxShadow: "0 24px 60px rgba(3,16,50,.42)", animationDelay: "0.12s" }}
