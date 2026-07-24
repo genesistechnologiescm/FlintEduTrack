@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BarChart3, BellRing, Check, ClipboardCheck, Clock, Globe, Heart, WifiOff } from "lucide-react";
+import { ArrowRight, BarChart3, BellRing, ClipboardCheck, Clock, Globe, Heart, WifiOff } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { OriginMark } from "./OriginMark";
 import { ThemeToggle } from "./ThemeToggle";
@@ -14,11 +14,9 @@ const STR = {
     sub: "Teachers mark a class in under a minute, even with no internet. The moment a child is absent, their parent knows. Attendance, grades, fees and wellbeing, all in one calm place.",
     ctaDemo: "See the live demo",
     ctaNation: "or explore the national picture",
-    cardSchool: "Demo Secondary School",
-    cardAlert: "Attendance alert",
-    cardName: "Divine was marked absent",
-    cardMeta: "Chemistry · 7:32 · Form 5 Science",
-    cardStatus: "Parent notified · free alert",
+    careTitle: "It takes a whole community.",
+    careSub: "Parents, teachers and the wider community, all looking out for one child.",
+    careAlt: "A community of parents, teachers and neighbours gathered around a child, held within a heart.",
     // Truth strip
     truths: [
       { icon: Clock, label: "Under 60 seconds to mark a class" },
@@ -57,11 +55,9 @@ const STR = {
     sub: "Les enseignants font l'appel en moins d'une minute, même sans internet. Dès qu'un enfant est absent, son parent le sait. Présences, notes, frais et bien-être, tout au même endroit, apaisé.",
     ctaDemo: "Voir la démo en direct",
     ctaNation: "ou voir la vue nationale",
-    cardSchool: "Collège de démonstration",
-    cardAlert: "Alerte de présence",
-    cardName: "Divine a été marquée absente",
-    cardMeta: "Chimie · 7h32 · Form 5 Science",
-    cardStatus: "Parent averti · alerte gratuite",
+    careTitle: "Il faut toute une communauté.",
+    careSub: "Parents, enseignants et toute la communauté, veillant ensemble sur un enfant.",
+    careAlt: "Une communauté de parents, d'enseignants et de voisins réunie autour d'un enfant, tenue dans un cœur.",
     truths: [
       { icon: Clock, label: "Moins de 60 secondes pour faire l'appel" },
       { icon: WifiOff, label: "Fonctionne sans internet" },
@@ -89,6 +85,57 @@ const STR = {
     privacy: "Confidentialité et protection des données",
   },
 };
+
+// A warm, original illustration: a whole community — parents, teacher, elder,
+// health worker — gathered around one child, the group cradled inside a soft
+// heart. It carries the product's real thesis: every child is held by many.
+function CommunityArt({ title }: { title: string }) {
+  // One figure = a warm-brown head + a rounded-shoulder body (clothing colour).
+  const Figure = ({ x, headY, r, bodyH, skin, cloth }: { x: number; headY: number; r: number; bodyH: number; skin: string; cloth: string }) => (
+    <g>
+      <rect x={x - (r + 4)} y={headY + r - 2} width={(r + 4) * 2} height={bodyH} rx={r + 4} fill={cloth} />
+      <circle cx={x} cy={headY} r={r} fill={skin} />
+    </g>
+  );
+
+  return (
+    <svg viewBox="0 0 340 250" role="img" aria-label={title} className="mx-auto w-full max-w-[300px]">
+      <defs>
+        <linearGradient id="ca-heart" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffdfe6" />
+          <stop offset="1" stopColor="#ffe9dc" />
+        </linearGradient>
+      </defs>
+
+      {/* the community's love, holding everyone */}
+      <path
+        d="M170 62 C150 34 108 32 90 56 C74 78 82 110 118 138 C140 156 160 172 170 186 C180 172 200 156 222 138 C258 110 266 78 250 56 C232 32 190 34 170 62 Z"
+        fill="url(#ca-heart)"
+      />
+
+      {/* soft floating hearts */}
+      <path d="M64 66 c-5-7-16-4-16 4 c0 6 8 11 16 18 c8-7 16-12 16-18 c0-8-11-11-16-4 Z" fill="#ff8fa3" opacity="0.9" />
+      <path d="M280 74 c-4-6-13-3-13 3 c0 5 6 9 13 15 c7-6 13-10 13-15 c0-6-9-9-13-3 Z" fill="#ffb27a" opacity="0.9" />
+
+      {/* ground shadow */}
+      <ellipse cx="170" cy="212" rx="104" ry="12" fill="#7a4b2b" opacity="0.10" />
+
+      {/* the community, in a caring arc — back figures first */}
+      <Figure x={132} headY={120} r={15} bodyH={66} skin="#7a4b2b" cloth="#1a6bff" />
+      <Figure x={208} headY={120} r={15} bodyH={66} skin="#6b4226" cloth="#00c48c" />
+      <Figure x={98} headY={132} r={14} bodyH={54} skin="#96603a" cloth="#ff7a59" />
+      <Figure x={242} headY={132} r={14} bodyH={54} skin="#b07a48" cloth="#f5a623" />
+
+      {/* the child, held in the middle */}
+      <g>
+        <rect x={155} y={168} width={30} height={40} rx={15} fill="#ffc53d" />
+        <circle cx={170} cy={162} r={12} fill="#8d5a34" />
+        {/* a small smile */}
+        <path d="M165 163 q5 5 10 0" stroke="#3d2415" strokeWidth="2" fill="none" strokeLinecap="round" />
+      </g>
+    </svg>
+  );
+}
 
 export function Welcome() {
   const { locale, setLocale } = useI18n();
@@ -148,40 +195,19 @@ export function Welcome() {
               </div>
             </div>
 
-            {/* Right: a real product moment — the parent absence alert */}
-            <div className="w-full max-w-[340px] shrink-0 lg:w-[340px]">
+            {/* Right: the heart of it — a whole community holding one child */}
+            <div className="w-full max-w-[360px] shrink-0 lg:w-[360px]">
               <div
-                className="et-pop rounded-2xl bg-white p-5 text-left"
-                style={{ boxShadow: "0 24px 60px rgba(3,16,50,.42)", animationDelay: "0.12s" }}
+                className="et-pop overflow-hidden rounded-2xl p-5 text-center"
+                style={{ background: "linear-gradient(180deg,#fffaf4 0%,#fff1e6 100%)", boxShadow: "0 24px 60px rgba(3,16,50,.42)", animationDelay: "0.12s" }}
               >
-                <div className="flex items-center gap-2 text-[12px]" style={{ color: "#5a6478" }}>
-                  <span className="size-2 rounded-full" style={{ background: "#00b7d4" }} aria-hidden="true" />
-                  <span className="font-semibold" style={{ color: "#0a0a0f" }}>{t.brand}</span>
-                  <span className="truncate">· {t.cardSchool}</span>
-                </div>
-                <div className="my-3 h-px" style={{ background: "rgba(10,10,15,.08)" }} />
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full" style={{ background: "#fff0f0" }}>
-                    <BellRing size={17} style={{ color: "#e0453a" }} aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "#e0453a" }}>
-                      {t.cardAlert}
-                    </div>
-                    <div className="mt-0.5 font-display text-[15px] font-semibold" style={{ color: "#0a0a0f" }}>
-                      {t.cardName}
-                    </div>
-                    <div className="text-[12px]" style={{ color: "#5a6478" }}>{t.cardMeta}</div>
-                  </div>
-                </div>
-                <div className="my-3 h-px" style={{ background: "rgba(10,10,15,.08)" }} />
-                <div className="flex items-center gap-2 text-[12px]" style={{ color: "#5a6478" }}>
-                  <span className="grid size-4 place-items-center rounded-full" style={{ background: "#00c48c" }}>
-                    <Check size={11} style={{ color: "#fff" }} aria-hidden="true" />
-                  </span>
-                  {t.cardStatus}
-                  <span className="ml-auto tabular-nums">7:32</span>
-                </div>
+                <CommunityArt title={t.careAlt} />
+                <p className="mt-2 font-display text-[15px] font-semibold" style={{ color: "#1a1330" }}>
+                  {t.careTitle}
+                </p>
+                <p className="mt-0.5 text-[12.5px] leading-snug" style={{ color: "#6a5a52" }}>
+                  {t.careSub}
+                </p>
               </div>
             </div>
           </div>
