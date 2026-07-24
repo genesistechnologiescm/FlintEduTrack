@@ -16,7 +16,7 @@ const STR = {
     ctaNation: "or explore the national picture",
     careTitle: "It takes a whole community.",
     careSub: "Parents, teachers and the wider community, all looking out for one child.",
-    careAlt: "A community of parents, teachers and neighbours gathered around a child, held within a heart.",
+    careAlt: "A community of parents, teachers and neighbours gathered protectively around one child.",
     // Truth strip
     truths: [
       { icon: Clock, label: "Under 60 seconds to mark a class" },
@@ -57,7 +57,7 @@ const STR = {
     ctaNation: "ou voir la vue nationale",
     careTitle: "Il faut toute une communauté.",
     careSub: "Parents, enseignants et toute la communauté, veillant ensemble sur un enfant.",
-    careAlt: "Une communauté de parents, d'enseignants et de voisins réunie autour d'un enfant, tenue dans un cœur.",
+    careAlt: "Une communauté de parents, d'enseignants et de voisins réunie de façon protectrice autour d'un enfant.",
     truths: [
       { icon: Clock, label: "Moins de 60 secondes pour faire l'appel" },
       { icon: WifiOff, label: "Fonctionne sans internet" },
@@ -91,8 +91,9 @@ const STR = {
 // heart. It carries the product's real thesis: every child is held by many.
 function CommunityArt({ title }: { title: string }) {
   // One figure = a warm-brown head + a rounded-shoulder body (clothing colour).
-  const Figure = ({ x, headY, r, bodyH, skin, cloth }: { x: number; headY: number; r: number; bodyH: number; skin: string; cloth: string }) => (
-    <g>
+  // `tilt` leans a figure toward the child at the centre.
+  const Figure = ({ x, headY, r, bodyH, skin, cloth, tilt = 0 }: { x: number; headY: number; r: number; bodyH: number; skin: string; cloth: string; tilt?: number }) => (
+    <g transform={tilt ? `rotate(${tilt} ${x} ${headY + bodyH})` : undefined}>
       <rect x={x - (r + 4)} y={headY + r - 2} width={(r + 4) * 2} height={bodyH} rx={r + 4} fill={cloth} />
       <circle cx={x} cy={headY} r={r} fill={skin} />
     </g>
@@ -101,37 +102,31 @@ function CommunityArt({ title }: { title: string }) {
   return (
     <svg viewBox="0 0 340 250" role="img" aria-label={title} className="mx-auto w-full max-w-[300px]">
       <defs>
-        <linearGradient id="ca-heart" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#ffdfe6" />
-          <stop offset="1" stopColor="#ffe9dc" />
-        </linearGradient>
+        <radialGradient id="ca-glow" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#f0dcb2" stopOpacity="1" />
+          <stop offset="1" stopColor="#f0dcb2" stopOpacity="0" />
+        </radialGradient>
       </defs>
 
-      {/* the community's love, holding everyone */}
-      <path
-        d="M170 62 C150 34 108 32 90 56 C74 78 82 110 118 138 C140 156 160 172 170 186 C180 172 200 156 222 138 C258 110 266 78 250 56 C232 32 190 34 170 62 Z"
-        fill="url(#ca-heart)"
-      />
+      {/* two sheltering arcs — the community's care arching over the child */}
+      <path d="M56 150 Q170 52 284 150" fill="none" stroke="#a9977a" strokeWidth="3" strokeLinecap="round" opacity="0.45" />
+      <path d="M80 154 Q170 80 260 154" fill="none" stroke="#bcae90" strokeWidth="2.5" strokeLinecap="round" opacity="0.32" />
 
-      {/* soft floating hearts */}
-      <path d="M64 66 c-5-7-16-4-16 4 c0 6 8 11 16 18 c8-7 16-12 16-18 c0-8-11-11-16-4 Z" fill="#ff8fa3" opacity="0.9" />
-      <path d="M280 74 c-4-6-13-3-13 3 c0 5 6 9 13 15 c7-6 13-10 13-15 c0-6-9-9-13-3 Z" fill="#ffb27a" opacity="0.9" />
+      {/* the adults, leaning in around the child — drawn back-to-front */}
+      <Figure x={170} headY={104} r={15} bodyH={72} skin="#6f4526" cloth="#5f6b7e" />
+      <Figure x={122} headY={118} r={14} bodyH={62} skin="#8a5a38" cloth="#7e8a6b" tilt={9} />
+      <Figure x={218} headY={118} r={14} bodyH={62} skin="#7a4c2c" cloth="#b0805e" tilt={-9} />
+      <Figure x={88} headY={134} r={12} bodyH={50} skin="#9c6a42" cloth="#a89078" tilt={14} />
+      <Figure x={252} headY={134} r={12} bodyH={50} skin="#a9784f" cloth="#c6b394" tilt={-14} />
 
-      {/* ground shadow */}
-      <ellipse cx="170" cy="212" rx="104" ry="12" fill="#7a4b2b" opacity="0.10" />
-
-      {/* the community, in a caring arc — back figures first */}
-      <Figure x={132} headY={120} r={15} bodyH={66} skin="#7a4b2b" cloth="#1a6bff" />
-      <Figure x={208} headY={120} r={15} bodyH={66} skin="#6b4226" cloth="#00c48c" />
-      <Figure x={98} headY={132} r={14} bodyH={54} skin="#96603a" cloth="#ff7a59" />
-      <Figure x={242} headY={132} r={14} bodyH={54} skin="#b07a48" cloth="#f5a623" />
-
-      {/* the child, held in the middle */}
+      {/* the one child at the heart of it — glow, halo of care, then the child */}
+      <circle cx="170" cy="178" r="52" fill="url(#ca-glow)" />
+      <circle cx="170" cy="182" r="42" fill="none" stroke="#d9b877" strokeWidth="2.5" opacity="0.55" />
+      <ellipse cx="170" cy="216" rx="30" ry="7" fill="#5f4128" opacity="0.12" />
       <g>
-        <rect x={155} y={168} width={30} height={40} rx={15} fill="#ffc53d" />
-        <circle cx={170} cy={162} r={12} fill="#8d5a34" />
-        {/* a small smile */}
-        <path d="M165 163 q5 5 10 0" stroke="#3d2415" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <rect x={156} y={172} width={28} height={40} rx={14} fill="#d7a24f" />
+        <circle cx={170} cy={166} r={13} fill="#8d5a34" />
+        <path d="M164 167 q6 5 12 0" stroke="#4a2e1a" strokeWidth="2" fill="none" strokeLinecap="round" />
       </g>
     </svg>
   );
@@ -199,7 +194,7 @@ export function Welcome() {
             <div className="w-full max-w-[360px] shrink-0 lg:w-[360px]">
               <div
                 className="et-pop overflow-hidden rounded-2xl p-5 text-center"
-                style={{ background: "linear-gradient(180deg,#fffaf4 0%,#fff1e6 100%)", boxShadow: "0 24px 60px rgba(3,16,50,.42)", animationDelay: "0.12s" }}
+                style={{ background: "linear-gradient(180deg,#faf7f1 0%,#efe9de 100%)", boxShadow: "0 24px 60px rgba(3,16,50,.42)", animationDelay: "0.12s" }}
               >
                 <CommunityArt title={t.careAlt} />
                 <p className="mt-2 font-display text-[15px] font-semibold" style={{ color: "#1a1330" }}>
