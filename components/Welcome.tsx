@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BarChart3, BellRing, ClipboardCheck, Clock, Globe, Heart, WifiOff } from "lucide-react";
+import { ArrowRight, BarChart3, BellRing, Check, ClipboardCheck, Clock, Globe, Heart, WifiOff } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { OriginMark } from "./OriginMark";
 import { ThemeToggle } from "./ThemeToggle";
@@ -14,6 +14,11 @@ const STR = {
     sub: "Teachers mark a class in under a minute, even with no internet. The moment a child is absent, their parent knows. Attendance, grades, fees and wellbeing, all in one calm place.",
     ctaDemo: "See the live demo",
     ctaNation: "or explore the national picture",
+    cardSchool: "Demo Secondary School",
+    cardAlert: "Attendance alert",
+    cardName: "Divine was marked absent",
+    cardMeta: "Chemistry · 7:32 · Form 5 Science",
+    cardStatus: "Parent notified · free alert",
     // Truth strip
     truths: [
       { icon: Clock, label: "Under 60 seconds to mark a class" },
@@ -52,6 +57,11 @@ const STR = {
     sub: "Les enseignants font l'appel en moins d'une minute, même sans internet. Dès qu'un enfant est absent, son parent le sait. Présences, notes, frais et bien-être, tout au même endroit, apaisé.",
     ctaDemo: "Voir la démo en direct",
     ctaNation: "ou voir la vue nationale",
+    cardSchool: "Collège de démonstration",
+    cardAlert: "Alerte de présence",
+    cardName: "Divine a été marquée absente",
+    cardMeta: "Chimie · 7h32 · Form 5 Science",
+    cardStatus: "Parent averti · alerte gratuite",
     truths: [
       { icon: Clock, label: "Moins de 60 secondes pour faire l'appel" },
       { icon: WifiOff, label: "Fonctionne sans internet" },
@@ -113,25 +123,67 @@ export function Welcome() {
 
         {/* Hero */}
         <section className="et-hero et-pop my-4 px-7 py-12 text-white sm:px-12 sm:py-16">
-          <div className="mb-6 flex items-center gap-2.5 text-white">
-            <OriginMark size={34} rings mono />
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color: "var(--et-hero-sub)" }}>
-              {t.brand} · {t.byline}
-            </span>
-          </div>
-          <h1 className="max-w-[16ch] font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
-            {t.hook}
-          </h1>
-          <p className="mt-5 max-w-[600px] text-lg leading-relaxed" style={{ color: "var(--et-hero-sub)" }}>
-            {t.sub}
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <a href="/login" className="et-btn px-7 py-3 text-sm">
-              {t.ctaDemo} <ArrowRight size={16} aria-hidden="true" />
-            </a>
-            <a href="/national" className="inline-flex items-center gap-1.5 text-sm font-medium text-white/85 hover:text-white">
-              {t.ctaNation} <ArrowRight size={15} aria-hidden="true" />
-            </a>
+          <div className="flex flex-col items-start gap-10 lg:flex-row lg:items-center lg:gap-8">
+            {/* Left: message */}
+            <div className="min-w-0 flex-1">
+              <div className="mb-6 flex items-center gap-2.5 text-white">
+                <OriginMark size={34} rings mono />
+                <span className="font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color: "var(--et-hero-sub)" }}>
+                  {t.brand} · {t.byline}
+                </span>
+              </div>
+              <h1 className="max-w-[16ch] font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
+                {t.hook}
+              </h1>
+              <p className="mt-5 max-w-[560px] text-lg leading-relaxed" style={{ color: "var(--et-hero-sub)" }}>
+                {t.sub}
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <a href="/login" className="et-btn-light px-7 py-3 text-sm">
+                  {t.ctaDemo} <ArrowRight size={16} aria-hidden="true" />
+                </a>
+                <a href="/national" className="inline-flex items-center gap-1.5 text-sm font-medium text-white underline-offset-4 hover:underline">
+                  {t.ctaNation} <ArrowRight size={15} aria-hidden="true" />
+                </a>
+              </div>
+            </div>
+
+            {/* Right: a real product moment — the parent absence alert */}
+            <div className="w-full max-w-[340px] shrink-0 lg:w-[340px]">
+              <div
+                className="et-pop rounded-2xl bg-white p-5 text-left"
+                style={{ boxShadow: "0 24px 60px rgba(3,16,50,.42)", animationDelay: "0.12s" }}
+              >
+                <div className="flex items-center gap-2 text-[12px]" style={{ color: "#5a6478" }}>
+                  <span className="size-2 rounded-full" style={{ background: "#00b7d4" }} aria-hidden="true" />
+                  <span className="font-semibold" style={{ color: "#0a0a0f" }}>{t.brand}</span>
+                  <span className="truncate">· {t.cardSchool}</span>
+                </div>
+                <div className="my-3 h-px" style={{ background: "rgba(10,10,15,.08)" }} />
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full" style={{ background: "#fff0f0" }}>
+                    <BellRing size={17} style={{ color: "#e0453a" }} aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "#e0453a" }}>
+                      {t.cardAlert}
+                    </div>
+                    <div className="mt-0.5 font-display text-[15px] font-semibold" style={{ color: "#0a0a0f" }}>
+                      {t.cardName}
+                    </div>
+                    <div className="text-[12px]" style={{ color: "#5a6478" }}>{t.cardMeta}</div>
+                  </div>
+                </div>
+                <div className="my-3 h-px" style={{ background: "rgba(10,10,15,.08)" }} />
+                <div className="flex items-center gap-2 text-[12px]" style={{ color: "#5a6478" }}>
+                  <span className="grid size-4 place-items-center rounded-full" style={{ background: "#00c48c" }}>
+                    <Check size={11} style={{ color: "#fff" }} aria-hidden="true" />
+                  </span>
+                  {t.cardStatus}
+                  <span className="ml-auto tabular-nums">7:32</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Truth strip */}
@@ -148,7 +200,7 @@ export function Welcome() {
         {/* How it works */}
         <section className="py-10">
           <h2 className="mb-6 font-display text-2xl font-bold tracking-tight">{t.howTitle}</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="et-anim grid gap-4 sm:grid-cols-3">
             {t.steps.map((s) => (
               <div key={s.n} className="et-card p-6">
                 <span className="grid size-9 place-items-center rounded-full bg-primary font-display text-sm font-bold text-white">
@@ -164,7 +216,7 @@ export function Welcome() {
         {/* Three wins */}
         <section className="py-4">
           <h2 className="mb-6 font-display text-2xl font-bold tracking-tight">{t.winsTitle}</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="et-anim grid gap-4 sm:grid-cols-3">
             {t.wins.map(({ icon: Icon, tag, h, p }) => (
               <div key={h} className="et-card p-5">
                 <span className="grid size-10 place-items-center rounded-xl bg-blue-bg">
@@ -191,11 +243,7 @@ export function Welcome() {
           <p className="mt-4 max-w-[660px] text-lg leading-relaxed" style={{ color: "var(--et-hero-sub)" }}>
             {t.impactBody}
           </p>
-          <a
-            href="/national"
-            className="mt-7 inline-flex items-center gap-1.5 rounded-xl border px-6 py-3 text-sm font-medium text-white"
-            style={{ borderColor: "rgba(255,255,255,.24)" }}
-          >
+          <a href="/national" className="et-btn-light mt-7 px-6 py-3 text-sm">
             {t.impactCta} <ArrowRight size={16} aria-hidden="true" />
           </a>
         </section>

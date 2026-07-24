@@ -262,6 +262,34 @@ a.et-card:hover {
   filter: none;
 }
 
+/* High-contrast CTA for use ON the coloured hero. The default .et-btn is a blue
+   gradient, which disappears on the blue hero (blue-on-blue). This is a solid
+   white button with deep-blue text + arrow, readable in both themes. */
+.et-btn-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #0b3fd0;
+  box-shadow: 0 8px 24px rgba(3, 20, 63, 0.28);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.et-btn-light:hover {
+  background: #eef4ff;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(3, 20, 63, 0.34);
+}
+.et-btn-light:active {
+  transform: translateY(0) scale(0.98);
+}
+
 .et-pill {
   display: inline-flex;
   align-items: center;
