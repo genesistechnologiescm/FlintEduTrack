@@ -51,7 +51,7 @@ const STR = {
     // Impact band
     impactEyebrow: "The bigger picture",
     impactTitle: "Built for where it matters most",
-    impactBody: "In the North-West and South-West, classrooms no foreign platform can reach are being measured for the first time. Real attendance, region by region: the evidence that turns concern into action.",
+    impactBody: "In the North-West and South-West, accountability becomes real: classrooms no one else can reach are being measured. Real attendance, region by region: the evidence that turns concern into action.",
     impactCta: "See the national picture",
     // Footer
     footerBuilt: "Built in Bamenda, Cameroon",
@@ -98,7 +98,7 @@ const STR = {
     ],
     impactEyebrow: "La vue d'ensemble",
     impactTitle: "Conçu pour là où ça compte le plus",
-    impactBody: "Au Nord-Ouest et au Sud-Ouest, des salles de classe qu'aucune plateforme étrangère n'atteint sont mesurées pour la première fois. De vraies présences, région par région : la preuve qui transforme l'inquiétude en action.",
+    impactBody: "Au Nord-Ouest et au Sud-Ouest, la responsabilité devient réelle : des salles de classe que personne d'autre n'atteint sont mesurées. De vraies présences, région par région : la preuve qui transforme l'inquiétude en action.",
     impactCta: "Voir la vue nationale",
     footerBuilt: "Conçu à Bamenda, Cameroun",
     footerBrand: "Flint Technologies · EduTrack",
