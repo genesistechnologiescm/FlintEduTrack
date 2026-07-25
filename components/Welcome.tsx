@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, BarChart3, BellRing, ClipboardCheck, Clock, Globe, Heart, WifiOff } from "lucide-react";
+import { BarChart3, BellRing, ClipboardCheck, Clock, Globe, Heart, Mail, MessageCircle, Phone, WifiOff } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { OriginMark } from "./OriginMark";
 import { ThemeToggle } from "./ThemeToggle";
@@ -10,10 +10,20 @@ const STR = {
     brand: "EduTrack",
     byline: "by Flint Technologies",
     // Hero
-    hook: "Every child accounted for, every day.",
-    sub: "Teachers mark a class in under a minute, even with no internet. The moment a child is absent, their parent knows. Attendance, grades, fees and wellbeing, all in one calm place.",
-    ctaDemo: "See the live demo",
-    ctaNation: "or explore the national picture",
+    hook: "Know your child's school day.",
+    sub: "Attendance, alerts, grades and fees, all in one place.",
+    ctaSignIn: "Sign in",
+    heroHelper: "Use the phone number and PIN your school gave you.",
+    ctaForSchools: "For schools",
+    heroAsk: "Your school not on EduTrack yet? Ask us to bring it.",
+    askMsg: "Hi Flint, I'd love EduTrack at my child's school. My school is: ",
+    // Contact section
+    contactTitle: "Get your school on EduTrack",
+    contactSub: "We're onboarding schools across Bamenda and the North-West. Reach out and we'll set your school up, class registers, parent alerts and all.",
+    contactEmail: "Email us",
+    contactWhatsapp: "Chat on WhatsApp",
+    contactCall: "Call us",
+    contactSignedUp: "Already on EduTrack?",
     careTitle: "It takes a whole community.",
     careSub: "Parents, teachers and the wider community, all looking out for one child.",
     careAlt: "A community of parents, teachers and neighbours gathered protectively around one child.",
@@ -41,7 +51,7 @@ const STR = {
     // Impact band
     impactEyebrow: "The bigger picture",
     impactTitle: "Built for where it matters most",
-    impactBody: "In the North-West and South-West, classrooms no foreign platform can reach are being measured for the first time. Real attendance, region by region: the evidence that turns concern into action.",
+    impactBody: "In the North-West and South-West, accountability becomes real: classrooms no one else can reach are being measured. Real attendance, region by region: the evidence that turns concern into action.",
     impactCta: "See the national picture",
     // Footer
     footerBuilt: "Built in Bamenda, Cameroon",
@@ -51,10 +61,20 @@ const STR = {
   fr: {
     brand: "EduTrack",
     byline: "par Flint Technologies",
-    hook: "Chaque enfant compté, chaque jour.",
-    sub: "Les enseignants font l'appel en moins d'une minute, même sans internet. Dès qu'un enfant est absent, son parent le sait. Présences, notes, frais et bien-être, tout au même endroit, apaisé.",
-    ctaDemo: "Voir la démo en direct",
-    ctaNation: "ou voir la vue nationale",
+    hook: "Suivez la journée d'école de votre enfant.",
+    sub: "Présences, alertes, notes et frais, au même endroit.",
+    ctaSignIn: "Se connecter",
+    heroHelper: "Utilisez le numéro de téléphone et le PIN donnés par votre école.",
+    ctaForSchools: "Pour les écoles",
+    heroAsk: "Votre école n'est pas encore sur EduTrack ? Demandez-nous de l'y amener.",
+    askMsg: "Bonjour Flint, j'aimerais EduTrack dans l'école de mon enfant. Mon école est : ",
+    // Contact section
+    contactTitle: "Mettez votre école sur EduTrack",
+    contactSub: "Nous intégrons les écoles de Bamenda et du Nord-Ouest. Contactez-nous et nous configurons votre école, listes de présence, alertes aux parents, et tout le reste.",
+    contactEmail: "Écrivez-nous",
+    contactWhatsapp: "Discuter sur WhatsApp",
+    contactCall: "Appelez-nous",
+    contactSignedUp: "Déjà sur EduTrack ?",
     careTitle: "Il faut toute une communauté.",
     careSub: "Parents, enseignants et toute la communauté, veillant ensemble sur un enfant.",
     careAlt: "Une communauté de parents, d'enseignants et de voisins réunie de façon protectrice autour d'un enfant.",
@@ -78,7 +98,7 @@ const STR = {
     ],
     impactEyebrow: "La vue d'ensemble",
     impactTitle: "Conçu pour là où ça compte le plus",
-    impactBody: "Au Nord-Ouest et au Sud-Ouest, des salles de classe qu'aucune plateforme étrangère n'atteint sont mesurées pour la première fois. De vraies présences, région par région : la preuve qui transforme l'inquiétude en action.",
+    impactBody: "Au Nord-Ouest et au Sud-Ouest, la responsabilité devient réelle : des salles de classe que personne d'autre n'atteint sont mesurées. De vraies présences, région par région : la preuve qui transforme l'inquiétude en action.",
     impactCta: "Voir la vue nationale",
     footerBuilt: "Conçu à Bamenda, Cameroun",
     footerBrand: "Flint Technologies · EduTrack",
@@ -160,6 +180,10 @@ export function Welcome() {
                 </button>
               ))}
             </div>
+            {/* Always-visible sign-in — where any returning user looks first. */}
+            <a href="/login" className="rounded-full border border-primary/40 px-4 py-1.5 text-sm font-medium text-primary hover:bg-blue-bg">
+              {t.ctaSignIn}
+            </a>
           </div>
         </div>
 
@@ -180,12 +204,27 @@ export function Welcome() {
               <p className="mt-5 max-w-[560px] text-lg leading-relaxed" style={{ color: "var(--et-hero-sub)" }}>
                 {t.sub}
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-                <a href="/login" className="et-btn-light px-7 py-3 text-sm">
-                  {t.ctaDemo} <ArrowRight size={16} aria-hidden="true" />
-                </a>
-                <a href="/national" className="inline-flex items-center gap-1.5 text-sm font-medium text-white underline-offset-4 hover:underline">
-                  {t.ctaNation} <ArrowRight size={15} aria-hidden="true" />
+              <div className="mt-8">
+                <div className="flex flex-wrap items-center gap-3">
+                  <a href="/login" className="et-btn-light px-8 py-3 text-sm">
+                    {t.ctaSignIn}
+                  </a>
+                  <a href="#contact" className="inline-flex min-h-11 items-center rounded-xl border px-6 text-sm font-medium text-white hover:bg-white/10" style={{ borderColor: "rgba(255,255,255,.4)" }}>
+                    {t.ctaForSchools}
+                  </a>
+                </div>
+                <p className="mt-3 text-sm" style={{ color: "var(--et-hero-sub)" }}>
+                  {t.heroHelper}
+                </p>
+                {/* Parent-pull → sales: a parent whose school isn't on EduTrack
+                    yet hands Flint a warm, named lead over WhatsApp. */}
+                <a
+                  href={`https://wa.me/237653158701?text=${encodeURIComponent(t.askMsg)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block text-sm font-medium text-white underline-offset-4 hover:underline"
+                >
+                  {t.heroAsk}
                 </a>
               </div>
             </div>
@@ -266,8 +305,31 @@ export function Welcome() {
             {t.impactBody}
           </p>
           <a href="/national" className="et-btn-light mt-7 px-6 py-3 text-sm">
-            {t.impactCta} <ArrowRight size={16} aria-hidden="true" />
+            {t.impactCta}
           </a>
+        </section>
+
+        {/* Contact — how a real school gets on board */}
+        <section id="contact" className="et-card my-10 scroll-mt-6 p-7 text-center sm:p-10">
+          <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">{t.contactTitle}</h2>
+          <p className="mx-auto mt-3 max-w-[560px] leading-relaxed text-sub">{t.contactSub}</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <a href="https://wa.me/237653158701" target="_blank" rel="noopener noreferrer" className="et-btn px-6 py-3 text-sm">
+              <MessageCircle size={16} aria-hidden="true" /> {t.contactWhatsapp}
+            </a>
+            <a href="mailto:officialkaisy@gmail.com" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/40 px-6 text-sm font-medium text-primary hover:bg-blue-bg">
+              <Mail size={16} aria-hidden="true" /> {t.contactEmail}
+            </a>
+            <a href="tel:+237653158701" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary/40 px-6 text-sm font-medium text-primary hover:bg-blue-bg">
+              <Phone size={16} aria-hidden="true" /> +237 653 158 701
+            </a>
+          </div>
+          <p className="mt-5 text-sm text-muted">
+            {t.contactSignedUp}{" "}
+            <a href="/login" className="font-medium text-primary hover:underline">
+              {t.ctaSignIn}
+            </a>
+          </p>
         </section>
 
         {/* Footer */}
