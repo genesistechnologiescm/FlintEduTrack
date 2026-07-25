@@ -15,6 +15,8 @@ const STR = {
     ctaSignIn: "Sign in",
     heroHelper: "Use the phone number and PIN your school gave you.",
     ctaForSchools: "For schools",
+    heroAsk: "Your school not on EduTrack yet? Ask us to bring it.",
+    askMsg: "Hi Flint, I'd love EduTrack at my child's school. My school is: ",
     // Contact section
     contactTitle: "Get your school on EduTrack",
     contactSub: "We're onboarding schools across Bamenda and the North-West. Reach out and we'll set your school up, class registers, parent alerts and all.",
@@ -64,6 +66,8 @@ const STR = {
     ctaSignIn: "Se connecter",
     heroHelper: "Utilisez le numéro de téléphone et le PIN donnés par votre école.",
     ctaForSchools: "Pour les écoles",
+    heroAsk: "Votre école n'est pas encore sur EduTrack ? Demandez-nous de l'y amener.",
+    askMsg: "Bonjour Flint, j'aimerais EduTrack dans l'école de mon enfant. Mon école est : ",
     // Contact section
     contactTitle: "Mettez votre école sur EduTrack",
     contactSub: "Nous intégrons les écoles de Bamenda et du Nord-Ouest. Contactez-nous et nous configurons votre école, listes de présence, alertes aux parents, et tout le reste.",
@@ -212,6 +216,16 @@ export function Welcome() {
                 <p className="mt-3 text-sm" style={{ color: "var(--et-hero-sub)" }}>
                   {t.heroHelper}
                 </p>
+                {/* Parent-pull → sales: a parent whose school isn't on EduTrack
+                    yet hands Flint a warm, named lead over WhatsApp. */}
+                <a
+                  href={`https://wa.me/237653158701?text=${encodeURIComponent(t.askMsg)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-block text-sm font-medium text-white underline-offset-4 hover:underline"
+                >
+                  {t.heroAsk}
+                </a>
               </div>
             </div>
 
