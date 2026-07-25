@@ -2,7 +2,7 @@
   "name": "EduTrack · Flint Technologies",
   "short_name": "EduTrack",
   "description": "School attendance, made simple.",
-  "start_url": "/",
+  "start_url": "/login",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
