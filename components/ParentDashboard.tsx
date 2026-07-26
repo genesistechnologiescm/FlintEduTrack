@@ -58,6 +58,8 @@ type Child = {
   bySubject: { subject: string; rate: number; total: number }[];
   subjects: SubjectGrade[];
   overall: number | null;
+  terms: { id: string; label: string; order: number }[];
+  viewTermId: string | null;
 };
 
 export type ParentData = {
@@ -78,6 +80,8 @@ const STR = {
     missed: "Classes missed most", byClass: "Attendance by class",
     qaMsg: "Message", qaFees: "Pay fees", qaReport: "Report card",
     grades: "Grades", overall: "Overall", viewReport: "View report card",
+    subjectCol: "Subject", seq1: "Test 1", seq2: "Test 2", avgCol: "Average",
+    noGradesTerm: "No marks recorded for this term yet.",
     supTitle: "may need support", supBody: "The school has been told and is following up. You can message the teachers.",
     supCta: "Message the school", okTitle: "Doing great", okBody: "Keep it up. Attendance and grades are strong.",
     events: "Upcoming events", announcements: "From the school", alerts: "Recent alerts", natTag: "National",
@@ -99,6 +103,8 @@ const STR = {
     missed: "Cours les plus manqués", byClass: "Présence par cours",
     qaMsg: "Écrire", qaFees: "Payer", qaReport: "Bulletin",
     grades: "Notes", overall: "Moyenne", viewReport: "Voir le bulletin",
+    subjectCol: "Matière", seq1: "Séq. 1", seq2: "Séq. 2", avgCol: "Moyenne",
+    noGradesTerm: "Aucune note enregistrée pour ce trimestre.",
     supTitle: "a besoin de soutien", supBody: "L’école est informée et assure le suivi. Vous pouvez écrire aux enseignants.",
     supCta: "Contacter l’école", okTitle: "Très bien", okBody: "Continuez. Présence et notes solides.",
     events: "Événements à venir", announcements: "De l’école", alerts: "Alertes récentes", natTag: "National",
@@ -340,12 +346,50 @@ export function ParentDashboard({ data }: { data: ParentData }) {
                       {t.overall}: <b className="text-ink">{child.overall === null ? "—" : `${child.overall}/20`}</b>
                     </span>
                   </div>
-                  {child.subjects.slice(0, 4).map((s) => (
-                    <div key={s.subject} className="flex items-center justify-between py-0.5 text-[13px]">
-                      <span>{s.subject}</span>
-                      <span className="font-mono text-muted">{s.avg === null ? "—" : `${s.avg}/20`}</span>
+                  {/* Term selector — any term of the year, defaulting to the
+                      current one. Grades are always read for ONE term. */}
+                  {child.terms.length > 1 && (
+                    <div className="mb-2 flex flex-wrap gap-1.5">
+                      {child.terms.map((tm) => {
+                        const on = tm.id === child.viewTermId;
+                        return (
+                          <a
+                            key={tm.id}
+                            href={`/parent?term=${tm.id}`}
+                            aria-current={on ? "true" : undefined}
+                            className={`rounded-full px-3 py-1 text-[11.5px] font-medium transition-colors ${
+                              on ? "bg-primary text-white" : "border border-line text-muted hover:text-ink"
+                            }`}
+                          >
+                            {tm.label}
+                          </a>
+                        );
+                      })}
                     </div>
-                  ))}
+                  )}
+                  {/* Column heads for the two sequence tests */}
+                  <div className="flex items-center justify-between border-b border-line pb-1 text-[10px] font-mono uppercase tracking-widest text-muted">
+                    <span>{t.subjectCol}</span>
+                    <span className="flex gap-3">
+                      <span className="w-10 text-right">{t.seq1}</span>
+                      <span className="w-10 text-right">{t.seq2}</span>
+                      <span className="w-12 text-right">{t.avgCol}</span>
+                    </span>
+                  </div>
+                  {child.subjects.length === 0 ? (
+                    <p className="py-2 text-[13px] text-muted">{t.noGradesTerm}</p>
+                  ) : (
+                    child.subjects.slice(0, 6).map((s) => (
+                      <div key={s.subject} className="flex items-center justify-between py-1 text-[13px]">
+                        <span className="min-w-0 truncate pr-2">{s.subject}</span>
+                        <span className="flex shrink-0 gap-3 font-mono tabular-nums">
+                          <span className="w-10 text-right text-muted">{s.seq1 === null ? "—" : s.seq1}</span>
+                          <span className="w-10 text-right text-muted">{s.seq2 === null ? "—" : s.seq2}</span>
+                          <span className="w-12 text-right font-semibold text-ink">{s.avg === null ? "—" : `${s.avg}`}</span>
+                        </span>
+                      </div>
+                    ))
+                  )}
                   <a href={`/report/${child.studentId}`} className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-primary">
                     {t.viewReport} <ArrowRight size={15} aria-hidden="true" />
                   </a>
