@@ -64,7 +64,7 @@ export type ParentData = {
   parentName: string;
   needsConsent?: boolean;
   children: Child[];
-  alerts: { type: string; date: string }[];
+  alerts: { kind: "absence" | "fee" | "digest" | "call" | "other"; child: string | null; date: string }[];
   announcements: { title: string; body: string; date: string }[];
   events: { school: string; title: string; startDate: string; endDate: string | null; note: string | null; national: boolean }[];
 };
@@ -82,6 +82,11 @@ const STR = {
     supCta: "Message the school", okTitle: "Doing great", okBody: "Keep it up. Attendance and grades are strong.",
     events: "Upcoming events", announcements: "From the school", alerts: "Recent alerts", natTag: "National",
     absenceAlert: "Absence alert", noAlerts: "No alerts. All good", noChildren: "No children linked yet.",
+    alAbsence: "{child} was marked absent", alAbsenceNoChild: "A child was marked absent",
+    alDigest: "Attendance update for {child}", alDigestNoChild: "Attendance update",
+    alFee: "Fee reminder for {child}", alFeeNoChild: "Fee reminder",
+    alCall: "Voice alert for {child}", alCallNoChild: "Voice alert",
+    alOther: "Update from your school",
     navHome: "Home", navMsg: "Messages", navFees: "Fees", navLessons: "Lessons",
     consentBody: "We use your child's data only to support their schooling. See how in our",
     consentLink: "Privacy notice", consentOk: "I understand", consentSaving: "Saving…",
@@ -98,6 +103,11 @@ const STR = {
     supCta: "Contacter l’école", okTitle: "Très bien", okBody: "Continuez. Présence et notes solides.",
     events: "Événements à venir", announcements: "De l’école", alerts: "Alertes récentes", natTag: "National",
     absenceAlert: "Alerte d’absence", noAlerts: "Aucune alerte. Tout va bien", noChildren: "Aucun enfant associé.",
+    alAbsence: "{child} a été marqué(e) absent(e)", alAbsenceNoChild: "Un enfant a été marqué absent",
+    alDigest: "Point de présence pour {child}", alDigestNoChild: "Point de présence",
+    alFee: "Rappel de frais pour {child}", alFeeNoChild: "Rappel de frais",
+    alCall: "Alerte vocale pour {child}", alCallNoChild: "Alerte vocale",
+    alOther: "Information de votre école",
     navHome: "Accueil", navMsg: "Messages", navFees: "Frais", navLessons: "Leçons",
     consentBody: "Nous utilisons les données de votre enfant uniquement pour sa scolarité. Voyez comment dans notre",
     consentLink: "Note de confidentialité", consentOk: "J'ai compris", consentSaving: "Enregistrement…",
@@ -162,6 +172,14 @@ export function ParentDashboard({ data }: { data: ParentData }) {
             {greet}, {firstName}
           </h1>
           <p className="text-[12.5px] capitalize text-muted">{today}</p>
+
+          {/* Prominent, one-time nudge to turn on alerts — the reach depends on
+              it (push is the live channel; SMS is not yet). Hides once on. */}
+          {data.children.length > 0 && (
+            <div className="mt-4">
+              <EnablePush variant="banner" />
+            </div>
+          )}
 
           {data.children.length > 1 && (
             <div className="mt-3 flex gap-2">
@@ -415,15 +433,30 @@ export function ParentDashboard({ data }: { data: ParentData }) {
                 {data.alerts.length === 0 ? (
                   <p className="text-[13px] text-ok">{t.noAlerts}</p>
                 ) : (
-                  data.alerts.slice(0, 5).map((a, i) => (
-                    <div key={i} className="flex items-center justify-between py-1.5 text-[13px]">
-                      <span className="flex items-center gap-2">
-                        <span className="size-2 rounded-full" style={{ background: "var(--et-danger)" }} />
-                        {t.absenceAlert}
-                      </span>
-                      <span className="font-mono text-xs text-muted">{a.date}</span>
-                    </div>
-                  ))
+                  data.alerts.slice(0, 5).map((a, i) => {
+                    const tone =
+                      a.kind === "absence" ? "var(--et-danger)" : a.kind === "fee" ? "var(--et-warn)" : "var(--et-primary)";
+                    const tpl =
+                      a.kind === "absence"
+                        ? a.child ? t.alAbsence : t.alAbsenceNoChild
+                        : a.kind === "digest"
+                          ? a.child ? t.alDigest : t.alDigestNoChild
+                          : a.kind === "fee"
+                            ? a.child ? t.alFee : t.alFeeNoChild
+                            : a.kind === "call"
+                              ? a.child ? t.alCall : t.alCallNoChild
+                              : t.alOther;
+                    const text = a.child ? tpl.replace("{child}", a.child) : tpl;
+                    return (
+                      <div key={i} className="flex items-center justify-between gap-2 py-1.5 text-[13px]">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="size-2 shrink-0 rounded-full" style={{ background: tone }} />
+                          <span className="truncate">{text}</span>
+                        </span>
+                        <span className="shrink-0 font-mono text-xs text-muted">{a.date}</span>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BellRing } from "lucide-react";
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import { savePushSubscription } from "@/app/parent/push-actions";
 
@@ -15,7 +16,7 @@ function urlBase64ToUint8Array(base64: string): Uint8Array {
 
 type State = "idle" | "working" | "on" | "denied" | "unsupported";
 
-export function EnablePush() {
+export function EnablePush({ variant = "pill" }: { variant?: "pill" | "banner" }) {
   const { t } = useI18n();
   const [state, setState] = useState<State>("idle");
 
@@ -59,6 +60,35 @@ export function EnablePush() {
     } catch {
       setState("idle");
     }
+  }
+
+  // Prominent, explanatory prompt for the parent dashboard. Only nags when
+  // alerts are off — vanishes once they're on (the pill confirms that).
+  if (variant === "banner") {
+    if (state === "unsupported" || state === "on") return null;
+    return (
+      <div className="et-card flex items-start gap-3 border-primary/25 bg-blue-bg/60 p-4">
+        <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          <BellRing size={20} aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="font-display text-[15px] font-semibold text-ink">{t("pushBannerTitle")}</div>
+          <p className="mt-0.5 text-[13px] leading-snug text-sub">
+            {state === "denied" ? t("pushBannerBlocked") : t("pushBannerBody")}
+          </p>
+          {state !== "denied" && (
+            <button
+              type="button"
+              onClick={enable}
+              disabled={state === "working"}
+              className="et-btn mt-3 min-h-11 px-5 text-sm disabled:opacity-60"
+            >
+              {state === "working" ? t("pushEnabling") : t("pushBannerBtn")}
+            </button>
+          )}
+        </div>
+      </div>
+    );
   }
 
   if (state === "unsupported") return null;

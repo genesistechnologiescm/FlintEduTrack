@@ -101,6 +101,20 @@ export default async function ParentPage() {
     orderBy: { serverSentAt: "desc" },
     take: 10,
   });
+  // Which child each alert is about — so a parent with two children can tell
+  // them apart. The in-app feed is the guaranteed record (push may not fire,
+  // SMS is not live yet), so it must say exactly what happened and to whom.
+  const childFirstById = new Map(links.map((l) => [l.studentId, l.student.firstName]));
+  const alertKind = (eventType: string): "absence" | "fee" | "digest" | "call" | "other" =>
+    eventType === "ABSENCE_FIRST_UNEXCUSED"
+      ? "absence"
+      : eventType === "ABSENCE_DIGEST"
+        ? "digest"
+        : eventType === "FEE_OVERDUE_REMINDER"
+          ? "fee"
+          : eventType === "MISSED_CALL_STATUS"
+            ? "call"
+            : "other";
 
   const receipts = await prisma.announcementReceipt.findMany({
     where: { parentUserId: user.id },
@@ -115,7 +129,11 @@ export default async function ParentPage() {
     parentName: me?.displayName ?? "Parent",
     needsConsent: !consent,
     children,
-    alerts: notifs.map((n) => ({ type: n.eventType, date: n.serverSentAt.toISOString().slice(0, 10) })),
+    alerts: notifs.map((n) => ({
+      kind: alertKind(n.eventType),
+      child: n.studentId ? childFirstById.get(n.studentId) ?? null : null,
+      date: n.serverSentAt.toISOString().slice(0, 10),
+    })),
     announcements: receipts.map((r) => ({
       title: r.announcement.title,
       body: r.announcement.body,
