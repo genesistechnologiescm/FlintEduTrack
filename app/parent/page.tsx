@@ -4,12 +4,18 @@ import { createClient } from "@/lib/supabase/server";
 import { ParentDashboard, type ParentData } from "@/components/ParentDashboard";
 import { avgOf, groupBySubject } from "@/lib/grades";
 import { upcomingEvents } from "@/lib/calendarFeed";
+import { schoolTerms } from "@/lib/terms";
 import { CURRENT_POLICY_VERSION } from "@/lib/privacyPolicy";
 
 export const dynamic = "force-dynamic";
 
 // A parent sees ONLY their own linked children (authz by auth.uid + RLS).
-export default async function ParentPage() {
+export default async function ParentPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ term?: string }>;
+}) {
+  const { term: requestedTermId } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -71,11 +77,22 @@ export default async function ParentPage() {
       })
       .sort((a, b) => a.rate - b.rate);
 
-    const gradeRows = await prisma.grade.findMany({
-      where: { studentId: link.studentId },
-      include: { subject: { select: { name: true } } },
-      orderBy: { sequence: "asc" },
-    });
+    // Grades are ALWAYS read for one term. Without a termId the query mixes
+    // terms and a later term's Sequence 1 masks an earlier one, which showed
+    // parents a meaningless blend. Defaults to the current term; the parent can
+    // select any term of the year.
+    const { terms, currentTermId } = await schoolTerms(enrollment?.schoolId ?? "");
+    const validTermIds = new Set(terms.map((x) => x.id));
+    const viewTermId =
+      requestedTermId && validTermIds.has(requestedTermId) ? requestedTermId : currentTermId;
+
+    const gradeRows = viewTermId
+      ? await prisma.grade.findMany({
+          where: { studentId: link.studentId, termId: viewTermId },
+          include: { subject: { select: { name: true } } },
+          orderBy: { sequence: "asc" },
+        })
+      : [];
     const subjects = groupBySubject(
       gradeRows.map((g) => ({ sequence: g.sequence, score: Number(g.score), subject: { name: g.subject.name } })),
     );
@@ -93,6 +110,8 @@ export default async function ParentPage() {
       bySubject,
       subjects,
       overall: avgOf(subjects.map((s) => s.avg)),
+      terms,
+      viewTermId,
     });
   }
 
