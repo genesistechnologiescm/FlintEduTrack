@@ -1,16 +1,27 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { dropoutRisk } from "@/lib/dropoutRisk";
 import { NationalDashboard, type NationalData } from "@/components/NationalDashboard";
 
+// Rendered per request, but the expensive part is cached (see loadNational).
+// Note: we do NOT use `export const revalidate`, because that would make Next.js
+// prerender this page at build time, when the database is not reachable.
 export const dynamic = "force-dynamic";
 
 type RegionAgg = { region: string; crisis: boolean; schools: number; records: number; absent: number };
 type StudentAgg = { region: string; students: number };
+type TrendAgg = { d: Date; crisis: boolean; records: number; absent: number };
 
-// Aggregated only — no individual student PII ever leaves this layer
-// (Non-Negotiable: government/national layer never sees individuals).
-export default async function NationalPage() {
-  const regionsRaw = await prisma.$queryRaw<RegionAgg[]>`
+// National figures are country-wide aggregates, not personal data, so they do
+// not need recomputing for every visitor. Cached for 5 minutes: the first
+// request pays for the aggregation, everyone after that is served in
+// milliseconds. Aggregated only, no individual student PII ever leaves this
+// layer (Non-Negotiable: the national layer never sees individuals).
+const loadNational = unstable_cache(async (): Promise<NationalData> => {
+  // All five queries are independent, so they run together. Sequentially they
+  // cost five network round trips to the database; in parallel, one.
+  const [regionsRaw, studentsRaw, schools, marks, trendRaw] = await Promise.all([
+    prisma.$queryRaw<RegionAgg[]>`
     SELECT s.region AS region,
            bool_or(s."isCrisisZone") AS crisis,
            count(DISTINCT s.id)::int AS schools,
@@ -21,26 +32,38 @@ export default async function NationalPage() {
     LEFT JOIN "AttendanceRecord" r ON r."sessionId" = sess.id
     WHERE s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY s.region
-  `;
-
-  const studentsRaw = await prisma.$queryRaw<StudentAgg[]>`
+  `,
+    prisma.$queryRaw<StudentAgg[]>`
     SELECT s.region AS region, count(e.id)::int AS students
     FROM "School" s
     LEFT JOIN "Enrollment" e ON e."schoolId" = s.id AND e.status = 'ACTIVE'
     WHERE s."deletedAt" IS NULL AND s."isTest" = false
     GROUP BY s.region
-  `;
-  const studentsByRegion = new Map(studentsRaw.map((r) => [r.region, r.students]));
+  `,
+    prisma.school.findMany({ where: { deletedAt: null, isTest: false }, select: { id: true, region: true, isCrisisZone: true } }),
+    // Dropout risk is computed per student from their attendance, then only the
+    // per-region COUNTS are exposed. No individual ever leaves this layer.
+    prisma.attendanceRecord.findMany({
+      select: { studentId: true, status: true, session: { select: { date: true, schoolId: true } } },
+      orderBy: { session: { date: "desc" } },
+      take: 20000,
+    }),
+    // 30-day trend: daily national / crisis / rest attendance rates (aggregates only).
+    prisma.$queryRaw<TrendAgg[]>`
+    SELECT sess.date::date AS d, s."isCrisisZone" AS crisis,
+           count(r.id)::int AS records,
+           (count(r.id) FILTER (WHERE r.status = 'ABSENT'))::int AS absent
+    FROM "AttendanceSession" sess
+    JOIN "AttendanceRecord" r ON r."sessionId" = sess.id
+    JOIN "School" s ON s.id = sess."schoolId"
+    WHERE sess.date >= (CURRENT_DATE - INTERVAL '30 days') AND s."deletedAt" IS NULL AND s."isTest" = false
+    GROUP BY 1, 2
+    ORDER BY 1
+  `,
+  ]);
 
-  // Dropout-risk aggregate. We compute each student's risk from their attendance,
-  // then expose ONLY the counts per region — no individual ever leaves this layer.
-  const schools = await prisma.school.findMany({ where: { deletedAt: null, isTest: false }, select: { id: true, region: true, isCrisisZone: true } });
+  const studentsByRegion = new Map(studentsRaw.map((r) => [r.region, r.students]));
   const schoolMeta = new Map(schools.map((s) => [s.id, { region: s.region, crisis: s.isCrisisZone }]));
-  const marks = await prisma.attendanceRecord.findMany({
-    select: { studentId: true, status: true, session: { select: { date: true, schoolId: true } } },
-    orderBy: { session: { date: "desc" } },
-    take: 20000,
-  });
   const byStudent = new Map<string, { region: string; crisis: boolean; marks: { date: string; absent: boolean }[] }>();
   for (const m of marks) {
     const meta = schoolMeta.get(m.session.schoolId);
@@ -60,19 +83,6 @@ export default async function NationalPage() {
     }
   }
 
-  // 30-day trend: daily national / crisis / rest attendance rates (aggregates only).
-  type TrendAgg = { d: Date; crisis: boolean; records: number; absent: number };
-  const trendRaw = await prisma.$queryRaw<TrendAgg[]>`
-    SELECT sess.date::date AS d, s."isCrisisZone" AS crisis,
-           count(r.id)::int AS records,
-           (count(r.id) FILTER (WHERE r.status = 'ABSENT'))::int AS absent
-    FROM "AttendanceSession" sess
-    JOIN "AttendanceRecord" r ON r."sessionId" = sess.id
-    JOIN "School" s ON s.id = sess."schoolId"
-    WHERE sess.date >= (CURRENT_DATE - INTERVAL '30 days') AND s."deletedAt" IS NULL AND s."isTest" = false
-    GROUP BY 1, 2
-    ORDER BY 1
-  `;
   const byDate = new Map<string, { cr: number; ca: number; rr: number; ra: number }>();
   for (const row of trendRaw) {
     const key = row.d.toISOString().slice(0, 10);
@@ -135,5 +145,10 @@ export default async function NationalPage() {
     })),
   };
 
+  return data;
+}, ["national-dashboard"], { revalidate: 300 });
+
+export default async function NationalPage() {
+  const data = await loadNational();
   return <NationalDashboard data={data} />;
 }
