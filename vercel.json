@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "//regions": "Run in Frankfurt, the same region as the Supabase database (aws-1-eu-central-1). Without this, Vercel defaults to US East, so every database query crossed the Atlantic twice and Cameroon traffic detoured through America. Frankfurt is also the closest region to Cameroon.",
   "regions": ["fra1"],
   "crons": [
     {
