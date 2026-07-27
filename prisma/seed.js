@@ -64,7 +64,47 @@ const STUDENTS = [
   ["Stephanie", "Berinyuy", "F"], ["Wilfred", "Tita", "M"],
 ];
 
+// The schools this seed and its companions create. Anything else in the
+// database is treated as REAL and must never be destroyed by a seed.
+const SEED_SCHOOL_NAMES = [
+  "Demo Secondary School, Bamenda",
+  "Sacred Heart College Mankon",
+  "GBHS Bali",
+  "Bishop Rogan College",
+  "GHS Kumba",
+  "Lycée de Biyem-Assi",
+  "Collège Libermann",
+  "Lycée Classique de Bafoussam",
+];
+
+// SAFETY GATE. wipe() below deletes every school, user and student with no
+// filter, which is fine on a throwaway demo database and catastrophic on one
+// holding a real school. Refuse to run if we find a school this seed did not
+// create. Override deliberately with SEED_FORCE=1 only when you are certain.
+async function refuseIfRealData() {
+  const foreign = await prisma.school.findMany({
+    where: { name: { notIn: SEED_SCHOOL_NAMES } },
+    select: { name: true, isTest: true },
+  });
+  if (foreign.length === 0) return;
+
+  if (process.env.SEED_FORCE === "1") {
+    console.warn(`⚠  SEED_FORCE=1: destroying ${foreign.length} school(s) this seed did not create.`);
+    return;
+  }
+
+  console.error("\n" + "=".repeat(64));
+  console.error("REFUSING TO SEED. This database holds schools this seed did not create:");
+  for (const s of foreign) console.error(`   - ${s.name}${s.isTest ? " (test)" : "  <-- REAL SCHOOL"}`);
+  console.error("\nThis seed wipes ALL schools, users and students. Running it here would");
+  console.error("destroy the data above. Seed a separate demo database instead.");
+  console.error("If you are certain, re-run with SEED_FORCE=1.");
+  console.error("=".repeat(64) + "\n");
+  process.exit(1);
+}
+
 async function wipe() {
+  await refuseIfRealData();
   await prisma.attendanceRecord.deleteMany();
   await prisma.attendanceSession.deleteMany();
   await prisma.absenceAuthorisation.deleteMany();
