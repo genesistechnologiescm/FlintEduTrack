@@ -14,6 +14,7 @@ import {
 import { useI18n } from "@/lib/i18n/LanguageProvider";
 import type { SubjectGrade } from "@/lib/grades";
 import { EnablePush } from "./EnablePush";
+import { InstallPrompt } from "./InstallPrompt";
 import { recordGuardianConsent } from "@/app/parent/consent";
 
 // One-time privacy acknowledgement. A guardian confirms they've seen how their
@@ -179,10 +180,12 @@ export function ParentDashboard({ data }: { data: ParentData }) {
           </h1>
           <p className="text-[12.5px] capitalize text-muted">{today}</p>
 
-          {/* Prominent, one-time nudge to turn on alerts — the reach depends on
-              it (push is the live channel; SMS is not yet). Hides once on. */}
+          {/* Install first, then alerts. On iPhone push does not work at all
+              until EduTrack is on the home screen, so the order matters.
+              Both hide themselves once done. */}
           {data.children.length > 0 && (
-            <div className="mt-4">
+            <div className="mt-4 space-y-3">
+              <InstallPrompt />
               <EnablePush variant="banner" />
             </div>
           )}
