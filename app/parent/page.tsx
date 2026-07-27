@@ -22,33 +22,38 @@ export default async function ParentPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const me = await prisma.user.findUnique({ where: { id: user.id }, select: { displayName: true } });
+  // These three only need the signed-in user's id, so they run together rather
+  // than as three separate round trips to the database.
+  // `consent`: has this guardian acknowledged the current privacy notice? If not,
+  // the dashboard shows a one-time consent bar.
+  const [me, consent, links] = await Promise.all([
+    prisma.user.findUnique({ where: { id: user.id }, select: { displayName: true } }),
+    prisma.consent.findFirst({
+      where: { scope: "GUARDIAN", userId: user.id, policyVersion: CURRENT_POLICY_VERSION },
+      select: { id: true },
+    }),
+    prisma.parentLink.findMany({
+      where: { parentUserId: user.id, status: "active" },
+      include: { student: true },
+    }),
+  ]);
 
-  // Has this guardian acknowledged the current privacy notice? If not, the
-  // dashboard shows a one-time consent bar.
-  const consent = await prisma.consent.findFirst({
-    where: { scope: "GUARDIAN", userId: user.id, policyVersion: CURRENT_POLICY_VERSION },
-    select: { id: true },
-  });
-
-  const links = await prisma.parentLink.findMany({
-    where: { parentUserId: user.id, status: "active" },
-    include: { student: true },
-  });
-
-  const children: ParentData["children"] = [];
-  for (const link of links) {
-    const enrollment = await prisma.enrollment.findFirst({
-      where: { studentId: link.studentId },
-      include: { school: true, classGroup: true },
-      orderBy: { enrolledAt: "desc" },
-    });
-    const records = await prisma.attendanceRecord.findMany({
-      where: { studentId: link.studentId },
-      include: { session: { select: { date: true, subjectId: true } } },
-      orderBy: { session: { date: "desc" } },
-      take: 200,
-    });
+  // Each child is assembled in parallel. Done in sequence, a parent with two
+  // children paid for two full sets of queries one after the other.
+  const children: ParentData["children"] = await Promise.all(links.map(async (link) => {
+    const [enrollment, records] = await Promise.all([
+      prisma.enrollment.findFirst({
+        where: { studentId: link.studentId },
+        include: { school: true, classGroup: true },
+        orderBy: { enrolledAt: "desc" },
+      }),
+      prisma.attendanceRecord.findMany({
+        where: { studentId: link.studentId },
+        include: { session: { select: { date: true, subjectId: true } } },
+        orderBy: { session: { date: "desc" } },
+        take: 200,
+      }),
+    ]);
     const present = records.filter((r) => r.status !== "ABSENT").length;
     const total = records.length;
 
@@ -62,9 +67,13 @@ export default async function ParentPage({
       perSubject.set(r.session.subjectId, s);
     }
     const subjectIds = [...perSubject.keys()];
-    const subjectNames = subjectIds.length
-      ? await prisma.subject.findMany({ where: { id: { in: subjectIds } }, select: { id: true, name: true } })
-      : [];
+    // Subject names and the school's term list are independent of each other.
+    const [subjectNames, termInfo] = await Promise.all([
+      subjectIds.length
+        ? prisma.subject.findMany({ where: { id: { in: subjectIds } }, select: { id: true, name: true } })
+        : Promise.resolve([] as { id: string; name: string }[]),
+      schoolTerms(enrollment?.schoolId ?? ""),
+    ]);
     const nameById = new Map(subjectNames.map((s) => [s.id, s.name]));
     const bySubject = subjectIds
       .map((id) => {
@@ -81,7 +90,7 @@ export default async function ParentPage({
     // terms and a later term's Sequence 1 masks an earlier one, which showed
     // parents a meaningless blend. Defaults to the current term; the parent can
     // select any term of the year.
-    const { terms, currentTermId } = await schoolTerms(enrollment?.schoolId ?? "");
+    const { terms, currentTermId } = termInfo;
     const validTermIds = new Set(terms.map((x) => x.id));
     const viewTermId =
       requestedTermId && validTermIds.has(requestedTermId) ? requestedTermId : currentTermId;
@@ -97,7 +106,7 @@ export default async function ParentPage({
       gradeRows.map((g) => ({ sequence: g.sequence, score: Number(g.score), subject: { name: g.subject.name } })),
     );
 
-    children.push({
+    return {
       studentId: link.studentId,
       name: `${link.student.firstName} ${link.student.lastName}`,
       school: enrollment?.school.name ?? "—",
@@ -112,14 +121,25 @@ export default async function ParentPage({
       overall: avgOf(subjects.map((s) => s.avg)),
       terms,
       viewTermId,
-    });
-  }
+    };
+  }));
 
-  const notifs = await prisma.notificationLog.findMany({
-    where: { parentUserId: user.id },
-    orderBy: { serverSentAt: "desc" },
-    take: 10,
-  });
+  // The alert feed, announcement receipts and calendar events are independent
+  // of one another, so they run as one batch instead of three round trips.
+  const [notifs, receipts, events] = await Promise.all([
+    prisma.notificationLog.findMany({
+      where: { parentUserId: user.id },
+      orderBy: { serverSentAt: "desc" },
+      take: 10,
+    }),
+    prisma.announcementReceipt.findMany({
+      where: { parentUserId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: { announcement: { select: { title: true, body: true, createdAt: true } } },
+    }),
+    upcomingEvents([...new Set(links.map((l) => l.schoolId))]),
+  ]);
   // Which child each alert is about — so a parent with two children can tell
   // them apart. The in-app feed is the guaranteed record (push may not fire,
   // SMS is not live yet), so it must say exactly what happened and to whom.
@@ -134,15 +154,6 @@ export default async function ParentPage({
           : eventType === "MISSED_CALL_STATUS"
             ? "call"
             : "other";
-
-  const receipts = await prisma.announcementReceipt.findMany({
-    where: { parentUserId: user.id },
-    orderBy: { createdAt: "desc" },
-    take: 10,
-    include: { announcement: { select: { title: true, body: true, createdAt: true } } },
-  });
-
-  const events = await upcomingEvents([...new Set(links.map((l) => l.schoolId))]);
 
   const data: ParentData = {
     parentName: me?.displayName ?? "Parent",
