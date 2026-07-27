@@ -24,7 +24,7 @@ const STR: { en: Copy; fr: Copy } = {
     updated: "Last updated: July 2026",
     intro: [
       "EduTrack is a school platform built by Flint Technologies. It helps schools record attendance, share it with parents, and manage grades, wellbeing and fees.",
-      "Your school decides what information is collected and why — it is the data controller. Flint operates the platform on the school's behalf as the data processor. This notice explains, in plain language, what we hold and the choices you have.",
+      "Your school decides what information is collected and why. It is the data controller. Flint operates the platform on the school's behalf as the data processor. This notice explains, in plain language, what we hold and the choices you have.",
     ],
     sections: [
       {
@@ -47,14 +47,14 @@ const STR: { en: Copy; fr: Copy } = {
       {
         h: "Children's data",
         p: [
-          "Most of the data is about children, so we treat it with extra care. It is used only to support the child's schooling — never sold, never used for advertising.",
+          "Most of the data is about children, so we treat it with extra care. It is used only to support the child's schooling. It is never sold and never used for advertising.",
         ],
       },
       {
         h: "Who can see it",
         p: [
           "A parent sees only their own children. A teacher sees only their own classes. Fees and wellbeing details are limited to the staff who need them.",
-          "Government dashboards show only anonymous totals by region — never a named child.",
+          "Government dashboards show only anonymous totals by region, never a named child.",
           "Access is enforced at the database, not just hidden in the screen, and every change is logged.",
         ],
       },

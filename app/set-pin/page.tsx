@@ -10,7 +10,7 @@ import { signOut } from "@/app/login/actions";
 const STR = {
   en: {
     title: "Choose your PIN",
-    sub: "Your school gave you a temporary PIN. Set your own private one to continue — no one else should know it.",
+    sub: "Your school gave you a temporary PIN. Set your own private one to continue. No one else should know it.",
     newPin: "New PIN",
     confirmPin: "Confirm PIN",
     save: "Save PIN",
@@ -20,15 +20,15 @@ const STR = {
     errors: {
       length: "Enter a 5-digit PIN.",
       mismatch: "The two PINs do not match.",
-      repeated: "Too easy to guess — don't use the same digit five times.",
-      sequential: "Too easy to guess — don't use a run like 1 2 3 4 5.",
+      repeated: "Too easy to guess. Do not use the same digit five times.",
+      sequential: "Too easy to guess. Do not use a run like 1 2 3 4 5.",
       common: "That PIN is too common. Choose a less obvious one.",
       auth: "Could not save your PIN. Try again.",
     },
   },
   fr: {
     title: "Choisissez votre PIN",
-    sub: "Votre école vous a donné un PIN temporaire. Définissez le vôtre pour continuer — personne d'autre ne doit le connaître.",
+    sub: "Votre école vous a donné un PIN temporaire. Définissez le vôtre pour continuer. Personne d'autre ne doit le connaître.",
     newPin: "Nouveau PIN",
     confirmPin: "Confirmer le PIN",
     save: "Enregistrer",
@@ -38,8 +38,8 @@ const STR = {
     errors: {
       length: "Entrez un PIN à 5 chiffres.",
       mismatch: "Les deux PIN ne correspondent pas.",
-      repeated: "Trop facile à deviner — n'utilisez pas cinq fois le même chiffre.",
-      sequential: "Trop facile à deviner — évitez une suite comme 1 2 3 4 5.",
+      repeated: "Trop facile à deviner. N'utilisez pas cinq fois le même chiffre.",
+      sequential: "Trop facile à deviner. Évitez une suite comme 1 2 3 4 5.",
       common: "Ce PIN est trop courant. Choisissez-en un moins évident.",
       auth: "Impossible d'enregistrer votre PIN. Réessayez.",
     },
